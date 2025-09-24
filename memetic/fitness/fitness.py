@@ -1,8 +1,17 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
+from utils.feasibility import is_feasible
 
-def is_feasible(problem: PDPTWProblem, solution: PDPTWSolution, use_prints = False) -> bool:
-    """Checks if a given PDPTW solution is feasible with respect to capacity and time windows."""
+def fitness(problem: PDPTWProblem, solution: PDPTWSolution) -> float:    
+    fitness = solution.total_distance
+    fitness += _penalty(problem, solution)
+    
+    percent_vehicles_used = solution.num_vehicles_used / problem.num_vehicles
+    fitness *= (1 + percent_vehicles_used)
+        
+    return fitness
+
+def _penalty(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
     pickup_to_delivery = problem.pickup_to_delivery
     delivery_to_pickup = problem.delivery_to_pickup
     
@@ -12,6 +21,8 @@ def is_feasible(problem: PDPTWProblem, solution: PDPTWSolution, use_prints = Fal
     time_windows = problem.time_windows
     service_times = problem.service_times
     nodes = problem.nodes
+    
+    num_violations = 0
     
     seen_total = set()
     for route in solution.routes:
@@ -24,41 +35,34 @@ def is_feasible(problem: PDPTWProblem, solution: PDPTWSolution, use_prints = Fal
             
             # * Check if the route start at the depot
             if i == 0 and from_node != 0:
-                if use_prints: print("Route does not start at depot:", route)
-                return False
+                num_violations += 1
             
             # * Check if the route ends at the depot
             if i+1 == len(route) - 1 and to_node != 0:
-                if use_prints: print("Route does not end at depot:", route)
-                return False
+                num_violations += 1
             
             # * Check if depot is visited in the middle of the route
             if i+1 < len(route) - 1 and to_node == 0:
-                if use_prints: print("Depot visited in the middle of route:", route)
-                return False  
+                num_violations += 1
             
             # * Check if node has already been served
             if to_node in seen:
-                if use_prints: print("Node visited multiple times:", to_node)
-                return False 
+                num_violations += 1
              
             # * Check if pickup happens before delivery
             if to_node in delivery_to_pickup:
                 pickup = delivery_to_pickup[to_node]
                 if pickup not in seen:
-                    if use_prints: print("Delivery before pickup:", to_node)
-                    return False  
+                    num_violations += 1
             # * Check if node is valid (depot, pickup, or delivery)
             else:
                 if to_node not in pickup_to_delivery and to_node != 0:
-                    if use_prints: print("Invalid node:", to_node)
-                    return False  
+                    num_violations += 1
                 
             # * Check if vehicle capacities are respected
             load += demands[to_node]
             if load < 0 or load > vehicle_capacity:
-                if use_prints: print("Capacity violation at node:", to_node)
-                return False
+                num_violations += 1
             
             # * Check if time windows are respected
             travel_time = distance_matrix[from_node, to_node]
@@ -68,8 +72,7 @@ def is_feasible(problem: PDPTWProblem, solution: PDPTWSolution, use_prints = Fal
             if current_time < tw_start:
                 current_time = tw_start
             if current_time > tw_end:
-                if use_prints: print("Arrived too late at node:", to_node)
-                return False 
+                num_violations += 1
             current_time += service_times[to_node]
             
             seen.add(to_node)
@@ -79,7 +82,9 @@ def is_feasible(problem: PDPTWProblem, solution: PDPTWSolution, use_prints = Fal
     # * Check if all nodes are served        
     if seen_total != set(node.index for node in nodes):
         not_served = set(node.index for node in nodes) - seen_total
-        if use_prints: print("Not all nodes served. Not served:", not_served)
-        return False  
+        num_violations += len(not_served)
     
-    return True
+    if num_violations == 0:
+        return 0.0
+    else:
+        return num_violations * 0.05 * problem.distance_baseline + 0.1 * problem.distance_baseline

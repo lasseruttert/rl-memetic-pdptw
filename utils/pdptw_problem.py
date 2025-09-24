@@ -77,6 +77,10 @@ class PDPTWProblem:
         
         self.pickup_to_delivery = {p: d for p, d in self.pickups_deliveries}
         self.delivery_to_pickup = {d: p for p, d in self.pickups_deliveries}
+        
+        self.distance_baseline = sum(self.distance_matrix[0, i] for i in range(1, len(self.distance_matrix))) * 2
+        total_demand = sum(node.demand for node in self.nodes if node.demand > 0)
+        self.num_vehicles_baseline = max(1, (total_demand + self.vehicle_capacity - 1) // self.vehicle_capacity)
     
     @property
     def num_locations(self) -> int:

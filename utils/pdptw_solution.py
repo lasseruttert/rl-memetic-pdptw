@@ -1,18 +1,27 @@
 from dataclasses import dataclass
 import numpy as np
 from typing import Optional
+from utils.pdptw_problem import PDPTWProblem
 
 @dataclass
 class PDPTWSolution:
+    problem: PDPTWProblem
     """A solution to a PDPTW problem instance."""
     routes: list[list[int]]
     """A list of routes, where each route is a list of node indices starting and ending with the depot (index 0)."""
-    total_distance: float
+    total_distance: float = None
     """The total distance traveled by all vehicles in the solution."""
     
     def __post_init__(self):
         self.encoding = str(self.routes)
         self.hashed_encoding = hash(self.encoding)
+        if self.total_distance is None:
+            self.total_distance = 0.0
+            for route in self.routes:
+                if len(route) < 2:
+                    continue
+                for i in range(len(route) - 1):
+                    self.total_distance += self.problem.distance_matrix[route[i]][route[i + 1]]
 
     def __len__(self):
         return len(self.routes)
@@ -40,7 +49,7 @@ class PDPTWSolution:
     
     @property
     def num_vehicles_used(self) -> int:
-        return sum(1 for r in self.routes if len(r) > 1)
+        return sum(1 for r in self.routes if len(r) > 2)
     
     @property
     def num_customers_served(self) -> int:

@@ -108,11 +108,11 @@ class ORToolsSolver:
         solution = routing.SolveWithParameters(search_parameters)
         
         if solution:
-            return self._get_solution(data, manager, routing, solution)
+            return self._get_solution(data, problem, manager, routing, solution)
         else:
             raise ValueError("No solution found")
         
-    def _get_solution(self, data, manager, routing, solution) -> PDPTWSolution:
+    def _get_solution(self,problem, data, manager, routing, solution) -> PDPTWSolution:
         routes = []
         total_distance = 0
         for vehicle_id in range(data['num_vehicles']):
@@ -133,4 +133,4 @@ class ORToolsSolver:
             total_distance += route_distance
         
         total_distance /= 100  # convert back to original scale
-        return PDPTWSolution(routes=routes, total_distance=total_distance)
+        return PDPTWSolution(problem=problem, routes=routes, total_distance=total_distance)

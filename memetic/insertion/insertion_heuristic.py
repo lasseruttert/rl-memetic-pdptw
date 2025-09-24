@@ -37,7 +37,7 @@ def greedy_insertion(problem: PDPTWProblem, solution: PDPTWSolution, unserved_re
             solution.total_distance += best_increase
             unserved_requests.remove((pickup, delivery))
         else:
-            print("No feasible insertion found for remaining requests")
+            # print("No feasible insertion found for remaining requests")
             break  # No feasible insertion found, exit loop
     return solution
         
