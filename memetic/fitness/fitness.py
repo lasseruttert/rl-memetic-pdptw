@@ -1,6 +1,5 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
-from utils.feasibility import is_feasible
 
 def fitness(problem: PDPTWProblem, solution: PDPTWSolution) -> float:    
     fitness = solution.total_distance
