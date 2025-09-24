@@ -1,4 +1,4 @@
-from pdptw_problem import PDPTWProblem, Node
+from .pdptw_problem import PDPTWProblem, Node
 
 def li_lim_reader(file_path):
     """Reads a PDPTW problem instance from a Li & Lim formatted file.
@@ -38,4 +38,4 @@ if __name__ == "__main__":
     problem = li_lim_reader('G:/Meine Ablage/rl-memetic-pdptw/data/pdp_100/lc101.txt')
     data = problem.data
     problem.num_vehicles
-    print(data)
+    # print(data)
