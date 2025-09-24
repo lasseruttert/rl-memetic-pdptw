@@ -13,8 +13,6 @@ class PDPTWSolution:
     def __post_init__(self):
         self.encoding = str(self.routes)
         self.hashed_encoding = hash(self.encoding)
-        self.num_vehicles_used = sum(1 for r in self.routes if len(r) > 1)
-        self.num_customers_served = sum(len(r) - 2 for r in self.routes if len(r) > 2)  # ohne Start/Ende-Depot
 
     def __len__(self):
         return len(self.routes)
@@ -39,3 +37,29 @@ class PDPTWSolution:
         for i, route in enumerate(self.routes):
             route_lines.append(f"  Vehicle {i}: {' -> '.join(map(str, route))}")
         return header + "\n" + "\n".join(route_lines)
+    
+    @property
+    def num_vehicles_used(self) -> int:
+        return sum(1 for r in self.routes if len(r) > 1)
+    
+    @property
+    def num_customers_served(self) -> int:
+        return sum(len(r) - 2 for r in self.routes if len(r) > 2)
+    
+    def get_unserved_requests(self, problem) -> list[int]:
+        """Returns a list of unserved customer requests based on the problem instance."""
+        served = set()
+        seen = set()
+        unserved = []
+        for route in self.routes:
+            for node in route:
+                if problem.is_pickup(node):
+                    seen.add(node)
+                elif problem.is_delivery(node):
+                    pair = problem.get_pair(node)
+                    if pair[0] in seen:
+                        served.add(pair)
+        for request in problem.pickups_deliveries:
+            if request not in served:
+                unserved.append(request)
+        return unserved

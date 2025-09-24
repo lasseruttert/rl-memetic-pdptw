@@ -1,8 +1,8 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from utils.li_lim_reader import li_lim_reader
+from utils.feasibility import is_feasible
 from or_tools.or_tools import ORToolsSolver
-from memetic.utils.feasibility import is_feasible
 
 if __name__ == "__main__":
     problem = li_lim_reader('G:/Meine Ablage/rl-memetic-pdptw/data/pdp_100/lc201.txt')

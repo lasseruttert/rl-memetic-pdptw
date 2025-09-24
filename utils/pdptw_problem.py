@@ -74,6 +74,9 @@ class PDPTWProblem:
         self.service_times = np.array([node.service_time for node in self.nodes])
         self.pickups_deliveries = self._compute_pickups_deliveries()
         self.requests = [Request(self.nodes_dict[p], self.nodes_dict[d]) for p, d in self.pickups_deliveries]
+        
+        self.pickup_to_delivery = {p: d for p, d in self.pickups_deliveries}
+        self.delivery_to_pickup = {d: p for p, d in self.pickups_deliveries}
     
     @property
     def num_locations(self) -> int:

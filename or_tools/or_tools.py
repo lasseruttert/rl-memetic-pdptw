@@ -16,7 +16,6 @@ class ORToolsSolver:
         data = problem.data
         if self.minimize_num_vehicles:
             for i in range(1, data['num_vehicles']):
-                print(i)
                 new_data = deepcopy(data)
                 new_data['num_vehicles'] = i
                 try:
