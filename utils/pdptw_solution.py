@@ -12,6 +12,7 @@ class PDPTWSolution:
     
     def __post_init__(self):
         self._total_distance = None
+        self._route_lengths = None
         self._is_feasible = None
         self._encoding = None
         self._hashed_encoding = None
@@ -19,6 +20,7 @@ class PDPTWSolution:
         
     def _clear_cache(self):
         self._total_distance = None
+        self._route_lengths = None
         self._is_feasible = None
         self._encoding = None
         self._hashed_encoding = None
@@ -52,15 +54,27 @@ class PDPTWSolution:
     @property
     def total_distance(self) -> float:
         if self._total_distance is None:
+            if self._route_lengths is None:
+                self._route_lengths = {}
             distance_matrix = self.problem.distance_matrix
             total_distance = 0.0
             for route in self.routes:
+                route_distance = 0.0
                 for i in range(len(route) - 1):
                     from_node = route[i]
                     to_node = route[i + 1]
                     total_distance += distance_matrix[from_node, to_node]
+                    route_distance += distance_matrix[from_node, to_node]
+                self._route_lengths[self.routes.index(route)] = route_distance
             self._total_distance = total_distance
         return self._total_distance
+    
+    @property
+    def route_lengths(self) -> np.ndarray:
+        if self._route_lengths is None:
+            self._route_lengths = {}
+            _ = self.total_distance  # This will populate _route_lengths
+        return self._route_lengths
     
     @property
     def is_feasible(self) -> bool:

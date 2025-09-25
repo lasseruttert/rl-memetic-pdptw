@@ -19,6 +19,7 @@ class RouteEliminationOperator(BaseOperator):
         print(route_to_eliminate)
         new_solution.routes.remove(route_to_eliminate)
         new_solution.routes.append([])  # Maintain the same number of routes by adding an empty one
+        new_solution._clear_cache()
         
         new_solution = greedy_insertion(problem=self.problem, solution=new_solution, allow_new_vehicles=False)
         
