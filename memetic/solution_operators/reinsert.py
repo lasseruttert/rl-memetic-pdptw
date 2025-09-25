@@ -14,9 +14,7 @@ class ReinsertOperator(BaseOperator):
 
         requests = self.problem.pickups_deliveries
         random_request = requests[random.randint(0, len(requests) - 1)]
-        print(random_request)
         route = new_solution.node_to_route.get(random_request[0], None)
-        print(route)
         if route is not None:
             # Remove both pickup and delivery from the route
             new_solution.routes[route] = [node for node in new_solution.routes[route] if node not in random_request]

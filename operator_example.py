@@ -5,6 +5,7 @@ from utils.li_lim_reader import li_lim_reader
 from memetic.solution_generators.random_solution import generate_random_solution
 from memetic.repair.reinsertion_repair import reinsertion_repair
 from memetic.solution_operators.reinsert import ReinsertOperator
+from memetic.solution_operators.route_elimination import RouteEliminationOperator
 
 if __name__ == "__main__":
     problem = li_lim_reader('G:/Meine Ablage/rl-memetic-pdptw/data/pdp_100/lc201.txt')
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     
     # print(repaired_solution)
     # print(repaired_solution.check_feasibility())  # Re-evaluate and print feasibility after repair
-    operator = ReinsertOperator(problem)
+    operator = RouteEliminationOperator(problem)
     modified_solution = operator.apply(solution)
     print(modified_solution)
     print(modified_solution.check_feasibility())  # Check feasibility after applying the operator

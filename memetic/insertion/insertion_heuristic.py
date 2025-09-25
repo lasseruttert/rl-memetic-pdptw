@@ -1,7 +1,7 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 
-def greedy_insertion(problem: PDPTWProblem, solution: PDPTWSolution, unserved_requests: list[tuple[int, int]] = None) -> PDPTWSolution:
+def greedy_insertion(problem: PDPTWProblem, solution: PDPTWSolution, unserved_requests: list[tuple[int, int]] = None, allow_new_vehicles = True) -> PDPTWSolution:
     if unserved_requests is None:
         unserved_requests = solution.get_unserved_requests(problem)
     
@@ -13,6 +13,8 @@ def greedy_insertion(problem: PDPTWProblem, solution: PDPTWSolution, unserved_re
             looked_at_empty = False
             for route_idx, route in enumerate(solution.routes):
                 if not route or len(route) <= 2 and route[0] == 0 and route[-1] == 0 and not looked_at_empty:  # Empty route, just add pickup and delivery
+                    if not allow_new_vehicles:
+                        continue
                     new_route = [0, pickup, delivery, 0]
                     if _is_feasible_insertion(problem, new_route):
                         looked_at_empty = True
