@@ -84,6 +84,8 @@ def _penalty(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
         num_violations += len(not_served)
     
     if num_violations == 0:
+        solution._is_feasible = True
         return 0.0
     else:
+        solution._is_feasible = False
         return num_violations * 0.05 * problem.distance_baseline + 0.1 * problem.distance_baseline

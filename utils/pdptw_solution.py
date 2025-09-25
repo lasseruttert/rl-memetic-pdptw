@@ -9,19 +9,18 @@ class PDPTWSolution:
     """A solution to a PDPTW problem instance."""
     routes: list[list[int]]
     """A list of routes, where each route is a list of node indices starting and ending with the depot (index 0)."""
-    total_distance: float = None
-    """The total distance traveled by all vehicles in the solution."""
     
     def __post_init__(self):
-        self.encoding = str(self.routes)
-        self.hashed_encoding = hash(self.encoding)
-        if self.total_distance is None:
-            self.total_distance = 0.0
-            for route in self.routes:
-                if len(route) < 2:
-                    continue
-                for i in range(len(route) - 1):
-                    self.total_distance += self.problem.distance_matrix[route[i]][route[i + 1]]
+        self._total_distance = None
+        self._is_feasible = None
+        self._encoding = None
+        self._hashed_encoding = None
+        
+    def _clear_cache(self):
+        self._total_distance = None
+        self._is_feasible = None
+        self._encoding = None
+        self._hashed_encoding = None
 
     def __len__(self):
         return len(self.routes)
@@ -44,8 +43,41 @@ class PDPTWSolution:
         header = f"PDPTW Solution | Distance: {self.total_distance:.2f} | Vehicles used: {self.num_vehicles_used}"
         route_lines = []
         for i, route in enumerate(self.routes):
-            route_lines.append(f"  Vehicle {i}: {' -> '.join(map(str, route))}")
+            if len(route) > 2:
+                route_lines.append(f"  Vehicle {i}: {' -> '.join(map(str, route))}")
         return header + "\n" + "\n".join(route_lines)
+    
+    @property
+    def total_distance(self) -> float:
+        if self._total_distance is None:
+            distance_matrix = self.problem.distance_matrix
+            total_distance = 0.0
+            for route in self.routes:
+                for i in range(len(route) - 1):
+                    from_node = route[i]
+                    to_node = route[i + 1]
+                    total_distance += distance_matrix[from_node, to_node]
+            self._total_distance = total_distance
+        return self._total_distance
+    
+    @property
+    def is_feasible(self) -> bool:
+        if self._is_feasible is None:
+            from utils.feasibility import is_feasible
+            self._is_feasible = is_feasible(self.problem, self)
+        return self._is_feasible
+    
+    @property
+    def encoding(self) -> str:
+        if self._encoding is None:
+            self._encoding = ";".join([",".join(map(str, route)) for route in self.routes])
+        return self._encoding
+    
+    @property
+    def hashed_encoding(self) -> int:
+        if self._hashed_encoding is None:
+            self._hashed_encoding = hash(self.encoding)
+        return self._hashed_encoding
     
     @property
     def num_vehicles_used(self) -> int:
@@ -54,6 +86,17 @@ class PDPTWSolution:
     @property
     def num_customers_served(self) -> int:
         return sum(len(r) - 2 for r in self.routes if len(r) > 2)
+    
+    def modify_routes(self, new_routes: list[list[int]]):
+        """Modifies the routes of the solution and clears cached properties."""
+        self.routes = new_routes
+        self._clear_cache()
+        
+    def check_feasibility(self) -> bool:
+        """Re-evaluates and returns the feasibility of the solution."""
+        from utils.feasibility import is_feasible
+        self._is_feasible = is_feasible(self.problem, self, use_prints=True)
+        return self._is_feasible
     
     def get_unserved_requests(self, problem) -> list[int]:
         """Returns a list of unserved customer requests based on the problem instance."""
@@ -72,3 +115,6 @@ class PDPTWSolution:
             if request not in served:
                 unserved.append(request)
         return unserved
+    
+    
+    
