@@ -4,6 +4,8 @@ from utils.pdptw_solution import PDPTWSolution
 from abc import ABC, abstractmethod
 
 class BaseOperator(ABC):
+    def __init__(self, problem: PDPTWProblem):
+        self.problem = problem
     @abstractmethod
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         pass

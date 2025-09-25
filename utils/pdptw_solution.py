@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import numpy as np
 from typing import Optional
 from utils.pdptw_problem import PDPTWProblem
-
+from copy import deepcopy
 @dataclass
 class PDPTWSolution:
     problem: PDPTWProblem
@@ -15,12 +15,14 @@ class PDPTWSolution:
         self._is_feasible = None
         self._encoding = None
         self._hashed_encoding = None
+        self._node_to_route = None
         
     def _clear_cache(self):
         self._total_distance = None
         self._is_feasible = None
         self._encoding = None
         self._hashed_encoding = None
+        self._node_to_route = None
 
     def __len__(self):
         return len(self.routes)
@@ -80,6 +82,17 @@ class PDPTWSolution:
         return self._hashed_encoding
     
     @property
+    def node_to_route(self) -> dict[int, int]:
+        if self._node_to_route is None:
+            mapping = {}
+            for route_idx, route in enumerate(self.routes):
+                for node in route:
+                    if self.problem.is_pickup(node) or self.problem.is_delivery(node):
+                        mapping[node] = route_idx
+            self._node_to_route = mapping
+        return self._node_to_route
+    
+    @property
     def num_vehicles_used(self) -> int:
         return sum(1 for r in self.routes if len(r) > 2)
     
@@ -116,5 +129,6 @@ class PDPTWSolution:
                 unserved.append(request)
         return unserved
     
-    
-    
+    def clone(self) -> 'PDPTWSolution':
+        """Creates a deep copy of the solution."""
+        return deepcopy(self)

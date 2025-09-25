@@ -55,7 +55,6 @@ def reinsertion_repair(problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWS
                 if violation and pair_to_remove:
                     # Remove pair immediately and restart
                     nodes_to_remove = set(pair_to_remove)
-                    print(f"Removing nodes {nodes_to_remove} from route {route_idx} due to violation.")
                     solution.routes[route_idx] = [n for n in route if n not in nodes_to_remove]
                     changed = True
                     break  # Restart this route
