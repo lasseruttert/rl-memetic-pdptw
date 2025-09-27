@@ -2,7 +2,7 @@ from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 
 def fitness(problem: PDPTWProblem, solution: PDPTWSolution) -> float:    
-    fitness = solution.total_distance
+    fitness = solution.total_distance 
     fitness += _penalty(problem, solution)
     
     percent_vehicles_used = solution.num_vehicles_used / problem.num_vehicles
@@ -88,4 +88,4 @@ def _penalty(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
         return 0.0
     else:
         solution._is_feasible = False
-        return num_violations * 0.05 * problem.distance_baseline + 0.1 * problem.distance_baseline
+        return num_violations * 0.05 * problem.distance_baseline + 1 * problem.distance_baseline

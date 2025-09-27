@@ -4,12 +4,12 @@ from memetic.solution_operators.base_operator import BaseOperator
 import random
 
 class FlipOperator(BaseOperator):
-    def __init__(self, problem: PDPTWProblem, max_attempts: None = None, single_route: bool = False):
-        super().__init__(problem)
+    def __init__(self, max_attempts: None = None, single_route: bool = False):
+        super().__init__()
         self.max_attempts = max_attempts
         self.single_route = single_route
 
-    def apply(self, solution: PDPTWSolution) -> PDPTWSolution:
+    def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()
         
         if self.single_route:

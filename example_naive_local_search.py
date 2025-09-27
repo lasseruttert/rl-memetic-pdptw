@@ -10,6 +10,8 @@ from memetic.solution_operators.flip import FlipOperator
 from memetic.solution_operators.swap_within import SwapWithinOperator
 from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
+from memetic.solution_operators.two_opt import TwoOptOperator
+from memetic.solution_operators.or_opt import OrOptOperator
 
 if __name__ == "__main__":
     # Example usage
@@ -17,17 +19,21 @@ if __name__ == "__main__":
     initial_solution = generate_random_solution(problem)
     initial_solution_s = initial_solution.clone()
     operators = [
-        ReinsertOperator(problem),
-        FlipOperator(problem, single_route=True),
-        SwapWithinOperator(problem, single_route=True),
-        SwapBetweenOperator(problem),
-        TransferOperator(problem, single_route=True)
+        # RouteEliminationOperator(),
+        TwoOptOperator(single_route=True),
+        SwapWithinOperator(single_route=True),
+        SwapBetweenOperator(),
+        TransferOperator(single_route=True),
+        ReinsertOperator()
     ]
     
     
-    local_search = NaiveLocalSearch(operators=operators, max_no_improvement=10)
-    improved_solution = local_search.search(problem, initial_solution)
+    local_search = NaiveLocalSearch(operators=operators, max_no_improvement=1000, max_iterations=1000)
+    improved_solution, fitness = local_search.search(problem, initial_solution)
     
     print("Initial Solution:", initial_solution_s)
     print("Improved Solution:", improved_solution)
     print("Feasible?:", improved_solution.check_feasibility())
+    
+    for operator in operators:
+        print(f"{operator.__class__.__name__}: Applications={operator.applications}, Improvements={operator.improvements}")

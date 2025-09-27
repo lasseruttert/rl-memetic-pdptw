@@ -6,13 +6,13 @@ from memetic.insertion.insertion_heuristic import greedy_insertion
 import random
 
 class ReinsertOperator(BaseOperator):
-    def __init__(self, problem: PDPTWProblem):
-        super().__init__(problem)
+    def __init__(self):
+        super().__init__()
 
-    def apply(self, solution: PDPTWSolution) -> PDPTWSolution:
+    def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()
 
-        requests = self.problem.pickups_deliveries
+        requests = problem.pickups_deliveries
         random_request = requests[random.randint(0, len(requests) - 1)]
         route = new_solution.node_to_route.get(random_request[0], None)
         if route is not None:
@@ -20,6 +20,6 @@ class ReinsertOperator(BaseOperator):
             new_solution.routes[route] = [node for node in new_solution.routes[route] if node not in random_request]
             new_solution._clear_cache()
             # Reinsert using greedy insertion
-            new_solution = greedy_insertion(self.problem, new_solution, [random_request])
+            new_solution = greedy_insertion(problem, new_solution, [random_request])
             
         return new_solution

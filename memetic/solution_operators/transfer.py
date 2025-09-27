@@ -4,12 +4,12 @@ from memetic.solution_operators.base_operator import BaseOperator
 import random
 
 class TransferOperator(BaseOperator):
-    def __init__(self, problem: PDPTWProblem, max_attempts: int = 10, single_route: bool = False):
-        super().__init__(problem)
+    def __init__(self, max_attempts: int = 10, single_route: bool = False):
+        super().__init__()
         self.max_attempts = max_attempts
         self.single_route = single_route
         
-    def apply(self, solution: PDPTWSolution) -> PDPTWSolution:
+    def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()
         
         if self.single_route:
@@ -23,7 +23,7 @@ class TransferOperator(BaseOperator):
                 break
             if len(route) >= 4:  # Ensure there is at least one request to transfer
                 nodes_in_route = route[1:-1]  # Exclude depot
-                requests = set(self.problem.get_pair(node) for node in nodes_in_route)
+                requests = set(problem.get_pair(node) for node in nodes_in_route)
                 request_to_transfer = random.choice(list(requests))
                 pickup, delivery = request_to_transfer
                 
