@@ -3,7 +3,7 @@ from utils.pdptw_solution import PDPTWSolution
 import random
 
 class NaiveMutation:
-    def __init__(self, operators: list = [], max_iterations: int = 5):
+    def __init__(self, operators: list = [], max_iterations: int = 1):
         self.operators = operators
         self.max_iterations = max_iterations
     

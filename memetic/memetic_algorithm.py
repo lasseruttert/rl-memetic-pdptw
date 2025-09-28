@@ -69,7 +69,7 @@ class MemeticSolver:
                 TransferOperator(single_route=True),
                 ReinsertOperator()
             ]
-            local_search_operator = NaiveLocalSearch(operators=operators, max_no_improvement=100, max_iterations=400)
+            local_search_operator = NaiveLocalSearch(operators=operators, max_no_improvement=10, max_iterations=50)
         
         self.local_search_operator = local_search_operator
         
@@ -94,7 +94,7 @@ class MemeticSolver:
         while not done:
             print(f"Generation {generation}, Best Fitness: {best_fitness}")
             no_improvement_in_generation = True
-            random.shuffle(population)
+            # random.shuffle(population)
             for i in range(len(population) - 1):
                 parent1 = population[i]
                 parent2 = population[i + 1]

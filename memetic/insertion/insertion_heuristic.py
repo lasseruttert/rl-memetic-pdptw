@@ -1,7 +1,14 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 
-def greedy_insertion(problem: PDPTWProblem, solution: PDPTWSolution, unserved_requests: list[tuple[int, int]] = None, allow_new_vehicles = True) -> PDPTWSolution:
+def greedy_insertion(
+    problem: PDPTWProblem, 
+    solution: PDPTWSolution, 
+    unserved_requests: list[tuple[int, int]] = None, 
+    allow_new_vehicles = True, 
+    not_allowed_vehicle_idxs = None,
+    force_vehicle_idx = None
+    ) -> PDPTWSolution:
     if unserved_requests is None:
         unserved_requests = solution.get_unserved_requests(problem)
     
@@ -12,6 +19,10 @@ def greedy_insertion(problem: PDPTWProblem, solution: PDPTWSolution, unserved_re
             pickup, delivery = request
             looked_at_empty = False
             for route_idx, route in enumerate(solution.routes):
+                if not_allowed_vehicle_idxs and route_idx in not_allowed_vehicle_idxs:
+                    continue
+                if force_vehicle_idx is not None and route_idx != force_vehicle_idx:
+                    continue
                 if not route or len(route) <= 2 and route[0] == 0 and route[-1] == 0 and not looked_at_empty:  # Empty route, just add pickup and delivery
                     if not allow_new_vehicles:
                         continue
@@ -43,6 +54,11 @@ def greedy_insertion(problem: PDPTWProblem, solution: PDPTWSolution, unserved_re
             print("No feasible insertion found for remaining requests")
             break  # No feasible insertion found, exit loop
     return solution
+
+def regret_based_insertion(problem: PDPTWProblem, solution: PDPTWSolution, unserved_requests: list[tuple[int, int]] = None, allow_new_vehicles = True, vehicle_idx = None, regret_k: int = 2) -> PDPTWSolution:
+    return #TODO Implement regret-based insertion heuristic
+
+
         
 def _cost_increase(problem: PDPTWProblem, old_route, new_route) -> float:
     old_distance = sum(problem.distance_matrix[old_route[i], old_route[i + 1]] for i in range(len(old_route) - 1))

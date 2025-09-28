@@ -144,9 +144,7 @@ class PDPTWSolution:
         return unserved
     
     def clone(self) -> 'PDPTWSolution':
-        # routes = [list(route) for route in self.routes]
         routes = [route[:] for route in self.routes]
-        # routes = deepcopy(self.routes)
         new_solution = PDPTWSolution(self.problem, routes=routes)
 
         return new_solution

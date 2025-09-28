@@ -1,3 +1,0 @@
-from utils.pdptw_problem import PDPTWProblem
-from utils.pdptw_solution import PDPTWSolution
-from memetic.solution_operators.base_operator import BaseOperator
