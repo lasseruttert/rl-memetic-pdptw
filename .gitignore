@@ -2,3 +2,9 @@
 **/__pycache__/
 .idea/
 .vscode/
+# add build folders
+build/
+# add cython generated files
+*.c
+*.so
+*.pyd
