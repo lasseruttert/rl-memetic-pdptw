@@ -13,7 +13,6 @@ from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
 from memetic.solution_operators.two_opt import TwoOptOperator
 from memetic.solution_operators.two_opt_star import TwoOptStarOperator
-from memetic.solution_operators.or_opt import OrOptOperator
 from memetic.solution_operators.cls_m1 import CLSM1Operator
 from memetic.solution_operators.cls_m2 import CLSM2Operator
 from memetic.solution_operators.cls_m3 import CLSM3Operator
@@ -24,12 +23,13 @@ if __name__ == "__main__":
     operators = [
         ReinsertOperator(),
         ReinsertOperator(max_attempts=5,clustered=True),
+        ReinsertOperator(insertion_heuristic="regret2" ,max_attempts=5,clustered=True),
         ReinsertOperator(force_same_vehicle=True),
         ReinsertOperator(allow_same_vehicle=False),
         ReinsertOperator(allow_same_vehicle=False, allow_new_vehicles=False),
         
-        SwapWithinOperator(single_route=True),
-        SwapWithinOperator(max_attempts=5,single_route=True),
+        RouteEliminationOperator(),
+        RouteEliminationOperator(insertion_heuristic="regret2"),
         
         SwapBetweenOperator(),
         
@@ -40,10 +40,7 @@ if __name__ == "__main__":
         CLSM1Operator(),
         CLSM2Operator(),
         CLSM3Operator(),
-        CLSM4Operator(),
-        
-        TwoOptOperator(),
-        TwoOptStarOperator()
+        CLSM4Operator()
     ]
 
     local_search = NaiveLocalSearch(operators, max_no_improvement=100, max_iterations=1000, first_improvement=False)

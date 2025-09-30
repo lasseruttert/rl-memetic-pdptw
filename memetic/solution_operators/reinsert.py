@@ -3,11 +3,14 @@ from utils.pdptw_solution import PDPTWSolution
 from memetic.solution_operators.base_operator import BaseOperator
 
 from memetic.insertion.greedy_insertion import GreedyInsertion
+from memetic.insertion.regret_insertion import Regret2Insertion
+from memetic.insertion.random_insertion import RandomInsertion
+
 import random
 
 class ReinsertOperator(BaseOperator):
     def __init__(self, 
-                 insertion_heuristik: str = "greedy", 
+                 insertion_heuristic: str = "greedy", 
                  max_attempts: int = 1, 
                  max_attempt_interval: tuple = None, 
                  clustered: bool = False, 
@@ -27,12 +30,16 @@ class ReinsertOperator(BaseOperator):
         self.allow_same_vehicle = allow_same_vehicle
         self.force_same_vehicle = force_same_vehicle
         
-        if insertion_heuristik == "greedy":
-            self.insertion_heuristik = GreedyInsertion(
+        if insertion_heuristic == "greedy":
+            self.insertion_heuristic = GreedyInsertion(
                 allow_new_vehicles=allow_new_vehicles,
                 not_allowed_vehicle_idxs=None if allow_same_vehicle else [],
                 force_vehicle_idx=None if not force_same_vehicle else 0
             )
+        if insertion_heuristic == 'regret2':
+            self.insertion_heuristic = Regret2Insertion()
+        if insertion_heuristic == 'random':
+            self.insertion_heuristic = RandomInsertion()
 
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()
@@ -50,13 +57,13 @@ class ReinsertOperator(BaseOperator):
                 new_solution._clear_cache()
                 # Reinsert using greedy insertion
                 if self.clustered:
-                    if self.allow_same_vehicle == False: self.insertion_heuristik.not_allowed_vehicle_idxs = [route_idx]
-                    if self.force_same_vehicle: self.insertion_heuristik.force_vehicle_idx = route_idx
-                    new_solution = self.insertion_heuristik.insert(problem, new_solution, [random_request])
-                    if self.allow_same_vehicle == False: self.insertion_heuristik.not_allowed_vehicle_idxs = None
-                    if self.force_same_vehicle: self.insertion_heuristik.force_vehicle_idx = None
+                    if self.allow_same_vehicle == False: self.insertion_heuristic.not_allowed_vehicle_idxs = [route_idx]
+                    if self.force_same_vehicle: self.insertion_heuristic.force_vehicle_idx = route_idx
+                    new_solution = self.insertion_heuristic.insert(problem, new_solution, [random_request])
+                    if self.allow_same_vehicle == False: self.insertion_heuristic.not_allowed_vehicle_idxs = None
+                    if self.force_same_vehicle: self.insertion_heuristic.force_vehicle_idx = None
                             
         if not self.clustered:
-            new_solution = self.insertion_heuristik.insert(problem, new_solution, removed_requests)
+            new_solution = self.insertion_heuristic.insert(problem, new_solution, removed_requests)
             
         return new_solution

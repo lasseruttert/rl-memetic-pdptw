@@ -1,11 +1,18 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from memetic.solution_operators.base_operator import BaseOperator
-from memetic.insertion.simple_insertion_heuristic import greedy_insertion
+from memetic.insertion.greedy_insertion import GreedyInsertion
+from memetic.insertion.regret_insertion import Regret2Insertion
+
+
 
 class RouteEliminationOperator(BaseOperator):
-    def __init__(self):
+    def __init__(self, insertion_heuristic: str = 'greedy'):
         super().__init__()
+        if insertion_heuristic == 'greedy':
+            self.insertion_heuristic = GreedyInsertion()
+        if insertion_heuristic == 'regret2':
+            self.insertion_heuristic = Regret2Insertion()
         
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()
@@ -14,10 +21,13 @@ class RouteEliminationOperator(BaseOperator):
     
         # Find the route with the least number of customers but more than just the depot
         route_to_eliminate = min((route for route in new_solution.routes if len(route) > 2), key=len)
+        route_to_eliminate_idx = new_solution.routes.index(route_to_eliminate)
         new_solution.routes.remove(route_to_eliminate)
         new_solution.routes.append([])  # Maintain the same number of routes by adding an empty one
         new_solution._clear_cache()
         
-        new_solution = greedy_insertion(problem=problem, solution=new_solution)
+        self.insertion_heuristic.not_allowed_vehicle_idxs = [route_to_eliminate_idx]
+        new_solution = self.insertion_heuristic.insert(problem, new_solution)
+        self.insertion_heuristic.not_allowed_vehicle_idxs = []
         
         return new_solution
