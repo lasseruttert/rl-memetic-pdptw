@@ -4,7 +4,7 @@ from memetic.insertion.simple_insertion_heuristic import _cost_increase
 # from memetic.insertion.simple_insertion_heuristic import _is_feasible_insertion
 from memetic.insertion.feasibility_check import is_feasible_insertion_fast as _is_feasible_insertion
 
-class GreedyInsertion:
+class GreedyInsertion: #TODO rewrite this in cpp and pybind
     """Greedy insertion heuristic for PDPTW. Inserts unserved requests into the solution
     at the position that results in the least increase in total cost.
     """

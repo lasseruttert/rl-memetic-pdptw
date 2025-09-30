@@ -27,7 +27,7 @@ import random
 class MemeticSolver:
     def __init__(
         self, 
-        population_size: int = 50, 
+        population_size: int = 30, 
         max_generations: int = 100,
         max_time_seconds: int = 600,
         max_no_improvement: int = 20,
@@ -83,7 +83,7 @@ class MemeticSolver:
                 CLSM3Operator(),
                 CLSM4Operator()
             ]
-            local_search_operator = NaiveLocalSearch(operators=operators, max_no_improvement=10, max_iterations=50)
+            local_search_operator = NaiveLocalSearch(operators=operators, max_no_improvement=3, max_iterations=50)
         
         self.local_search_operator = local_search_operator
         
@@ -97,18 +97,25 @@ class MemeticSolver:
         best_solution = None
         best_fitness = float('inf')
         
+        fitness_cache = {}
+        current_fitnesses = [None for _ in range(self.population_size)]
+        
         done = False
         generation = 0
         no_improvement_count = 0
         
-        population = [self.initial_solution_generator(problem) for _ in range(self.population_size)]
-        
         start_time = time.time()
+        
+        population = [self.initial_solution_generator(problem) for _ in range(self.population_size)]
+        for i in range(len(population)):
+            population[i], current_fitnesses[i] = self.local_search_operator.search(problem, population[i])
+            if current_fitnesses[i] < best_fitness:
+                best_solution = population[i]
+                best_fitness = current_fitnesses[i]
         
         while not done:
             print(f"Generation {generation}, Best Fitness: {best_fitness}")
             no_improvement_in_generation = True
-            # random.shuffle(population)
             for i in range(len(population) - 1):
                 parent1 = population[i]
                 parent2 = population[i + 1]
@@ -116,6 +123,7 @@ class MemeticSolver:
                 child = self.crossover_operator.crossover(problem, parent1, parent2)
                 child = self.mutatation_operator.mutate(problem, child)
                 child, fitness = self.local_search_operator.search(problem, child)
+                current_fitnesses[i] = fitness
                 
                 if fitness < best_fitness:
                     best_solution = child
@@ -135,5 +143,5 @@ class MemeticSolver:
             if generation >= self.max_generations or no_improvement_count >= self.max_no_improvement or (time.time() - start_time) >= self.max_time_seconds:
                 done = True
         
-        return best_solution, best_fitness
+        return best_solution
         
