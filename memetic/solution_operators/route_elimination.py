@@ -20,7 +20,13 @@ class RouteEliminationOperator(BaseOperator):
             return new_solution  # Cannot eliminate a route if there's only one
     
         # Find the route with the least number of customers but more than just the depot
-        route_to_eliminate = min((route for route in new_solution.routes if len(route) > 2), key=len)
+        non_empty_routes = [route for route in new_solution.routes if len(route) > 2]
+    
+        if not non_empty_routes:
+            # No routes to eliminate, return unchanged
+            return new_solution
+    
+        route_to_eliminate = min(non_empty_routes, key=len)
         route_to_eliminate_idx = new_solution.routes.index(route_to_eliminate)
         new_solution.routes.remove(route_to_eliminate)
         new_solution.routes.append([])  # Maintain the same number of routes by adding an empty one
