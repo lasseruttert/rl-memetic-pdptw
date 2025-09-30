@@ -2,7 +2,7 @@ from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from utils.feasibility import is_feasible
 from utils.li_lim_reader import li_lim_reader
-from memetic.insertion.insertion_heuristic import greedy_insertion
+from memetic.insertion.simple_insertion_heuristic import greedy_insertion
 from memetic.fitness.fitness import fitness
 
 if __name__ == "__main__":

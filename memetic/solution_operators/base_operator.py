@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 
 class BaseOperator(ABC):
     def __init__(self):
+        self.name = "BaseOperator"
         self.applications = 0
         self.improvements = 0
         

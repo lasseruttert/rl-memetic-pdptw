@@ -1,7 +1,7 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from memetic.solution_operators.base_operator import BaseOperator
-from memetic.insertion.insertion_heuristic import greedy_insertion
+from memetic.insertion.simple_insertion_heuristic import greedy_insertion
 
 class RouteEliminationOperator(BaseOperator):
     def __init__(self):
@@ -18,6 +18,6 @@ class RouteEliminationOperator(BaseOperator):
         new_solution.routes.append([])  # Maintain the same number of routes by adding an empty one
         new_solution._clear_cache()
         
-        new_solution = greedy_insertion(problem=problem, solution=new_solution, allow_new_vehicles=False)
+        new_solution = greedy_insertion(problem=problem, solution=new_solution)
         
         return new_solution

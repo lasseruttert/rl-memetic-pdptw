@@ -1,4 +1,4 @@
-from memetic.insertion.insertion_heuristic import greedy_insertion
+from memetic.insertion.simple_insertion_heuristic import greedy_insertion
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 

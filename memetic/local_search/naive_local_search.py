@@ -4,12 +4,14 @@ from memetic.fitness.fitness import fitness
 import random
 
 class NaiveLocalSearch:
-    def __init__(self, operators: list = [], max_no_improvement: int = 3, max_iterations: int = 50):
+    def __init__(self, operators: list = [], max_no_improvement: int = 3, max_iterations: int = 50, first_improvement: bool = True, random_operator_order: bool = False):
         self.operators = operators
         self.max_no_improvement = max_no_improvement
         self.max_iterations = max_iterations
+        self.first_improvement = first_improvement
+        self.random_operator_order = random_operator_order
     
-    def search(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
+    def search(self, problem: PDPTWProblem, solution: PDPTWSolution) -> tuple[PDPTWSolution, float]:
         no_improvement_count = 0
         iteration = 0
         best_solution = solution
@@ -17,20 +19,30 @@ class NaiveLocalSearch:
         
         while no_improvement_count < self.max_no_improvement and iteration < self.max_iterations:
             improved = False
+            best_neighbor = None
+            best_fitness_neighbor = float('inf')
+            if self.random_operator_order: random.shuffle(self.operators)
             for operator in self.operators:
                 new_solution = operator.apply(problem, best_solution)
                 operator.applications += 1
                 new_fitness = fitness(problem, new_solution)
                 if new_fitness < best_fitness:
                     operator.improvements += 1
-                    best_solution = new_solution
-                    best_fitness = new_fitness
-                    improved = True
-                    break
+                    if self.first_improvement:
+                        best_solution = new_solution
+                        best_fitness = new_fitness
+                        improved = True
+                        break
+                    else:
+                        if new_fitness < best_fitness_neighbor:
+                            best_neighbor = new_solution
+                            best_fitness_neighbor = new_fitness
             
-            if not improved:
-                no_improvement_count += 1
-            else:
-                no_improvement_count = 0
+            if not self.first_improvement and best_neighbor is not None:
+                best_solution = best_neighbor
+                best_fitness = best_fitness_neighbor
+                improved = True
+            
+            no_improvement_count = 0 if improved else no_improvement_count + 1
             iteration += 1
         return best_solution, best_fitness

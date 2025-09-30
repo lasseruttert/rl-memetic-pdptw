@@ -125,6 +125,20 @@ class PDPTWSolution:
         self._is_feasible = is_feasible(self.problem, self, use_prints=True)
         return self._is_feasible
     
+    def get_served_requests(self, problem) -> list[int]:
+        """Returns a list of served customer requests based on the problem instance."""
+        served = set()
+        seen = set()
+        for route in self.routes:
+            for node in route:
+                if problem.is_pickup(node):
+                    seen.add(node)
+                elif problem.is_delivery(node):
+                    pair = problem.get_pair(node)
+                    if pair[0] in seen:
+                        served.add(pair)
+        return list(served)
+    
     def get_unserved_requests(self, problem) -> list[int]:
         """Returns a list of unserved customer requests based on the problem instance."""
         served = set()

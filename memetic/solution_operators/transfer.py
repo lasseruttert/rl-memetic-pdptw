@@ -4,7 +4,7 @@ from memetic.solution_operators.base_operator import BaseOperator
 import random
 
 class TransferOperator(BaseOperator):
-    def __init__(self, max_attempts: int = 10, single_route: bool = False):
+    def __init__(self, max_attempts: int = 1, single_route: bool = False):
         super().__init__()
         self.max_attempts = max_attempts
         self.single_route = single_route
