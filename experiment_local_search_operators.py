@@ -23,13 +23,11 @@ if __name__ == "__main__":
     operators = [
         ReinsertOperator(),
         ReinsertOperator(max_attempts=5,clustered=True),
-        ReinsertOperator(insertion_heuristic="regret2" ,max_attempts=5,clustered=True),
         ReinsertOperator(force_same_vehicle=True),
         ReinsertOperator(allow_same_vehicle=False),
         ReinsertOperator(allow_same_vehicle=False, allow_new_vehicles=False),
         
         RouteEliminationOperator(),
-        RouteEliminationOperator(insertion_heuristic="regret2"),
         
         SwapBetweenOperator(),
         
