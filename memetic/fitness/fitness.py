@@ -1,7 +1,16 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 
-def fitness(problem: PDPTWProblem, solution: PDPTWSolution) -> float:    
+def fitness(problem: PDPTWProblem, solution: PDPTWSolution) -> float: 
+    """Calculates the fitness of a solution, based on number of vehicles used and total distance of the routes. Feasible solutions are preferred over infeasible ones, based on a penalty system.
+
+    Args:
+        problem (PDPTWProblem): a PDPTW problem instance
+        solution (PDPTWSolution): a PDPTW solution instance, which is evaluated on the given problem
+
+    Returns:
+        float: the fitness value, lower is better
+    """
     fitness = solution.total_distance 
     fitness += _penalty(problem, solution)
     
@@ -11,6 +20,15 @@ def fitness(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
     return fitness
 
 def _penalty(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
+    """ Calculates the penalty of a solution based on the number of violations of constraints. If no violations are found, the solution is marked as feasible.
+
+    Args:
+        problem (PDPTWProblem): a PDPTW problem instance
+        solution (PDPTWSolution): a PDPTW solution instance, which is evaluated on the given problem
+
+    Returns:
+        float: the penalty value, lower is better
+    """
     pickup_to_delivery = problem.pickup_to_delivery
     delivery_to_pickup = problem.delivery_to_pickup
     

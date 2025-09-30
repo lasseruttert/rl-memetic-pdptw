@@ -3,12 +3,30 @@ from utils.pdptw_solution import PDPTWSolution
 from memetic.insertion.simple_insertion_heuristic import _cost_increase
 from memetic.insertion.feasibility_check import is_feasible_insertion_fast as _is_feasible_insertion
 class Regret2Insertion:
+    """Regret-2 insertion heuristic for PDPTW. Inserts requests based on the regret of not inserting them now.
+    """
     def __init__(self, allow_new_vehicles = True, not_allowed_vehicle_idxs = None, force_vehicle_idx = None):
+        """
+        Args:
+            allow_new_vehicles (bool): Whether to allow inserting into new vehicles (empty routes).
+            not_allowed_vehicle_idxs (list[int] | None): List of vehicle indices that are not allowed for insertion.
+            force_vehicle_idx (int | None): If set, only this vehicle index is allowed for insertion.
+        """
         self.allow_new_vehicles = allow_new_vehicles
         self.not_allowed_vehicle_idxs = not_allowed_vehicle_idxs
         self.force_vehicle_idx = force_vehicle_idx
     
     def insert(self, problem: PDPTWProblem, solution: PDPTWSolution, unserved_requests: list[tuple[int, int]] = None) -> PDPTWSolution:
+        """Insert unserved requests into the solution using the regret-2 heuristic.
+
+        Args:
+            problem (PDPTWProblem): a problem instance
+            solution (PDPTWSolution): a solution instance
+            unserved_requests (list[tuple[int, int]], optional): List of unserved requests (pickup, delivery).
+
+        Returns:
+            PDPTWSolution: the improved solution
+        """
         if unserved_requests is None:
             unserved_requests = solution.get_unserved_requests(problem)
 

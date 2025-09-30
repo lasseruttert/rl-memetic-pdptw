@@ -3,6 +3,14 @@ from utils.pdptw_solution import PDPTWSolution
 import random
 
 def generate_random_solution(problem: PDPTWProblem) -> PDPTWSolution:
+    """Generate a random solution for the given PDPTW problem.
+
+    Args:
+        problem (PDPTWProblem): a problem instance
+
+    Returns:
+        PDPTWSolution: a randomly generated solution
+    """
     routes = [[] for _ in range(problem.num_vehicles)]
     vehicle_index = None
     for pickup, delivery in problem.pickups_deliveries:

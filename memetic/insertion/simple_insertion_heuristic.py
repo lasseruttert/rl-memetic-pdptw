@@ -6,6 +6,16 @@ def greedy_insertion(
     problem: PDPTWProblem, 
     solution: PDPTWSolution, 
     unserved_requests: list[tuple[int, int]] = None, ) -> PDPTWSolution:
+    """A simple greedy insertion heuristic for PDPTW. Inserts requests one by one into the position that causes the least cost increase.
+
+    Args:
+        problem (PDPTWProblem): a problem instance
+        solution (PDPTWSolution):a solution instance
+        unserved_requests (list[tuple[int, int]], optional): List of unserved requests (pickup, delivery). If None, will use all unserved requests in the solution.
+
+    Returns:
+        PDPTWSolution: the improved solution
+    """
     if unserved_requests is None:
         unserved_requests = solution.get_unserved_requests(problem)
     
@@ -46,12 +56,9 @@ def greedy_insertion(
             break  # No feasible insertion found, exit loop
     return solution
 
-def regret_based_insertion(problem: PDPTWProblem, solution: PDPTWSolution, unserved_requests: list[tuple[int, int]] = None, allow_new_vehicles = True, vehicle_idx = None, regret_k: int = 2) -> PDPTWSolution:
-    return #TODO Implement regret-based insertion heuristic
 
-
-        
 def _cost_increase(problem: PDPTWProblem, old_route, new_route) -> float:
+    """Calculate the cost increase of changing from old_route to new_route."""
     old_distance = sum(problem.distance_matrix[old_route[i], old_route[i + 1]] for i in range(len(old_route) - 1))
     new_distance = sum(problem.distance_matrix[new_route[i], new_route[i + 1]] for i in range(len(new_route) - 1))
     return new_distance - old_distance

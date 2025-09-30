@@ -8,12 +8,6 @@ class RandomInsertion:
     
     Pure perturbation strategy without optimization. Evaluates all feasible
     positions but selects randomly among them (optionally weighted by feasibility).
-    
-    Args:
-        allow_new_vehicles: Allow creating new routes
-        not_allowed_vehicle_idxs: Routes to exclude from insertion
-        force_vehicle_idx: Force insertion into specific route
-        weighted: If True, weight by inverse cost (slightly biased toward better positions)
     """
     
     def __init__(self, 
@@ -21,6 +15,13 @@ class RandomInsertion:
                  not_allowed_vehicle_idxs: list = None, 
                  force_vehicle_idx: int = None,
                  weighted: bool = False):
+        """
+        Args:
+            allow_new_vehicles (bool, optional): If True, new vehicles can be used for insertion. Defaults to True.
+            not_allowed_vehicle_idxs (list, optional): List of vehicle indices that are not allowed for insertion. Defaults to None.
+            force_vehicle_idx (int, optional): If set, only this vehicle index is allowed for insertion. Defaults to None.
+            weighted (bool, optional): If True, feasible insertions are weighted by inverse cost increase when selecting randomly. Defaults to False (uniform random).
+        """
         self.allow_new_vehicles = allow_new_vehicles
         self.not_allowed_vehicle_idxs = not_allowed_vehicle_idxs
         self.force_vehicle_idx = force_vehicle_idx
@@ -28,6 +29,16 @@ class RandomInsertion:
     
     def insert(self, problem: PDPTWProblem, solution: PDPTWSolution, 
                unserved_requests: list[tuple[int, int]] = None) -> PDPTWSolution:
+        """Insert unserved requests into the solution using a random heuristic.
+
+        Args:
+            problem (PDPTWProblem): a PDPTW problem instance
+            solution (PDPTWSolution): a PDPTW solution instance in which requests should be inserted
+            unserved_requests (list[tuple[int, int]], optional): List of unserved requests to insert. If None, will be determined from the solution. Defaults to None.
+
+        Returns:
+            PDPTWSolution: a solution with inserted requests, if possible
+        """
         if unserved_requests is None:
             unserved_requests = solution.get_unserved_requests(problem)
         

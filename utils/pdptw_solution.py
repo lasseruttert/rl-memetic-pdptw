@@ -53,6 +53,7 @@ class PDPTWSolution:
     
     @property
     def total_distance(self) -> float:
+        """Calculates and returns the total distance of all routes in the solution."""
         if self._total_distance is None:
             if self._route_lengths is None:
                 self._route_lengths = {}
@@ -71,6 +72,7 @@ class PDPTWSolution:
     
     @property
     def route_lengths(self) -> np.ndarray:
+        """Returns a dictionary mapping each route index to its total distance."""
         if self._route_lengths is None:
             self._route_lengths = {}
             _ = self.total_distance  # This will populate _route_lengths
@@ -78,6 +80,7 @@ class PDPTWSolution:
     
     @property
     def is_feasible(self) -> bool:
+        """Checks and returns whether the solution is feasible."""
         if self._is_feasible is None:
             from utils.feasibility import is_feasible
             self._is_feasible = is_feasible(self.problem, self)
@@ -85,18 +88,21 @@ class PDPTWSolution:
     
     @property
     def encoding(self) -> str:
+        """Returns a string encoding of the solution."""
         if self._encoding is None:
             self._encoding = ";".join([",".join(map(str, route)) for route in self.routes])
         return self._encoding
     
     @property
     def hashed_encoding(self) -> int:
+        """Returns a hash of the solution's encoding."""
         if self._hashed_encoding is None:
             self._hashed_encoding = hash(self.encoding)
         return self._hashed_encoding
     
     @property
     def node_to_route(self) -> dict[int, int]:
+        """Returns a mapping from node indices to their corresponding route index."""
         if self._node_to_route is None:
             mapping = {}
             for route_idx, route in enumerate(self.routes):
@@ -108,10 +114,12 @@ class PDPTWSolution:
     
     @property
     def num_vehicles_used(self) -> int:
+        """Returns the number of vehicles used in the solution (i.e., routes with more than just depot nodes)."""
         return sum(1 for r in self.routes if len(r) > 2)
     
     @property
     def num_customers_served(self) -> int:
+        """Returns the number of customers served in the solution."""
         return sum(len(r) - 2 for r in self.routes if len(r) > 2)
     
     def modify_routes(self, new_routes: list[list[int]]):
@@ -158,6 +166,7 @@ class PDPTWSolution:
         return unserved
     
     def clone(self) -> 'PDPTWSolution':
+        """Creates and returns a deep copy of the solution."""
         routes = [route[:] for route in self.routes]
         new_solution = PDPTWSolution(self.problem, routes=routes)
 

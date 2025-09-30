@@ -39,6 +39,15 @@ class AdaptiveLocalSearch:
         self.recent_improvements = [[] for _ in range(len(operators))]  # Sliding window
     
     def search(self, problem: PDPTWProblem, solution: PDPTWSolution) -> tuple[PDPTWSolution, float]:
+        """Start the adaptive local search process.
+
+        Args:
+            problem (PDPTWProblem): a problem instance
+            solution (PDPTWSolution): a solution instance
+
+        Returns:
+            tuple[PDPTWSolution, float]: the best solution found and its fitness
+        """
         no_improvement_count = 0
         iteration = 0
         best_solution = solution

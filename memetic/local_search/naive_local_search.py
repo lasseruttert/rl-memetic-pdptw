@@ -4,7 +4,17 @@ from memetic.fitness.fitness import fitness
 import random
 
 class NaiveLocalSearch:
+    """A simple local search framework that applies a list of operators iteratively until no improvement is found.
+    """
     def __init__(self, operators: list = [], max_no_improvement: int = 3, max_iterations: int = 50, first_improvement: bool = True, random_operator_order: bool = False):
+        """
+        Args:
+            operators (list, optional): List of local search operators to apply. Defaults to [].
+            max_no_improvement (int, optional): Maximum number of consecutive iterations without improvement before stopping. Defaults to 3.
+            max_iterations (int, optional): Maximum total iterations before stopping. Defaults to 50.
+            first_improvement (bool, optional): Whether to accept the first improving move found (True) or search all operators for the best move (False). Defaults to True.
+            random_operator_order (bool, optional): Whether to randomize the order of operators in each iteration. Defaults to False.
+        """
         self.operators = operators
         self.max_no_improvement = max_no_improvement
         self.max_iterations = max_iterations
@@ -12,6 +22,15 @@ class NaiveLocalSearch:
         self.random_operator_order = random_operator_order
     
     def search(self, problem: PDPTWProblem, solution: PDPTWSolution) -> tuple[PDPTWSolution, float]:
+        """Start the local search process.
+
+        Args:
+            problem (PDPTWProblem): a problem instance
+            solution (PDPTWSolution): a solution instance
+
+        Returns:
+            tuple[PDPTWSolution, float]: the best solution found and its fitness
+        """
         no_improvement_count = 0
         iteration = 0
         best_solution = solution

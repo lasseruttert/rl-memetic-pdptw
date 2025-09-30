@@ -3,7 +3,7 @@ from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 
 def reinsertion_repair(problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
-    """Remove problematic pairs iteratively."""
+    """Remove problematic pairs iteratively and reinsert them using a greedy insertion heuristic."""
     
     for route_idx in range(len(solution.routes)):
         changed = True

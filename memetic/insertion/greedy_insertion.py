@@ -3,15 +3,33 @@ from utils.pdptw_solution import PDPTWSolution
 from memetic.insertion.simple_insertion_heuristic import _cost_increase
 # from memetic.insertion.simple_insertion_heuristic import _is_feasible_insertion
 from memetic.insertion.feasibility_check import is_feasible_insertion_fast as _is_feasible_insertion
-# from memetic.insertion.simple_insertion_heuristic import _is_feasible_insertion as py_check
-# from memetic.insertion.feasibility_check import is_feasible_insertion_fast as cy_check
+
 class GreedyInsertion:
+    """Greedy insertion heuristic for PDPTW. Inserts unserved requests into the solution
+    at the position that results in the least increase in total cost.
+    """
     def __init__(self, allow_new_vehicles = True, not_allowed_vehicle_idxs = None, force_vehicle_idx = None):
+        """
+        Args:
+            allow_new_vehicles (bool, optional): If True, new vehicles can be used for insertion. Defaults to True.
+            not_allowed_vehicle_idxs (_type_, optional): List of vehicle indices that are not allowed for insertion. Defaults to None.
+            force_vehicle_idx (_type_, optional): If set, only this vehicle index is allowed for insertion. Defaults to None.
+        """
         self.allow_new_vehicles = allow_new_vehicles
         self.not_allowed_vehicle_idxs = not_allowed_vehicle_idxs
         self.force_vehicle_idx = force_vehicle_idx
     
     def insert(self, problem: PDPTWProblem, solution: PDPTWSolution, unserved_requests: list[tuple[int, int]] = None) -> PDPTWSolution:
+        """Insert unserved requests into the solution using a greedy heuristic.
+
+        Args:
+            problem (PDPTWProblem): a PDPTW problem instance
+            solution (PDPTWSolution): a PDPTW solution instance in which requests should be inserted
+            unserved_requests (list[tuple[int, int]], optional): List of unserved requests to insert. If None, will be determined from the solution. Defaults to None.
+
+        Returns:
+            PDPTWSolution: the solution with inserted requests, if possible
+        """
         if unserved_requests is None:
             unserved_requests = solution.get_unserved_requests(problem)
 
