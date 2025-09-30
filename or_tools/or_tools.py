@@ -133,4 +133,4 @@ class ORToolsSolver:
             total_distance += route_distance
         
         total_distance /= 100  # convert back to original scale
-        return PDPTWSolution(problem=problem, routes=routes, total_distance=total_distance)
+        return PDPTWSolution(problem=problem, routes=routes)

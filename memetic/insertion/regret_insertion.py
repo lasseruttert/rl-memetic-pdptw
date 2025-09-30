@@ -1,7 +1,7 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
-from memetic.insertion.simple_insertion_heuristic import _is_feasible_insertion, _cost_increase
-
+from memetic.insertion.simple_insertion_heuristic import _cost_increase
+from memetic.insertion.feasibility_check import is_feasible_insertion_fast as _is_feasible_insertion
 class Regret2Insertion:
     def __init__(self, allow_new_vehicles = True, not_allowed_vehicle_idxs = None, force_vehicle_idx = None):
         self.allow_new_vehicles = allow_new_vehicles

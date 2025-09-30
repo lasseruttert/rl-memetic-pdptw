@@ -20,8 +20,8 @@ if __name__ == "__main__":
     
     # print(repaired_solution)
     # print(repaired_solution.check_feasibility())  # Re-evaluate and print feasibility after repair
-    operator = TransferOperator(problem, max_attempts=1, single_route=False)
-    modified_solution = operator.apply(solution)
+    operator = TransferOperator(max_attempts=1, single_route=False)
+    modified_solution = operator.apply(problem, solution)
     print(modified_solution)
     print(modified_solution.check_feasibility())  # Check feasibility after applying the operator
     # repaired_solution = reinsertion_repair(problem, modified_solution)

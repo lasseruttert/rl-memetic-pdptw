@@ -15,7 +15,11 @@ from memetic.solution_operators.swap_within import SwapWithinOperator
 from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
 from memetic.solution_operators.two_opt import TwoOptOperator
-from memetic.solution_operators.or_opt import OrOptOperator
+from memetic.solution_operators.two_opt_star import TwoOptStarOperator
+from memetic.solution_operators.cls_m1 import CLSM1Operator
+from memetic.solution_operators.cls_m2 import CLSM2Operator
+from memetic.solution_operators.cls_m3 import CLSM3Operator
+from memetic.solution_operators.cls_m4 import CLSM4Operator
 
 import time
 import random
@@ -64,10 +68,20 @@ class MemeticSolver:
         
         if local_search_operator is None:
             operators = [
-                SwapWithinOperator(single_route=True),
+                ReinsertOperator(max_attempts=5,clustered=True),
+                ReinsertOperator(allow_same_vehicle=False),
+                ReinsertOperator(allow_same_vehicle=False, allow_new_vehicles=False),
+                
+                RouteEliminationOperator(),
+                
                 SwapBetweenOperator(),
+                
                 TransferOperator(single_route=True),
-                ReinsertOperator()
+                
+                CLSM1Operator(),
+                CLSM2Operator(),
+                CLSM3Operator(),
+                CLSM4Operator()
             ]
             local_search_operator = NaiveLocalSearch(operators=operators, max_no_improvement=10, max_iterations=50)
         
