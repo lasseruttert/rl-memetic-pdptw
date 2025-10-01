@@ -1,6 +1,6 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
-from memetic.insertion.feasibility_check import is_feasible_insertion_fast as _is_feasible_insertion
+from memetic.insertion.insertion_core import find_best_position_for_request
 
 def greedy_insertion(
     problem: PDPTWProblem, 
@@ -63,51 +63,51 @@ def _cost_increase(problem: PDPTWProblem, old_route, new_route) -> float:
     new_distance = sum(problem.distance_matrix[new_route[i], new_route[i + 1]] for i in range(len(new_route) - 1))
     return new_distance - old_distance
 
-# def _is_feasible_insertion(problem: PDPTWProblem, route) -> bool:
-#     if len(route) < 2 or route[0] != 0 or route[-1] != 0:
-#         return False
+def _is_feasible_insertion(problem: PDPTWProblem, route) -> bool:
+    if len(route) < 2 or route[0] != 0 or route[-1] != 0:
+        return False
     
-#     load = 0
-#     current_time = 0
-#     seen = set()
+    load = 0
+    current_time = 0
+    seen = set()
     
-#     demands = problem.demands
-#     distance_matrix = problem.distance_matrix
-#     time_windows = problem.time_windows
-#     service_times = problem.service_times
-#     vehicle_capacity = problem.vehicle_capacity
-#     delivery_to_pickup = problem.delivery_to_pickup
-#     pickup_to_delivery = problem.pickup_to_delivery
+    demands = problem.demands
+    distance_matrix = problem.distance_matrix
+    time_windows = problem.time_windows
+    service_times = problem.service_times
+    vehicle_capacity = problem.vehicle_capacity
+    delivery_to_pickup = problem.delivery_to_pickup
+    pickup_to_delivery = problem.pickup_to_delivery
     
-#     for i in range(len(route) - 1):
-#         from_node = route[i]
-#         to_node = route[i + 1]
+    for i in range(len(route) - 1):
+        from_node = route[i]
+        to_node = route[i + 1]
         
-#         if to_node in delivery_to_pickup:
-#             pickup = delivery_to_pickup[to_node]
-#             if pickup not in seen:
-#                 return False
-#         elif to_node not in pickup_to_delivery and to_node != 0:
-#             return False
+        if to_node in delivery_to_pickup:
+            pickup = delivery_to_pickup[to_node]
+            if pickup not in seen:
+                return False
+        elif to_node not in pickup_to_delivery and to_node != 0:
+            return False
         
-#         current_time += distance_matrix[from_node, to_node]
-#         tw_start, tw_end = time_windows[to_node]
-#         if current_time > tw_end:
-#             return False
-#         if current_time < tw_start:
-#             current_time = tw_start
-#         current_time += service_times[to_node]
+        current_time += distance_matrix[from_node, to_node]
+        tw_start, tw_end = time_windows[to_node]
+        if current_time > tw_end:
+            return False
+        if current_time < tw_start:
+            current_time = tw_start
+        current_time += service_times[to_node]
         
-#         if to_node in seen:
-#             return False
+        if to_node in seen:
+            return False
         
-#         if to_node == 0 and i+1 < len(route) - 1:
-#             return False
+        if to_node == 0 and i+1 < len(route) - 1:
+            return False
         
-#         load += demands[to_node]
-#         if load < 0 or load > vehicle_capacity:
-#             return False
+        load += demands[to_node]
+        if load < 0 or load > vehicle_capacity:
+            return False
         
-#         seen.add(to_node)
+        seen.add(to_node)
     
-#     return True
+    return True

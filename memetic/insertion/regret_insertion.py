@@ -1,7 +1,6 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
-from memetic.insertion.simple_insertion_heuristic import _cost_increase
-from memetic.insertion.feasibility_check import is_feasible_insertion_fast as _is_feasible_insertion
+from memetic.insertion.simple_insertion_heuristic import _cost_increase, _is_feasible_insertion
 class Regret2Insertion:
     """Regret-2 insertion heuristic for PDPTW. Inserts requests based on the regret of not inserting them now.
     """

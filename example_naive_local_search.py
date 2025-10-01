@@ -43,8 +43,8 @@ if __name__ == "__main__":
     ]
     
     
-    # local_search = NaiveLocalSearch(operators=operators, max_no_improvement=300, max_iterations=1000, first_improvement=False)
-    local_search = AdaptiveLocalSearch(operators=operators, max_no_improvement=500, max_iterations=2000)
+    local_search = NaiveLocalSearch(operators=operators, max_no_improvement=300, max_iterations=1000, first_improvement=False)
+    # local_search = AdaptiveLocalSearch(operators=operators, max_no_improvement=500, max_iterations=2000)
     improved_solution, fitness = local_search.search(problem, initial_solution)
     
     print("Initial Solution:", initial_solution_s)
