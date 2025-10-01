@@ -22,9 +22,8 @@ def generate_random_solution(problem: PDPTWProblem) -> PDPTWSolution:
         routes[vehicle_index].insert(delivery_index, delivery)
     
     for route in routes:
-        if route:
-            route.insert(0, 0)
-            route.append(0)
+        route.insert(0, 0)
+        route.append(0)
     
     solution = PDPTWSolution(problem, routes)
     

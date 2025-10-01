@@ -22,7 +22,7 @@ from memetic.solution_operators.cls_m4 import CLSM4Operator
 
 if __name__ == "__main__":
     # Example usage
-    problem = li_lim_reader('G:/Meine Ablage/rl-memetic-pdptw/data/pdp_100/lc201.txt')
+    problem = li_lim_reader('G:/Meine Ablage/rl-memetic-pdptw/data/pdp_100/lc109.txt')
     initial_solution = generate_random_solution(problem)
     initial_solution_s = initial_solution.clone()
     operators = [
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         RouteEliminationOperator(),
         
         SwapBetweenOperator(),
-        
+    
         TransferOperator(single_route=True),
         
         CLSM1Operator(),
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     ]
     
     
-    local_search = NaiveLocalSearch(operators=operators, max_no_improvement=300, max_iterations=1000, first_improvement=False)
+    local_search = NaiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200, first_improvement=False)
     # local_search = AdaptiveLocalSearch(operators=operators, max_no_improvement=500, max_iterations=2000)
     improved_solution, fitness = local_search.search(problem, initial_solution)
     

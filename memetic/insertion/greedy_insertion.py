@@ -36,7 +36,7 @@ class GreedyInsertion:
             best_increase = float('inf')
             for request in unserved_requests:
                 pickup, delivery = request
-                
+
                 # C++ handles the heavy double-loop
                 route_idx, pickup_pos, delivery_pos, increase, new_route = find_best_position_for_request(
                     problem.distance_matrix,
@@ -48,8 +48,11 @@ class GreedyInsertion:
                     pickup,
                     delivery,
                     self.not_allowed_vehicle_idxs or [],
-                    self.force_vehicle_idx if self.force_vehicle_idx is not None else -1
+                    self.force_vehicle_idx if self.force_vehicle_idx is not None else -1,
+                    problem.delivery_to_pickup,
+                    problem.pickup_to_delivery  # NEU
                 )
+                
                 
                 if route_idx != -1 and increase < best_increase:
                     best_insertion = (route_idx, new_route, pickup, delivery)
