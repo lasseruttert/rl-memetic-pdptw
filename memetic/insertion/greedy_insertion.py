@@ -4,7 +4,7 @@ from memetic.insertion.simple_insertion_heuristic import _cost_increase
 # from memetic.insertion.simple_insertion_heuristic import _is_feasible_insertion
 from memetic.insertion.feasibility_check import is_feasible_insertion_fast as _is_feasible_insertion
 
-class GreedyInsertion: #TODO rewrite this in cpp and pybind
+class GreedyInsertion: 
     """Greedy insertion heuristic for PDPTW. Inserts unserved requests into the solution
     at the position that results in the least increase in total cost.
     """
@@ -48,16 +48,17 @@ class GreedyInsertion: #TODO rewrite this in cpp and pybind
                         if not self.allow_new_vehicles:
                             continue
                         new_route = [0, pickup, delivery, 0]
-                        if _is_feasible_insertion(problem, new_route):
-                            looked_at_empty = True
-                            increase = (problem.distance_matrix[0, pickup] + 
-                                        problem.distance_matrix[pickup, delivery] + 
-                                        problem.distance_matrix[delivery, 0])
-                            increase += problem.distance_baseline  # Small penalty for using a new vehicle
-                            if increase < best_increase:
-                                best_insertion = route_idx, new_route, pickup, delivery
-                                best_increase = increase
-                    for pickup_pos in range(1, len(route)):  # Position to insert pickup
+                        looked_at_empty = True
+                        increase = (problem.distance_matrix[0, pickup] + 
+                                    problem.distance_matrix[pickup, delivery] + 
+                                    problem.distance_matrix[delivery, 0])
+                        increase += problem.distance_baseline  # Small penalty for using a new vehicle
+                        if increase < best_increase:
+                            best_insertion = route_idx, new_route, pickup, delivery
+                            best_increase = increase
+                            continue  # No need to look at other positions in this empty route
+                        
+                    for pickup_pos in range(1, len(route)):  # Position to insert pickup #TODO rewrite this in cpp and pybind
                         for delivery_pos in range(pickup_pos + 1, len(route) + 1):  # Position to insert delivery
                             new_route = route[:pickup_pos] + [pickup] + route[pickup_pos:delivery_pos] + [delivery] + route[delivery_pos:]
                             if _is_feasible_insertion(problem, new_route):
