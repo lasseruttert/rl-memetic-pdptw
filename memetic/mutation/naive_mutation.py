@@ -1,8 +1,11 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
+
+from memetic.mutation.base_mutation import BaseMutation
+
 import random
 
-class NaiveMutation:
+class NaiveMutation(BaseMutation):
     """
     A simple mutation operator that randomly applies one of the given operators a specified number of times.
     """
@@ -12,10 +15,11 @@ class NaiveMutation:
             operators (list, optional): List of mutation operators to choose from. Defaults to [].
             max_iterations (int, optional): Number of times to apply mutation. Defaults to 1.
         """
+        super().__init__()
         self.operators = operators
         self.max_iterations = max_iterations
     
-    def mutate(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
+    def mutate(self, problem: PDPTWProblem, solution: PDPTWSolution, population = None) -> PDPTWSolution:
         """Mutate the given solution by randomly applying mutation operators.
 
         Args:

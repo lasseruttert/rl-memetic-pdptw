@@ -1,10 +1,15 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 
-class ElitistSelection:
+from memetic.selection.base_selection import BaseSelection
+
+class ElitistSelection(BaseSelection):
     """Elitist selection operator for selecting parents in a genetic algorithm.
     Always selects the best individual from the population.
     """
+    def __init__(self):
+        super().__init__()
+        
     def select(self, population: list[PDPTWSolution], fitnesses: list[float]) -> PDPTWSolution:
         """Select the best individual from the population.
 

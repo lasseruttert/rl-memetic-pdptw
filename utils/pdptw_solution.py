@@ -90,7 +90,10 @@ class PDPTWSolution:
     def encoding(self) -> str:
         """Returns a string encoding of the solution."""
         if self._encoding is None:
-            self._encoding = ";".join([",".join(map(str, route)) for route in self.routes])
+            # convert routes to a string, sort the strings based on length and then concatenate
+            route_strings = ['-'.join(map(str, route)) for route in self.routes if len(route) > 2]
+            route_strings.sort(key=lambda x: len(x))
+            self._encoding = '|'.join(route_strings)
         return self._encoding
     
     @property
@@ -121,6 +124,14 @@ class PDPTWSolution:
     def num_customers_served(self) -> int:
         """Returns the number of customers served in the solution."""
         return sum(len(r) - 2 for r in self.routes if len(r) > 2)
+    
+    @property
+    def visited_nodes(self) -> list[int]:
+        """Returns a list of all visited nodes in the solution, excluding depot nodes."""
+        visited = []
+        for route in self.routes:
+            visited.extend([node for node in route if node != 0])
+        return visited
     
     def modify_routes(self, new_routes: list[list[int]]):
         """Modifies the routes of the solution and clears cached properties."""

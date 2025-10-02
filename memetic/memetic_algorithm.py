@@ -120,7 +120,8 @@ class MemeticSolver:
                 parent1 = population[i]
                 parent2 = population[i + 1]
                 
-                child = self.crossover_operator.crossover(problem, parent1, parent2)
+                children = self.crossover_operator.crossover(problem, parent1, parent2)
+                child = random.choice(children) if children else None
                 child = self.mutatation_operator.mutate(problem, child)
                 child, fitness = self.local_search_operator.search(problem, child)
                 current_fitnesses[i] = fitness

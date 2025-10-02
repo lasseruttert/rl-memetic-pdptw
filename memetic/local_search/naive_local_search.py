@@ -1,9 +1,25 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
+
+from memetic.local_search.base_local_search import BaseLocalSearch
+
 from memetic.fitness.fitness import fitness
 import random
 
-class NaiveLocalSearch:
+from memetic.solution_operators.reinsert import ReinsertOperator
+from memetic.solution_operators.route_elimination import RouteEliminationOperator
+from memetic.solution_operators.flip import FlipOperator
+from memetic.solution_operators.swap_within import SwapWithinOperator
+from memetic.solution_operators.swap_between import SwapBetweenOperator
+from memetic.solution_operators.transfer import TransferOperator
+from memetic.solution_operators.two_opt import TwoOptOperator
+from memetic.solution_operators.two_opt_star import TwoOptStarOperator
+from memetic.solution_operators.cls_m1 import CLSM1Operator
+from memetic.solution_operators.cls_m2 import CLSM2Operator
+from memetic.solution_operators.cls_m3 import CLSM3Operator
+from memetic.solution_operators.cls_m4 import CLSM4Operator
+
+class NaiveLocalSearch(BaseLocalSearch):
     """A simple local search framework that applies a list of operators iteratively until no improvement is found.
     """
     def __init__(self, operators: list = [], max_no_improvement: int = 3, max_iterations: int = 50, first_improvement: bool = True, random_operator_order: bool = False):
@@ -15,6 +31,16 @@ class NaiveLocalSearch:
             first_improvement (bool, optional): Whether to accept the first improving move found (True) or search all operators for the best move (False). Defaults to True.
             random_operator_order (bool, optional): Whether to randomize the order of operators in each iteration. Defaults to False.
         """
+        super().__init__()
+        if not operators:
+            operators = [
+                ReinsertOperator(max_attempts=5,clustered=True),
+                ReinsertOperator(allow_same_vehicle=False),
+                ReinsertOperator(allow_same_vehicle=False, allow_new_vehicles=False),
+                
+                RouteEliminationOperator()
+            ]
+        
         self.operators = operators
         self.max_no_improvement = max_no_improvement
         self.max_iterations = max_iterations

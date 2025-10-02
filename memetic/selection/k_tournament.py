@@ -1,8 +1,11 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
+
+from memetic.selection.base_selection import BaseSelection
+
 import random
 
-class KTournamentSelection:
+class KTournamentSelection(BaseSelection):
     """K-Tournament selection operator for selecting parents in a genetic algorithm.
     Selects k random individuals from the population and returns the best one.
     """
@@ -11,6 +14,7 @@ class KTournamentSelection:
         Args:
             k (int, optional): Number of individuals to select for the tournament. Defaults to 3.
         """
+        super().__init__()
         self.k = k
     
     def select(self, population: list[PDPTWSolution], fitnesses: list[float]) -> PDPTWSolution:

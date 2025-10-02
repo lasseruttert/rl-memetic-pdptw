@@ -1,9 +1,12 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
+
+from memetic.local_search.base_local_search import BaseLocalSearch
+
 from memetic.fitness.fitness import fitness
 import random
 
-class AdaptiveLocalSearch:
+class AdaptiveLocalSearch(BaseLocalSearch):
     """Adaptive Local Search using operator performance statistics.
     
     Uses a simple bandit-like approach: tracks success rate of each operator
@@ -25,6 +28,7 @@ class AdaptiveLocalSearch:
                  adaptation_method: str = 'probability_matching',
                  window_size: int = 10,
                  epsilon: float = 0.1):
+        super().__init__()
         self.operators = operators
         self.max_no_improvement = max_no_improvement
         self.max_iterations = max_iterations

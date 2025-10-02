@@ -1,8 +1,11 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
+
+from memetic.insertion.base_insertion import BaseInsertion
+
 from memetic.insertion.simple_insertion_heuristic import _cost_increase
 from memetic.insertion.insertion_core import find_best_position_for_request
-class GreedyInsertion: 
+class GreedyInsertion(BaseInsertion): 
     """Greedy insertion heuristic for PDPTW. Inserts unserved requests into the solution
     at the position that results in the least increase in total cost.
     """
@@ -13,6 +16,7 @@ class GreedyInsertion:
             not_allowed_vehicle_idxs (_type_, optional): List of vehicle indices that are not allowed for insertion. Defaults to None.
             force_vehicle_idx (_type_, optional): If set, only this vehicle index is allowed for insertion. Defaults to None.
         """
+        super().__init__()
         self.allow_new_vehicles = allow_new_vehicles
         self.not_allowed_vehicle_idxs = not_allowed_vehicle_idxs
         self.force_vehicle_idx = force_vehicle_idx

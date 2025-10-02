@@ -1,11 +1,17 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
+
+from memetic.selection.base_selection import BaseSelection
+
 import random
 
-class RouletteWheelSelection:
+class RouletteWheelSelection(BaseSelection):
     """Roulette Wheel selection operator for selecting parents in a genetic algorithm.
     Selects individuals with a probability proportional to their fitness.
     """
+    def __init__(self):
+        super().__init__()
+    
     def select(self, population: list[PDPTWSolution], fitnesses: list[float]) -> PDPTWSolution:
         """Select an individual from the population using roulette wheel selection.
 

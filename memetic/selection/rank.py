@@ -1,11 +1,17 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
+
+from memetic.selection.base_selection import BaseSelection
+
 import random
 
-class RankSelection:
+class RankSelection(BaseSelection):
     """Rank selection operator for selecting parents in a genetic algorithm.
     Selects individuals based on their rank in the population.
     """
+    def __init__(self):
+        super().__init__()
+    
     def select(self, population: list[PDPTWSolution], fitnesses: list[float]) -> PDPTWSolution:
         """Select an individual from the population using rank selection.
 
