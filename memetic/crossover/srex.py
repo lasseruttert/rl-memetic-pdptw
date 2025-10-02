@@ -11,7 +11,7 @@ class SREXCrossover(BaseCrossover):
     def __init__(self, n_total: int = 10, n_cross: int = 2):
         super().__init__()
         operators = [ReinsertOperator()]
-        self.local_search = NaiveLocalSearch(operators=operators, max_no_improvement=10)
+        self.local_search = NaiveLocalSearch(operators=operators, max_no_improvement=1, max_iterations=10)
         self.insertion = GreedyInsertion()
         self.n_total = n_total
         self.n_cross = n_cross

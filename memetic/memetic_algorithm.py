@@ -62,7 +62,7 @@ class MemeticSolver:
         self.selection_operator = selection_operator if selection_operator is not None else KTournamentSelection(k=2)
         self.crossover_operator = crossover_operator if crossover_operator is not None else SREXCrossover()
         
-        self.mutatation_operator = mutation_operator if mutation_operator is not None else NaiveMutation(
+        self.mutation_operator = mutation_operator if mutation_operator is not None else NaiveMutation(
             operators=[
                 ReinsertOperator(),
                 FlipOperator(),
@@ -151,7 +151,7 @@ class MemeticSolver:
                 
                 children = self.crossover_operator.crossover(problem, parent1, parent2)
                 child = random.choice(children) if children else None
-                child = self.mutatation_operator.mutate(problem, child)
+                child = self.mutation_operator.mutate(problem, child)
                 child, fitness = self.local_search_operator.search(problem, child)
                 
                 if fitness < current_fitnesses[i]:

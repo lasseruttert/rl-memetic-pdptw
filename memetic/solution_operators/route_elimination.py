@@ -29,7 +29,7 @@ class RouteEliminationOperator(BaseOperator):
         route_to_eliminate = min(non_empty_routes, key=len)
         route_to_eliminate_idx = new_solution.routes.index(route_to_eliminate)
         new_solution.routes.remove(route_to_eliminate)
-        new_solution.routes.append([])  # Maintain the same number of routes by adding an empty one
+        new_solution.routes.append([0,0])  # Maintain the same number of routes by adding an empty one
         new_solution._clear_cache()
         
         self.insertion_heuristic.not_allowed_vehicle_idxs = [route_to_eliminate_idx]

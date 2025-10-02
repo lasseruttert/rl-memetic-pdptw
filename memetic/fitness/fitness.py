@@ -14,7 +14,7 @@ def fitness(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
     fitness = solution.total_distance 
     fitness += _penalty(problem, solution)
     
-    percent_vehicles_used = solution.num_vehicles_used / problem.num_vehicles
+    percent_vehicles_used = solution.num_vehicles_used / problem.num_vehicles # TODO weight number of vehicles more
     fitness *= (1 + percent_vehicles_used)
         
     return fitness
@@ -106,4 +106,4 @@ def _penalty(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
         return 0.0
     else:
         solution._is_feasible = False
-        return num_violations * 0.05 * problem.distance_baseline + 1 * problem.distance_baseline
+        return num_violations * 0.05 * problem.distance_baseline + 1 * problem.distance_baseline # TODO make each penalty type have different weights
