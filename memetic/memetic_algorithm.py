@@ -46,6 +46,8 @@ class MemeticSolver:
         
         fitness_function = fitness,
         
+        ensure_diversity_interval: int = 3,
+        
         evaluation_interval: int = 10,
         verbose: bool = False,
         track_history: bool = False
@@ -96,7 +98,10 @@ class MemeticSolver:
         
         self.fitness_function = fitness_function
         
+        self.ensure_diversity_interval = ensure_diversity_interval
+        
         self.evaluation_interval = evaluation_interval
+        self.evaluations = {}
         self.verbose = verbose
         self.track_history = track_history
     
@@ -121,7 +126,13 @@ class MemeticSolver:
                 best_fitness = current_fitnesses[i]
         
         while not done:
-            print(f"Generation {generation}, Best Fitness: {best_fitness}")
+            if self.verbose: print(f"Generation {generation}, Best Fitness: {best_fitness}")
+            
+            if generation % self.evaluation_interval == 0:
+                self._evaluate(problem, population, current_fitnesses, generation)
+            if generation % self.ensure_diversity_interval == 0:
+                population, current_fitnesses = self._ensure_diversity(problem, population, current_fitnesses)
+            
             no_improvement_in_generation = True
             for i in range(len(population)):
                 parent1 = population[i]
@@ -131,13 +142,14 @@ class MemeticSolver:
                 child = random.choice(children) if children else None
                 child = self.mutatation_operator.mutate(problem, child)
                 child, fitness = self.local_search_operator.search(problem, child)
-                current_fitnesses[i] = fitness
+                
+                if fitness < current_fitnesses[i]:
+                    population[i] = child
+                    current_fitnesses[i] = fitness
                 
                 if fitness < best_fitness:
                     best_solution = child
                     best_fitness = fitness
-                    
-                    population[i] = child
                     
                     no_improvement_count = 0
                     no_improvement_in_generation = False
@@ -153,3 +165,39 @@ class MemeticSolver:
         
         return best_solution
         
+    def _ensure_diversity(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list):
+        # Remove duplicates
+        seen = set()
+        for i in range(len(population)):
+            identifier = population[i].hashed_encoding
+            if identifier in seen:
+                population[i] = self.initial_solution_generator.generate(population[i].problem, 1)[0]
+                current_fitnesses[i] = self.fitness_function(problem, population[i])
+            else:
+                seen.add(identifier)
+        
+        # TODO: Use some distance metric to ensure diversity
+        
+        return population, current_fitnesses
+        
+    def _evaluate(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, iteration: int):
+        min_fitness = float('inf')
+        max_fitness = float('-inf')
+        avg_fitness = 0.0
+        for i in range(len(population)):
+            if current_fitnesses[i] is None:
+                current_fitnesses[i] = self.fitness_function(problem, population[i])
+            fitness = current_fitnesses[i]
+            if fitness < min_fitness:
+                min_fitness = fitness
+            if fitness > max_fitness:
+                max_fitness = fitness
+            avg_fitness += fitness
+        avg_fitness /= len(population)
+        
+        self.evaluations[iteration] = {
+            'min': min_fitness,
+            'max': max_fitness,
+            'avg': avg_fitness
+        }
+        return # TODO

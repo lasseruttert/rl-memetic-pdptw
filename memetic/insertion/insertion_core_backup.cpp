@@ -6,13 +6,13 @@
 #include <tuple>
 #include <algorithm>
 #include <limits>
-#include <unordered_set>
-#include <unordered_map>
+#include <set>
+#include <map>
 #include <iostream>
 
 namespace py = pybind11;
 
-// Helper: Check if route is feasible (keine semantische Änderung, nur intern optimiert)
+// Helper: Check if route is feasible (exact Python logic)
 bool is_feasible_route(
     const std::vector<int> &route,
     const py::array_t<double> &distance_matrix,
@@ -20,29 +20,23 @@ bool is_feasible_route(
     const py::array_t<double> &service_times,
     const py::array_t<double> &demands,
     double vehicle_capacity,
-    const std::unordered_map<int, int> &delivery_to_pickup,
-    const std::unordered_map<int, int> &pickup_to_delivery)
+    const std::map<int, int> &delivery_to_pickup,
+    const std::map<int, int> &pickup_to_delivery)
 {
-    if (route.size() < 2 || route.front() != 0 || route.back() != 0)
+
+    if (route.size() < 2 || route[0] != 0 || route[route.size() - 1] != 0)
     {
         return false;
     }
 
-    // create unchecked views ONCE
     auto dist = distance_matrix.unchecked<2>();
     auto tw = time_windows.unchecked<2>();
     auto service = service_times.unchecked<1>();
     auto dem = demands.unchecked<1>();
 
-    // number of nodes (used to size 'seen'); assumes time_windows rows == number of nodes
-    const auto n_nodes_py = tw.shape(0);
-    size_t n_nodes = static_cast<size_t>(n_nodes_py);
-
     double load = 0.0;
     double current_time = 0.0;
-
-    // use a compact boolean array for seen-checks (much faster than set)
-    std::vector<char> seen(n_nodes, 0);
+    std::set<int> seen;
 
     for (size_t i = 0; i < route.size() - 1; ++i)
     {
@@ -54,19 +48,18 @@ bool is_feasible_route(
         if (delivery_it != delivery_to_pickup.end())
         {
             int pickup = delivery_it->second;
-            // pickup must have been seen before visiting this delivery
-            if (pickup < 0 || static_cast<size_t>(pickup) >= n_nodes || !seen[pickup])
+            if (seen.find(pickup) == seen.end())
             {
                 return false;
             }
         }
         // Check 2: Node must be pickup, delivery, or depot
-        else if (to_node != 0 && pickup_to_delivery.find(to_node) == pickup_to_delivery.end())
+        else if (pickup_to_delivery.find(to_node) == pickup_to_delivery.end() && to_node != 0)
         {
             return false;
         }
 
-        // Check 3: Time window (use unchecked accessor)
+        // Check 3: Time window
         current_time += dist(from_node, to_node);
         double tw_start = tw(to_node, 0);
         double tw_end = tw(to_node, 1);
@@ -80,8 +73,8 @@ bool is_feasible_route(
         }
         current_time += service(to_node);
 
-        // Check 4: Duplicate visit
-        if (seen[to_node])
+        // Check 4: Duplicate
+        if (seen.find(to_node) != seen.end())
         {
             return false;
         }
@@ -94,13 +87,12 @@ bool is_feasible_route(
 
         // Check 6: Capacity
         load += dem(to_node);
-        if (load < 0.0 || load > vehicle_capacity)
+        if (load < 0 || load > vehicle_capacity)
         {
             return false;
         }
 
-        // mark visited
-        seen[to_node] = 1;
+        seen.insert(to_node);
     }
 
     return true;
@@ -117,18 +109,10 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
     int delivery,
     const std::vector<int> &not_allowed_vehicle_idxs,
     int force_vehicle_idx,
-    const std::map<int, int> &delivery_to_pickup_map,
-    const std::map<int, int> &pickup_to_delivery_map)
+    const std::map<int, int> &delivery_to_pickup,
+    const std::map<int, int> &pickup_to_delivery)
 {
-    // Create unchecked view once for cost computations
     auto dist = distance_matrix.unchecked<2>();
-
-    // Convert maps to unordered_map for faster repeated lookup
-    std::unordered_map<int, int> delivery_to_pickup(delivery_to_pickup_map.begin(), delivery_to_pickup_map.end());
-    std::unordered_map<int, int> pickup_to_delivery(pickup_to_delivery_map.begin(), pickup_to_delivery_map.end());
-
-    // Convert not-allowed vector to set for O(1) membership tests
-    std::unordered_set<int> not_allowed(not_allowed_vehicle_idxs.begin(), not_allowed_vehicle_idxs.end());
 
     double best_increase = std::numeric_limits<double>::infinity();
     int best_route_idx = -1;
@@ -138,20 +122,16 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
 
     for (size_t route_idx = 0; route_idx < routes.size(); ++route_idx)
     {
-        int r_idx = static_cast<int>(route_idx);
-
-        if (not_allowed.find(r_idx) != not_allowed.end())
+        if (std::find(not_allowed_vehicle_idxs.begin(), not_allowed_vehicle_idxs.end(), route_idx) != not_allowed_vehicle_idxs.end())
         {
             continue;
         }
-        if (force_vehicle_idx != -1 && r_idx != force_vehicle_idx)
+        if (force_vehicle_idx != -1 && (int)route_idx != force_vehicle_idx)
         {
             continue;
         }
 
         const auto &route = routes[route_idx];
-
-        // Fast path: empty route (depot-depot)
         if (route.size() == 2 && route[0] == 0 && route[1] == 0)
         {
             std::vector<int> new_route = {0, pickup, delivery, 0};
@@ -160,86 +140,47 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
                                    service_times, demands, vehicle_capacity,
                                    delivery_to_pickup, pickup_to_delivery))
             {
-                continue;
+                continue; // Nächste Route probieren
             }
 
             double cost = dist(0, pickup) + dist(pickup, delivery) + dist(delivery, 0);
-            cost *= 10.0; // keep existing scale factor
+
+            cost *= 10;
 
             if (cost < best_increase)
             {
                 best_increase = cost;
-                best_route_idx = r_idx;
-                best_pickup_pos = 1;
-                best_delivery_pos = 2;
-                best_new_route = std::move(new_route);
+                best_route_idx = (int)route_idx;
+                best_new_route = new_route;
             }
-            continue;
+            continue; // Skip normale Schleifen für diese Route
         }
 
-        // Precompute old route cost once
-        double old_cost = 0.0;
-        for (size_t i = 0; i < route.size() - 1; ++i)
-        {
-            old_cost += dist(route[i], route[i + 1]);
-        }
-
-        // Try all insertion positions (pickup_pos in [1, route.size()-1], delivery_pos in [pickup_pos, route.size()-1])
         for (size_t pickup_pos = 1; pickup_pos < route.size(); ++pickup_pos)
         {
             for (size_t delivery_pos = pickup_pos; delivery_pos < route.size(); ++delivery_pos)
             {
-                // Compute local cost delta without building full route
-                double removed = 0.0;
-                double added = 0.0;
 
-                if (delivery_pos > pickup_pos)
-                {
-                    // we remove two original edges, add four new edges
-                    removed = dist(route[pickup_pos - 1], route[pickup_pos]) + dist(route[delivery_pos - 1], route[delivery_pos]);
-                    added = dist(route[pickup_pos - 1], pickup) + dist(pickup, route[pickup_pos])
-                          + dist(route[delivery_pos - 1], delivery) + dist(delivery, route[delivery_pos]);
-                }
-                else
-                {
-                    // delivery_pos == pickup_pos: one original edge replaced by three edges
-                    removed = dist(route[pickup_pos - 1], route[pickup_pos]);
-                    added = dist(route[pickup_pos - 1], pickup) + dist(pickup, delivery) + dist(delivery, route[pickup_pos]);
-                }
-
-                double increase = added - removed;
-
-                // Early prune: if not better than current best, skip feasibility check
-                if (!(increase < best_increase))
-                {
-                    continue;
-                }
-
-                // Build candidate route (reserve once)
+                // Build new route
                 std::vector<int> new_route;
                 new_route.reserve(route.size() + 2);
 
-                // copy up to pickup_pos-1 (i.e., indices [0..pickup_pos-1])
                 for (size_t i = 0; i < pickup_pos; ++i)
                 {
                     new_route.push_back(route[i]);
                 }
-                // insert pickup
                 new_route.push_back(pickup);
-                // copy [pickup_pos .. delivery_pos-1]
                 for (size_t i = pickup_pos; i < delivery_pos; ++i)
                 {
                     new_route.push_back(route[i]);
                 }
-                // insert delivery
                 new_route.push_back(delivery);
-                // copy [delivery_pos .. end]
                 for (size_t i = delivery_pos; i < route.size(); ++i)
                 {
                     new_route.push_back(route[i]);
                 }
 
-                // Final feasibility check using exact routine
+                // Use exact Python feasibility check
                 if (!is_feasible_route(new_route, distance_matrix, time_windows,
                                        service_times, demands, vehicle_capacity,
                                        delivery_to_pickup, pickup_to_delivery))
@@ -247,14 +188,28 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
                     continue;
                 }
 
-                // If feasible and better, update best
+                // Calculate cost increase
+                double old_cost = 0.0;
+                for (size_t i = 0; i < route.size() - 1; ++i)
+                {
+                    old_cost += dist(route[i], route[i + 1]);
+                }
+
+                double new_cost = 0.0;
+                for (size_t i = 0; i < new_route.size() - 1; ++i)
+                {
+                    new_cost += dist(new_route[i], new_route[i + 1]);
+                }
+
+                double increase = new_cost - old_cost;
+
                 if (increase < best_increase)
                 {
                     best_increase = increase;
-                    best_route_idx = r_idx;
-                    best_pickup_pos = static_cast<int>(pickup_pos);
-                    best_delivery_pos = static_cast<int>(delivery_pos);
-                    best_new_route = std::move(new_route);
+                    best_route_idx = (int)route_idx;
+                    best_pickup_pos = (int)pickup_pos;
+                    best_delivery_pos = (int)delivery_pos;
+                    best_new_route = new_route;
                 }
             }
         }
@@ -265,7 +220,6 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
 
 PYBIND11_MODULE(insertion_core, m)
 {
-    m.doc() = "Optimized insertion core (C++ / pybind11)";
     m.def("find_best_position_for_request", &find_best_position_for_request,
           py::arg("distance_matrix"),
           py::arg("time_windows"),
