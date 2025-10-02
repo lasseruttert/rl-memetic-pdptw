@@ -2,7 +2,6 @@ from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from memetic.fitness.fitness import fitness
 
-
 from memetic.solution_generators.base_generator import BaseGenerator
 from memetic.crossover.base_crossover import BaseCrossover
 from memetic.mutation.base_mutation import BaseMutation
@@ -28,6 +27,7 @@ from memetic.solution_operators.cls_m4 import CLSM4Operator
 
 import time
 import random
+import copy
 
 class MemeticSolver:
     def __init__(
@@ -104,6 +104,8 @@ class MemeticSolver:
         self.evaluations = {}
         self.verbose = verbose
         self.track_history = track_history
+        if self.track_history:
+            self.history = {}
     
     def solve(self, problem: PDPTWProblem, initial_solution: PDPTWSolution = None) -> PDPTWSolution:
         best_solution = None
@@ -127,10 +129,19 @@ class MemeticSolver:
         
         while not done:
             if self.verbose: print(f"Generation {generation}, Best Fitness: {best_fitness}")
+            if self.track_history:
+                self.history[generation] = {
+                    'population': copy.deepcopy(population),
+                    'fitnesses': current_fitnesses.copy(),
+                    'best_solution': copy.deepcopy(best_solution),
+                    'best_fitness': best_fitness
+                }
             
             if generation % self.evaluation_interval == 0:
+                if self.verbose: print(f"Evaluating population at generation {generation}")
                 self._evaluate(problem, population, current_fitnesses, generation)
             if generation % self.ensure_diversity_interval == 0:
+                if self.verbose: print(f"Ensuring diversity at generation {generation}")
                 population, current_fitnesses = self._ensure_diversity(problem, population, current_fitnesses)
             
             no_improvement_in_generation = True
@@ -148,6 +159,7 @@ class MemeticSolver:
                     current_fitnesses[i] = fitness
                 
                 if fitness < best_fitness:
+                    if self.verbose: print(f"New best solution found with fitness {fitness} at generation {generation}")
                     best_solution = child
                     best_fitness = fitness
                     
@@ -156,11 +168,13 @@ class MemeticSolver:
                 
             
             if no_improvement_in_generation:
+                if self.verbose: print(f"No improvement in generation {generation}")
                 no_improvement_count += 1
                 
             generation += 1
             
             if generation >= self.max_generations or no_improvement_count >= self.max_no_improvement or (time.time() - start_time) >= self.max_time_seconds:
+                if self.verbose: print("Stopping criteria met.")
                 done = True
         
         return best_solution
