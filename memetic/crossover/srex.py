@@ -8,13 +8,13 @@ from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.insertion.greedy_insertion import GreedyInsertion
 
 class SREXCrossover(BaseCrossover):
-    def __init__(self):
+    def __init__(self, n_total: int = 10, n_cross: int = 2):
         super().__init__()
         operators = [ReinsertOperator()]
         self.local_search = NaiveLocalSearch(operators=operators, max_no_improvement=10)
         self.insertion = GreedyInsertion()
-        self.n_total = 10
-        self.n_cross = 2
+        self.n_total = n_total
+        self.n_cross = n_cross
 
     def crossover(self, problem: PDPTWProblem, parent1: PDPTWSolution, parent2: PDPTWSolution) -> list[PDPTWSolution]:
         return self._srex_overall(problem, parent1, parent2)
@@ -116,8 +116,6 @@ class SREXCrossover(BaseCrossover):
         
         # Step 4: Return all feasible solutions
         result = []
-        offspring1.check_feasibility()
-        offspring2.check_feasibility()
         if offspring1.is_feasible:
             result.append(offspring1)
         if offspring2.is_feasible:

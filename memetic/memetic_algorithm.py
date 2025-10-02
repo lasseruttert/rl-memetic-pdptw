@@ -2,8 +2,15 @@ from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from memetic.fitness.fitness import fitness
 
-from memetic.solution_generators.random_solution import generate_random_solution
 
+from memetic.solution_generators.base_generator import BaseGenerator
+from memetic.crossover.base_crossover import BaseCrossover
+from memetic.mutation.base_mutation import BaseMutation
+from memetic.local_search.base_local_search import BaseLocalSearch
+from memetic.selection.base_selection import BaseSelection
+
+from memetic.solution_generators.random_generator import RandomGenerator
+from memetic.selection.k_tournament import KTournamentSelection
 from memetic.crossover.srex import SREXCrossover
 from memetic.mutation.naive_mutation import NaiveMutation
 from memetic.local_search.naive_local_search import NaiveLocalSearch
@@ -14,8 +21,6 @@ from memetic.solution_operators.flip import FlipOperator
 from memetic.solution_operators.swap_within import SwapWithinOperator
 from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
-from memetic.solution_operators.two_opt import TwoOptOperator
-from memetic.solution_operators.two_opt_star import TwoOptStarOperator
 from memetic.solution_operators.cls_m1 import CLSM1Operator
 from memetic.solution_operators.cls_m2 import CLSM2Operator
 from memetic.solution_operators.cls_m3 import CLSM3Operator
@@ -27,17 +32,17 @@ import random
 class MemeticSolver:
     def __init__(
         self, 
-        population_size: int = 30, 
+        population_size: int = 10, 
         max_generations: int = 100,
         max_time_seconds: int = 600,
-        max_no_improvement: int = 20,
+        max_no_improvement: int = 10,
         
-        inital_solution_generator = generate_random_solution, 
+        inital_solution_generator: BaseGenerator = None,
         
-        selection_operator = None,
-        crossover_operator = None,
-        mutation_operator = None,
-        local_search_operator = None,
+        selection_operator: BaseSelection = None,
+        crossover_operator: BaseCrossover = None,
+        mutation_operator: BaseMutation = None,
+        local_search_operator: BaseLocalSearch = None,
         
         fitness_function = fitness,
         
@@ -50,9 +55,9 @@ class MemeticSolver:
         self.max_time_seconds = max_time_seconds
         self.max_no_improvement = max_no_improvement
         
-        self.initial_solution_generator = inital_solution_generator
+        self.initial_solution_generator = inital_solution_generator if inital_solution_generator is not None else RandomGenerator()
         
-        self.selection_operator = selection_operator
+        self.selection_operator = selection_operator if selection_operator is not None else KTournamentSelection(k=2)
         self.crossover_operator = crossover_operator if crossover_operator is not None else SREXCrossover()
         
         self.mutatation_operator = mutation_operator if mutation_operator is not None else NaiveMutation(
@@ -66,26 +71,28 @@ class MemeticSolver:
             max_iterations=1
         )
         
-        if local_search_operator is None:
-            operators = [
+        self.local_search_operator = local_search_operator if local_search_operator is not None else NaiveLocalSearch(
+            operators=[
+                ReinsertOperator(),
                 ReinsertOperator(max_attempts=5,clustered=True),
                 ReinsertOperator(allow_same_vehicle=False),
                 ReinsertOperator(allow_same_vehicle=False, allow_new_vehicles=False),
                 
                 RouteEliminationOperator(),
                 
-                SwapBetweenOperator(),
-                
-                TransferOperator(single_route=True),
-                
                 CLSM1Operator(),
                 CLSM2Operator(),
                 CLSM3Operator(),
-                CLSM4Operator()
-            ]
-            local_search_operator = NaiveLocalSearch(operators=operators, max_no_improvement=3, max_iterations=50)
-        
-        self.local_search_operator = local_search_operator
+                CLSM4Operator(),
+                
+                TransferOperator(single_route=True),
+                TransferOperator(max_attempts=5,single_route=True),
+                
+                SwapBetweenOperator(),
+            ],
+            max_no_improvement=10,
+            max_iterations=30
+        )
         
         self.fitness_function = fitness_function
         
@@ -106,7 +113,7 @@ class MemeticSolver:
         
         start_time = time.time()
         
-        population = [self.initial_solution_generator(problem) for _ in range(self.population_size)]
+        population = self.initial_solution_generator.generate(problem, self.population_size)
         for i in range(len(population)):
             population[i], current_fitnesses[i] = self.local_search_operator.search(problem, population[i])
             if current_fitnesses[i] < best_fitness:
@@ -116,9 +123,9 @@ class MemeticSolver:
         while not done:
             print(f"Generation {generation}, Best Fitness: {best_fitness}")
             no_improvement_in_generation = True
-            for i in range(len(population) - 1):
+            for i in range(len(population)):
                 parent1 = population[i]
-                parent2 = population[i + 1]
+                parent2 = population[i + 1] if i + 1 < len(population) else population[0]
                 
                 children = self.crossover_operator.crossover(problem, parent1, parent2)
                 child = random.choice(children) if children else None
