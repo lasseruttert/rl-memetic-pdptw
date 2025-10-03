@@ -19,8 +19,11 @@ class RandomGenerator(BaseGenerator):
     def _generate_single_solution(self, problem: PDPTWProblem) -> PDPTWSolution:
         routes = [[] for _ in range(problem.num_vehicles)]
         vehicle_index = None
-        for pickup, delivery in problem.pickups_deliveries:
-            if vehicle_index is None or random.random() < 0.3:
+        requests = problem.pickups_deliveries.copy()
+        random.shuffle(requests)
+        for pickup, delivery in requests:
+            switch_prob = random.uniform(0.2, 0.6)
+            if vehicle_index is None or random.random() < switch_prob:
                 vehicle_index = random.randint(0, problem.num_vehicles - 1)
             pickup_index = random.randint(0, len(routes[vehicle_index]))
             routes[vehicle_index].insert(pickup_index, pickup)
