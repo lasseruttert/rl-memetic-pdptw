@@ -176,6 +176,14 @@ class PDPTWSolution:
                 unserved.append(request)
         return unserved
     
+    def remove_request(self, problem: PDPTWProblem, request: int):
+        """Removes a specific customer request (both pickup and delivery) from the solution."""
+        pickup, delivery = problem.get_pair(request)
+        route = self.node_to_route.get(pickup)
+        if route is not None:
+            self.routes[route] = [node for node in self.routes[route] if node != pickup and node != delivery]
+        self._clear_cache()
+    
     def clone(self) -> 'PDPTWSolution':
         """Creates and returns a deep copy of the solution."""
         routes = [route[:] for route in self.routes]

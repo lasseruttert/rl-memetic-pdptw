@@ -10,7 +10,7 @@ class RouteEliminationOperator(BaseOperator):
     def __init__(self, insertion_heuristic: str = 'greedy'):
         super().__init__()
         if insertion_heuristic == 'greedy':
-            self.insertion_heuristic = GreedyInsertion()
+            self.insertion_heuristic = GreedyInsertion(allow_new_vehicles=False)
         if insertion_heuristic == 'regret2':
             self.insertion_heuristic = Regret2Insertion()
         
@@ -32,8 +32,6 @@ class RouteEliminationOperator(BaseOperator):
         new_solution.routes.append([0,0])  # Maintain the same number of routes by adding an empty one
         new_solution._clear_cache()
         
-        self.insertion_heuristic.not_allowed_vehicle_idxs = [route_to_eliminate_idx]
         new_solution = self.insertion_heuristic.insert(problem, new_solution)
-        self.insertion_heuristic.not_allowed_vehicle_idxs = []
         
         return new_solution
