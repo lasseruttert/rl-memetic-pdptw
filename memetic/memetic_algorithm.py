@@ -25,11 +25,15 @@ from memetic.solution_operators.cls_m2 import CLSM2Operator
 from memetic.solution_operators.cls_m3 import CLSM3Operator
 from memetic.solution_operators.cls_m4 import CLSM4Operator
 
+from memetic.utils.distance_measure import DistanceMeasure
+from memetic.utils.edge_frequency import SparseCentroid, compute_sparse_edges
+
 import time
 import random
 import copy
+from dataclasses import dataclass
 
-class MemeticSolver:
+class MemeticSolver: # TODO change parameters so you can init using strings to decide operators etc but also objects
     def __init__(
         self, 
         population_size: int = 10, 
@@ -120,6 +124,8 @@ class MemeticSolver:
         
         start_time = time.time()
         
+        # TODO: (Optional) Calculate Upper Bound of num vehicles via iterative LS
+        
         population = self.initial_solution_generator.generate(problem, self.population_size)
         for i in range(len(population)):
             population[i], current_fitnesses[i] = self.local_search_operator.search(problem, population[i])
@@ -128,7 +134,7 @@ class MemeticSolver:
                 best_fitness = current_fitnesses[i]
         
         while not done:
-            if self.verbose: print(f"Generation {generation}, Best Fitness: {best_fitness}")
+            if self.verbose: print(f"Generation {generation} at {time.time() - start_time} seconds, Best Fitness: {best_fitness}")
             if self.track_history:
                 self.history[generation] = {
                     'population': copy.deepcopy(population),
@@ -139,7 +145,7 @@ class MemeticSolver:
             
             if generation % self.evaluation_interval == 0:
                 if self.verbose: print(f"Evaluating population at generation {generation}")
-                self._evaluate(problem, population, current_fitnesses, generation)
+                self._evaluate(problem, population, current_fitnesses, generation, start_time)
             if generation % self.ensure_diversity_interval == 0:
                 if self.verbose: print(f"Ensuring diversity at generation {generation}")
                 population, current_fitnesses = self._ensure_diversity(problem, population, current_fitnesses)
@@ -194,7 +200,7 @@ class MemeticSolver:
         
         return population, current_fitnesses
         
-    def _evaluate(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, iteration: int):
+    def _evaluate(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, iteration: int, start_time: float):
         min_fitness = float('inf')
         max_fitness = float('-inf')
         avg_fitness = 0.0
@@ -209,9 +215,16 @@ class MemeticSolver:
             avg_fitness += fitness
         avg_fitness /= len(population)
         
+        
         self.evaluations[iteration] = {
+            'time': time.time() - start_time,
             'min': min_fitness,
             'max': max_fitness,
             'avg': avg_fitness
         }
         return # TODO
+
+@dataclass
+class Individual: # TODO use this
+    solution: PDPTWSolution
+    fitness: float

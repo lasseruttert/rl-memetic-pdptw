@@ -5,20 +5,23 @@ from memetic.solution_generators.base_generator import BaseGenerator
 from memetic.solution_generators.greedy_generator import GreedyGenerator
 from memetic.solution_generators.random_generator import RandomGenerator
 
+import random
+
 class HybridGenerator(BaseGenerator):
     def __init__(self, greedy_ratio: float = 0.5):
         self.greedy_ratio = greedy_ratio
         self.greedy_generator = GreedyGenerator()
         self.random_generator = RandomGenerator()
     
-    def generate(self, problem: PDPTWProblem, num_solutions: int) -> PDPTWSolution:
-        num_greedy = int(num_solutions * self.greedy_ratio)
-        num_random = num_solutions - num_greedy
-        
+    def generate(self, problem: PDPTWProblem, num_solutions: int) -> list[PDPTWSolution]:
         solutions = []
-        if num_greedy > 0:
-            solutions.extend(self.greedy_generator.generate(problem, num_greedy))
-        if num_random > 0:
-            solutions.extend(self.random_generator.generate(problem, num_random))
+        
+        for i in range(num_solutions):
+            # Für jede Lösung individuell entscheiden: greedy oder random?
+            if random.random() < self.greedy_ratio:
+                solution = self.greedy_generator.generate(problem, num_solutions=1)[0]
+            else:
+                solution = self.random_generator.generate(problem, num_solutions=1)[0]
+            solutions.append(solution)
         
         return solutions
