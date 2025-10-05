@@ -22,7 +22,7 @@ from memetic.solution_operators.cls_m4 import CLSM4Operator
 
 if __name__ == "__main__":
     # Example usage
-    problem = li_lim_reader('G:/Meine Ablage/rl-memetic-pdptw/data/pdp_100/lc101.txt')
+    problem = li_lim_reader('G:/Meine Ablage/rl-memetic-pdptw/data/pdp_100/lc104.txt')
     initial_solution = generate_random_solution(problem)
     initial_solution_s = initial_solution.clone()
     operators = [

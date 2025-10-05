@@ -10,3 +10,6 @@ build/
 *.pyd
 # any json files
 *.json
+
+results/
+models/
