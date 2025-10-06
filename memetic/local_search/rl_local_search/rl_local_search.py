@@ -216,7 +216,7 @@ class RLLocalSearch(BaseLocalSearch):
             if step_losses:
                 self.training_history['losses'].append(avg_loss)
 
-            # Logging
+            # Logging # TODO add TensorBoard logging
             if self.verbose and (episode % 10 == 0 or episode == num_episodes - 1):
                 elapsed = time.time() - start_time
                 episode_time = time.time() - episode_start_time

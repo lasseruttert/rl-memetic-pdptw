@@ -61,8 +61,14 @@ class LocalSearchEnv(gym.Env):
         self.current_fitness: Optional[float] = None
         self.current_violations: Optional[dict] = None
         self.step_count: int = 0
+        self.initial_fitness: Optional[float] = None
         self.best_solution: Optional[PDPTWSolution] = None
         self.best_fitness: float = float('inf')
+
+        # Simulated annealing parameters
+        self.initial_temp = 1000.0
+        self.temp_decay = 0.995
+        self.temperature = self.initial_temp
 
     def reset(
         self,
@@ -89,8 +95,12 @@ class LocalSearchEnv(gym.Env):
         self.current_fitness = fitness(problem, self.current_solution)
         self.current_violations = calculate_constraint_violations(problem, self.current_solution)
         self.step_count = 0
+        self.initial_fitness = self.current_fitness
         self.best_solution = self.current_solution.clone()
         self.best_fitness = self.current_fitness
+
+        # Reset temperature for simulated annealing
+        self.temperature = self.initial_temp
 
         observation = extract_solution_features(problem, self.current_solution)
         
@@ -143,6 +153,10 @@ class LocalSearchEnv(gym.Env):
         # Increment step counter
         self.step_count += 1
 
+        # Decay temperature for simulated annealing
+        if self.acceptance_strategy == "simulated_annealing":
+            self.temperature *= self.temp_decay
+
         # Check termination
         terminated = False  # local search doesn't have a terminal state
         truncated = self.step_count >= self.max_steps
@@ -167,10 +181,7 @@ class LocalSearchEnv(gym.Env):
         old_fitness: float,
         new_fitness: float,
     ) -> float:
-        """Calculate reward based on fitness improvement and feasibility changes.
-
-        Fitness improvements are normalized by problem.distance_baseline to ensure
-        rewards are in a reasonable scale for learning.
+        """Calculate reward based on fitness improvement.
 
         Args:
             old_fitness: Fitness of current solution (includes penalties)
@@ -179,10 +190,34 @@ class LocalSearchEnv(gym.Env):
         Returns:
             Reward value (normalized)
         """
-        # Normalize fitness improvement by distance baseline
-        baseline = self.problem.distance_baseline
-        fitness_improvement = (old_fitness - new_fitness) / baseline
-        reward = self.alpha * fitness_improvement 
+        # Relative improvement (instance-independent)
+        # if old_fitness <= 0:
+        #     reward = 0.0
+        # else:
+        #     improvement_pct = (old_fitness - new_fitness) / old_fitness if old_fitness > 0 else 0.0
+        #     reward = self.alpha * improvement_pct
+            
+        # improvement based on initial fitness (instance-dependent)
+        # if self.initial_fitness <= 0:
+        #     reward = 0.0
+        # else:
+        #     improvement_pct = (self.initial_fitness - new_fitness) / self.initial_fitness if self.initial_fitness > 0 else 0.0
+        #     reward = self.alpha * improvement_pct
+
+        # Old version (distance baseline normalization)
+        # baseline = self.problem.distance_baseline
+        # fitness_improvement = (old_fitness - new_fitness) / baseline
+        # reward = self.alpha * fitness_improvement
+        
+        # if new_fitness < old_fitness:
+        #     reward = self.alpha * np.log(old_fitness / new_fitness)
+        # else:
+        #     reward = -self.alpha * np.log(new_fitness / old_fitness)
+        
+        if new_fitness < old_fitness:
+            reward = 1.0
+        else:
+            reward = -10.0
 
         return reward
 
@@ -200,6 +235,19 @@ class LocalSearchEnv(gym.Env):
             return new_fitness < old_fitness
         elif self.acceptance_strategy == "always":
             return True
+        elif self.acceptance_strategy == "epsilon_greedy":
+            epsilon = 0.1  # This could be parameterized
+            if new_fitness < old_fitness:
+                return True
+            else:
+                return np.random.rand() < epsilon
+        elif self.acceptance_strategy == "simulated_annealing":
+            if new_fitness < old_fitness:
+                return True
+            else:
+                delta = new_fitness - old_fitness
+                acceptance_prob = np.exp(-delta / self.temperature)
+                return np.random.rand() < acceptance_prob
         else:
             raise ValueError(f"Unknown acceptance strategy: {self.acceptance_strategy}")
 
