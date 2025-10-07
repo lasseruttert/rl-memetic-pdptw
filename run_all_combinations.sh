@@ -6,7 +6,7 @@
 set -e
 
 # Activate conda environment
-source ~/miniconda3/etc/profile.d/conda.sh  # adjust path if necessary
+source $(conda info --base)/etc/profile.d/conda.sh  # adjust path if necessary
 conda activate PDPTW
 
 # Define all acceptance strategies
