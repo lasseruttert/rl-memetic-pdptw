@@ -4,6 +4,7 @@
 
 # Exit immediately if a command exits with a non-zero status
 set -e
+echo "Running with shell: $0"
 
 # Activate conda environment
 source $(conda info --base)/etc/profile.d/conda.sh  # adjust path if necessary
