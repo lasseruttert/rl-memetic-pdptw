@@ -5,16 +5,23 @@ conda activate PDPTW
 
 # Define all acceptance strategies
 $acceptanceStrategies = @(
-    # "greedy",
-    # "always",
-    # "simulated_annealing"
-    "epsilon_greedy"
+    "rising_epsilon_greedy",
+    "late_acceptance",
+    "epsilon_greedy",
+    "greedy",
+    "always",
+    "simulated_annealing"
 )
 
 # Define all reward strategies
 $rewardStrategies = @(
+    "tanh",
+    "distance_baseline_tanh",
+    "distance_baseline_normalized",
+    "pure_normalized",
+    "distance_baseline_asymmetric_tanh",
     "initial_improvement",
-    # "old_improvement",
+    "old_improvement",
     "hybrid_improvement",
     "distance_baseline",
     "log_improvement",
@@ -64,10 +71,12 @@ foreach ($acceptance in $acceptanceStrategies) {
 
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "  ✓ Completed successfully" -ForegroundColor Green
-            } else {
+            }
+            else {
                 Write-Host "  ✗ Failed with exit code $LASTEXITCODE" -ForegroundColor Red
             }
-        } catch {
+        }
+        catch {
             Write-Host "  ✗ Error: $_" -ForegroundColor Red
         }
 

@@ -14,6 +14,7 @@ from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from utils.instance_manager import InstanceManager
 from memetic.local_search.rl_local_search.rl_local_search import RLLocalSearch
+from memetic.local_search.adaptive_local_search import AdaptiveLocalSearch
 from memetic.local_search.naive_local_search import NaiveLocalSearch
 from memetic.local_search.random_local_search import RandomLocalSearch
 from memetic.solution_generators.random_generator import RandomGenerator
@@ -91,17 +92,21 @@ def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Train RL-based local search with configurable strategies")
     parser.add_argument("--acceptance_strategy", type=str, default="epsilon_greedy",
-                        choices=["greedy", "always", "epsilon_greedy", "adaptive_epsilon_greedy",
-                                 "simulated_annealing", "simulated_annealing_linear",
-                                 "simulated_annealing_adaptive", "great_deluge", "record_to_record",
-                                 "threshold_accepting", "late_acceptance"],
+                        choices=["greedy", "always", "epsilon_greedy",
+                                 "simulated_annealing", "late_acceptance", "rising_epsilon_greedy"],
                         help="Acceptance strategy for local search")
     parser.add_argument("--reward_strategy", type=str, default="initial_improvement",
-                        choices=["initial_improvement", "old_improvement", "hybrid_improvement",
-                                 "distance_baseline", "log_improvement", "binary",
-                                 "distance_baseline_clipped", "multi_objective",
-                                 "distance_baseline_shaped", "adaptive_baseline",
-                                 "exponential_improvement"],
+                        choices=[    "tanh", "distance_baseline_tanh",
+    "distance_baseline_normalized",
+    "pure_normalized",
+    "distance_baseline_asymmetric_tanh",
+    "initial_improvement",
+    "old_improvement",
+    "hybrid_improvement",
+    "distance_baseline",
+    "log_improvement",
+    "binary",
+    "distance_baseline_clipped"],
                         help="Reward strategy for RL agent")
     parser.add_argument("--problem_size", type=int, default=100,
                         choices=[100, 200, 400, 600, 1000],
@@ -185,6 +190,8 @@ def main():
     print("\nTraining completed!")
     print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
     print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
+    
+    adaptive_local_search = AdaptiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200)
 
     naive_local_search = NaiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200, first_improvement=True)
     
@@ -194,11 +201,6 @@ def main():
 
     # You can provide up to 6 different RL model paths to evaluate here.
     RL_MODEL_PATHS = [
-        # f"models/rl_local_search_{PROBLEM_SIZE}_always-baseline.pt",
-        # f"models/rl_local_search_{PROBLEM_SIZE}_epsilon-one.pt",
-        # f"models/rl_local_search_{PROBLEM_SIZE}_epsilon-(initial-new).pt",
-        # f"models/rl_local_search_{PROBLEM_SIZE}_episode_2000.pt",
-        # f"models/rl_local_search_{PROBLEM_SIZE}_epsilon-(old-new).pt",
         f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final.pt",
     ]
 
@@ -241,6 +243,7 @@ def main():
     # Compare RL local search models vs Naive local search and Random local search
     NUM_TESTS = 50
     rl_results = [[] for _ in range(len(rl_models))]  # per-model collected tuples (initial, best, time)
+    adaptive_results = []
     naive_results = []
     naive_with_best_results = []
     random_results = []
@@ -272,6 +275,17 @@ def main():
             rl_time = time.time() - t0
             print(f"{model_names[midx]}: best fitness: {rl_best_fitness:.2f} (time: {rl_time:.2f}s)")
             rl_results[midx].append((initial_fitness, rl_best_fitness, rl_time))
+
+        # Adaptive local search
+        adaptive_solution = initial_solution.clone()
+        t0 = time.time()
+        adaptive_best_solution, adaptive_best_fitness = adaptive_local_search.search(
+            problem=test_problem,
+            solution=adaptive_solution
+        )
+        adaptive_time = time.time() - t0
+        print(f"Adaptive: best fitness: {adaptive_best_fitness:.2f} (time: {adaptive_time:.2f}s)")
+        adaptive_results.append((initial_fitness, adaptive_best_fitness, adaptive_time))
 
         # Naive local search
         naive_solution = initial_solution.clone()
@@ -315,17 +329,19 @@ def main():
         avg_time = sum(r[2] for r in rl_results[midx]) / NUM_TESTS
         print(f"Model {name}: Avg best fitness: {avg_best:.2f} (avg time: {avg_time:.2f}s)")
 
+    # Summary for Adaptive, Naive, and Random
+    avg_adaptive = sum(r[1] for r in adaptive_results) / NUM_TESTS
+    avg_time_adaptive = sum(r[2] for r in adaptive_results) / NUM_TESTS
     avg_naive = sum(r[1] for r in naive_results) / NUM_TESTS
     avg_time_naive = sum(r[2] for r in naive_results) / NUM_TESTS
     avg_naive_with_best = sum(r[1] for r in naive_with_best_results) / NUM_TESTS
     avg_time_naive_with_best = sum(r[2] for r in naive_with_best_results) / NUM_TESTS
     avg_random = sum(r[1] for r in random_results) / NUM_TESTS
     avg_time_random = sum(r[2] for r in random_results) / NUM_TESTS
+    print(f"Adaptive: Avg best fitness: {avg_adaptive:.2f} (avg time: {avg_time_adaptive:.2f}s)")
     print(f"Naive: Avg best fitness: {avg_naive:.2f} (avg time: {avg_time_naive:.2f}s)")
     print(f"Naive (best improvement): Avg best fitness: {avg_naive_with_best:.2f} (avg time: {avg_time_naive_with_best:.2f}s)")
     print(f"Random: Avg best fitness: {avg_random:.2f} (avg time: {avg_time_random:.2f}s)")
-
-    # Note: we do not re-save models here. Change RL_MODEL_PATHS above to evaluate different files.
 
 
 if __name__ == "__main__":

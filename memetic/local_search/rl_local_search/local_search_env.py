@@ -74,6 +74,20 @@ class LocalSearchEnv(gym.Env):
         self.temp_decay = 0.995
         self.temperature = self.initial_temp
 
+        # Running reward normalization statistics
+        self.reward_mean = 0.0
+        self.reward_std = 1.0
+        self.reward_samples = 0
+        self.max_reward_samples = 10000  # Stop updating after this many samples
+
+        # Late acceptance parameters
+        self.late_acceptance_length = 20  # History buffer size L
+        self.fitness_history = []
+
+        # Rising epsilon parameters
+        self.rising_epsilon_start = 0.05
+        self.rising_epsilon_end = 0.5
+
     def reset(
         self,
         problem: PDPTWProblem,
@@ -105,6 +119,9 @@ class LocalSearchEnv(gym.Env):
 
         # Reset temperature for simulated annealing
         self.temperature = self.initial_temp
+
+        # Clear fitness history for late acceptance
+        self.fitness_history = []
 
         observation = extract_solution_features(problem, self.current_solution)
         
@@ -161,6 +178,10 @@ class LocalSearchEnv(gym.Env):
         if self.acceptance_strategy == "simulated_annealing":
             self.temperature *= self.temp_decay
 
+        # Maintain fitness history for late acceptance
+        self.fitness_history.append(self.current_fitness)
+        if len(self.fitness_history) > self.late_acceptance_length:
+            self.fitness_history.pop(0)
 
         # Check termination
         terminated = False  # local search doesn't have a terminal state
@@ -180,6 +201,27 @@ class LocalSearchEnv(gym.Env):
         }
 
         return observation, reward, terminated, truncated, info
+
+    def _update_reward_stats(self, raw_reward: float) -> None:
+        """Update running reward statistics using online algorithm.
+
+        Args:
+            raw_reward: Raw reward value to incorporate into statistics
+        """
+        if self.reward_samples >= self.max_reward_samples:
+            return  # Stop updating after max samples
+
+        self.reward_samples += 1
+
+        # Online mean and std update (Welford's algorithm)
+        delta = raw_reward - self.reward_mean
+        self.reward_mean += delta / self.reward_samples
+        delta2 = raw_reward - self.reward_mean
+
+        if self.reward_samples > 1:
+            # Update variance
+            variance = ((self.reward_samples - 2) * (self.reward_std ** 2) + delta * delta2) / (self.reward_samples - 1)
+            self.reward_std = np.sqrt(max(variance, 1e-8))
 
     def _calculate_reward(
         self,
@@ -228,16 +270,59 @@ class LocalSearchEnv(gym.Env):
             else:
                 reward = -self.alpha * np.log(new_fitness / old_fitness)
                 
+        elif self.reward_strategy == "distance_baseline_clipped":
+            baseline = self.problem.distance_baseline
+            fitness_improvement = (old_fitness - new_fitness) / baseline
+            reward = np.clip(self.alpha * fitness_improvement, -20.0, 20.0)
+            
         elif self.reward_strategy == "binary":
             if new_fitness < old_fitness:
                 reward = 1.0
             else:
                 reward = -1.0
+                
+        elif self.reward_strategy == "tanh":
+            fitness_improvement = old_fitness - new_fitness / 1
+            reward = np.tanh(self.alpha * fitness_improvement)
 
-        elif self.reward_strategy == "distance_baseline_clipped":
+        elif self.reward_strategy == "distance_baseline_normalized":
+            # Two-stage: baseline normalization + z-score (for mixed instance sizes)
+            baseline = self.problem.distance_baseline
+            raw_improvement = (old_fitness - new_fitness) / baseline
+
+            self._update_reward_stats(raw_improvement)
+
+            if self.reward_samples > 1:
+                reward = np.clip((raw_improvement - self.reward_mean) / (self.reward_std + 1e-8), -1.0, 1.0)
+            else:
+                reward = raw_improvement
+
+        elif self.reward_strategy == "pure_normalized":
+            # Pure z-score normalization (for single instance size training)
+            raw_improvement = old_fitness - new_fitness
+
+            self._update_reward_stats(raw_improvement)
+
+            if self.reward_samples > 1:
+                reward = np.clip((raw_improvement - self.reward_mean) / (self.reward_std + 1e-8), -1.0, 1.0)
+            else:
+                reward = raw_improvement 
+
+        elif self.reward_strategy == "distance_baseline_tanh":
             baseline = self.problem.distance_baseline
             fitness_improvement = (old_fitness - new_fitness) / baseline
-            reward = np.clip(self.alpha * fitness_improvement, -5.0, 5.0)
+            reward = np.tanh(self.alpha * fitness_improvement)
+
+        elif self.reward_strategy == "distance_baseline_asymmetric_tanh":
+            # Distance baseline + asymmetric tanh (penalize degradations more)
+            baseline = self.problem.distance_baseline
+            fitness_improvement = (old_fitness - new_fitness) / baseline
+
+            # Apply asymmetric scaling
+            if fitness_improvement > 0:  # Improvement
+                reward = np.tanh(self.alpha * fitness_improvement)
+            else:  # Degradation - penalize 2x more
+                reward = np.tanh(self.alpha * fitness_improvement * 2.0)
 
         else:
             raise ValueError(f"Unknown reward strategy: {self.reward_strategy}")
@@ -273,6 +358,24 @@ class LocalSearchEnv(gym.Env):
                 delta = new_fitness - old_fitness
                 acceptance_prob = np.exp(-delta / self.temperature)
                 return np.random.rand() < acceptance_prob
+
+        elif self.acceptance_strategy == "late_acceptance":
+            # Accept if better than fitness from L steps ago
+            if len(self.fitness_history) < self.late_acceptance_length:
+                # Greedy until buffer fills
+                return new_fitness <= old_fitness
+            # Compare to oldest fitness in history (L steps ago)
+            return new_fitness <= self.fitness_history[0]
+
+        elif self.acceptance_strategy == "rising_epsilon_greedy":
+            # Always accept improvements
+            if new_fitness < old_fitness:
+                return True
+            # Epsilon rises from start to end over max_steps
+            progress = min(self.step_count / self.max_steps, 1.0)
+            epsilon = self.rising_epsilon_start + (self.rising_epsilon_end - self.rising_epsilon_start) * progress
+            return np.random.rand() < epsilon
+
         else:
             raise ValueError(f"Unknown acceptance strategy: {self.acceptance_strategy}")
 
@@ -283,3 +386,25 @@ class LocalSearchEnv(gym.Env):
             Tuple of (best_solution, best_fitness)
         """
         return self.best_solution, self.best_fitness
+
+    def get_reward_stats(self) -> dict:
+        """Get current reward normalization statistics.
+
+        Returns:
+            Dictionary with mean, std, and sample count
+        """
+        return {
+            'reward_mean': self.reward_mean,
+            'reward_std': self.reward_std,
+            'reward_samples': self.reward_samples
+        }
+
+    def set_reward_stats(self, stats: dict) -> None:
+        """Set reward normalization statistics (for loading saved state).
+
+        Args:
+            stats: Dictionary with 'reward_mean', 'reward_std', 'reward_samples'
+        """
+        self.reward_mean = stats.get('reward_mean', 0.0)
+        self.reward_std = stats.get('reward_std', 1.0)
+        self.reward_samples = stats.get('reward_samples', 0)

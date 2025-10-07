@@ -15,7 +15,7 @@ class DQNNetwork(nn.Module):
         state_dim: int,
         action_dim: int,
         hidden_dims: list[int] = [128, 128, 64],
-        dropout_rate: float = 0.05  # Reduced from 0.1 for better stability
+        dropout_rate: float = 0.05  
     ):
         """Initialize the DQN network.
 
@@ -150,7 +150,7 @@ class DQNAgent:
         # Normalize with small epsilon to avoid division by zero
         normalized = (state - self.state_mean) / (self.state_std + 1e-8)
         # Clip to reasonable range
-        normalized = np.clip(normalized, -10, 10)
+        # normalized = np.clip(normalized, -10, 10)
         return normalized
 
     def get_action(self, state: np.ndarray, epsilon: Optional[float] = None) -> int:
@@ -171,7 +171,7 @@ class DQNAgent:
             return np.random.randint(0, self.action_dim)
         else:
             # Normalize state
-            normalized_state = self.normalize_state(state, update_stats=False)
+            normalized_state = self.normalize_state(state, update_stats=True)
 
             # Greedy action
             self.q_network.eval()  # Set to eval mode to disable dropout
@@ -197,8 +197,8 @@ class DQNAgent:
             Loss value
         """
         # Normalize states
-        normalized_states = np.array([self.normalize_state(s, update_stats=True) for s in batch['states']])
-        normalized_next_states = np.array([self.normalize_state(s, update_stats=True) for s in batch['next_states']])
+        normalized_states = np.array([self.normalize_state(s, update_stats=False) for s in batch['states']])
+        normalized_next_states = np.array([self.normalize_state(s, update_stats=False) for s in batch['next_states']])
 
         # Convert to tensors
         states = torch.FloatTensor(normalized_states).to(self.device)

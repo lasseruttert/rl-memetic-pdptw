@@ -51,6 +51,12 @@ class AdaptiveLocalSearch(BaseLocalSearch):
         Returns:
             tuple[PDPTWSolution, float]: the best solution found and its fitness
         """
+        # Reset statistics at start of each search (each instance is different)
+        self.operator_weights = [1.0] * len(self.operators)
+        self.operator_successes = [0] * len(self.operators)
+        self.operator_attempts = [0] * len(self.operators)
+        self.recent_improvements = [[] for _ in range(len(self.operators))]
+
         no_improvement_count = 0
         iteration = 0
         best_solution = solution
