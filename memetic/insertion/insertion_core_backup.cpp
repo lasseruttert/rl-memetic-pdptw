@@ -12,7 +12,6 @@
 
 namespace py = pybind11;
 
-// Helper: Check if route is feasible (exact Python logic)
 bool is_feasible_route(
     const std::vector<int> &route,
     const py::array_t<double> &distance_matrix,
@@ -140,7 +139,7 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
                                    service_times, demands, vehicle_capacity,
                                    delivery_to_pickup, pickup_to_delivery))
             {
-                continue; // Nächste Route probieren
+                continue; 
             }
 
             double cost = dist(0, pickup) + dist(pickup, delivery) + dist(delivery, 0);
@@ -153,7 +152,7 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
                 best_route_idx = (int)route_idx;
                 best_new_route = new_route;
             }
-            continue; // Skip normale Schleifen für diese Route
+            continue; 
         }
 
         for (size_t pickup_pos = 1; pickup_pos < route.size(); ++pickup_pos)
@@ -180,7 +179,6 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
                     new_route.push_back(route[i]);
                 }
 
-                // Use exact Python feasibility check
                 if (!is_feasible_route(new_route, distance_matrix, time_windows,
                                        service_times, demands, vehicle_capacity,
                                        delivery_to_pickup, pickup_to_delivery))

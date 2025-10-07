@@ -15,6 +15,12 @@ from memetic.local_search.rl_local_search.local_search_env import LocalSearchEnv
 from memetic.local_search.rl_local_search.dqn_network import DQNAgent
 from memetic.local_search.rl_local_search.replay_buffer import ReplayBuffer
 
+try:
+    from torch.utils.tensorboard import SummaryWriter
+    TENSORBOARD_AVAILABLE = True
+except ImportError:
+    TENSORBOARD_AVAILABLE = False
+
 
 class RLLocalSearch(BaseLocalSearch):
     """RL-based local search that learns to select operators adaptively.
@@ -36,6 +42,7 @@ class RLLocalSearch(BaseLocalSearch):
         alpha: float = 1.0,  # Fitness weight (rewards are normalized by distance_baseline)
         beta: float = 1.0,   # Feasibility weight (normalized to [0, 1] range)
         acceptance_strategy: str = "greedy",
+        reward_strategy: str = "initial_improvement",
         max_steps_per_episode: int = 100,
         replay_buffer_capacity: int = 100000,
         batch_size: int = 64,
@@ -66,6 +73,7 @@ class RLLocalSearch(BaseLocalSearch):
 
         self.operators = operators
         self.acceptance_strategy = acceptance_strategy
+        self.reward_strategy = reward_strategy
         self.max_steps_per_episode = max_steps_per_episode
         self.batch_size = batch_size
         self.verbose = verbose
@@ -75,6 +83,7 @@ class RLLocalSearch(BaseLocalSearch):
             operators=operators,
             alpha=alpha,
             acceptance_strategy=acceptance_strategy,
+            reward_strategy=reward_strategy,
             max_steps=max_steps_per_episode
         )
 
@@ -110,6 +119,29 @@ class RLLocalSearch(BaseLocalSearch):
             'epsilon_values': []
         }
 
+    def _set_seed(self, seed: int):
+        """Set random seeds for reproducibility.
+
+        Args:
+            seed: Random seed value
+        """
+        random.seed(seed)
+        np.random.seed(seed)
+
+        # Set PyTorch seeds
+        try:
+            import torch
+            torch.manual_seed(seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed(seed)
+                torch.cuda.manual_seed_all(seed)
+            # Make PyTorch deterministic (may reduce performance)
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
+        except ImportError:
+            if self.verbose:
+                print("Warning: PyTorch not available for seeding")
+
     def train(
         self,
         problem_generator: Callable[[], PDPTWProblem],
@@ -120,7 +152,9 @@ class RLLocalSearch(BaseLocalSearch):
         update_interval: int = 1,
         warmup_episodes: int = 10,
         save_interval: int = 100,
-        save_path: Optional[str] = None
+        save_path: Optional[str] = None,
+        tensorboard_dir: Optional[str] = None,
+        seed: Optional[int] = None
     ) -> Dict:
         """Train the RL policy for operator selection.
 
@@ -134,12 +168,49 @@ class RLLocalSearch(BaseLocalSearch):
             warmup_episodes: Number of episodes before training starts
             save_interval: Save model every N episodes
             save_path: Path to save model checkpoints
+            tensorboard_dir: Directory for TensorBoard logs (None to disable)
+            seed: Random seed for reproducibility (None for random)
 
         Returns:
             Dictionary containing training history
         """
+        # Set random seed if provided
+        if seed is not None:
+            self._set_seed(seed)
+            if self.verbose:
+                print(f"Random seed set to {seed}")
+
         self.training_mode = True
         start_time = time.time()
+
+        # Initialize TensorBoard writer
+        writer = None
+        if tensorboard_dir and TENSORBOARD_AVAILABLE:
+            writer = SummaryWriter(log_dir=tensorboard_dir)
+            if self.verbose:
+                print(f"TensorBoard logging enabled: {tensorboard_dir}")
+
+            # Log hyperparameters
+            hparams = {
+                'learning_rate': self.agent.optimizer.param_groups[0]['lr'],
+                'gamma': self.agent.gamma,
+                'epsilon_start': self.agent.epsilon,
+                'epsilon_end': self.agent.epsilon_end,
+                'epsilon_decay': self.agent.epsilon_decay,
+                'batch_size': self.batch_size,
+                'num_episodes': num_episodes,
+                'max_steps_per_episode': self.max_steps_per_episode,
+                'acceptance_strategy': self.acceptance_strategy,
+                'reward_strategy': self.reward_strategy,
+                'alpha': self.env.alpha,
+                'new_instance_interval': new_instance_interval,
+                'new_solution_interval': new_solution_interval,
+                'seed': seed if seed is not None else 'random',
+            }
+            writer.add_text('Hyperparameters', str(hparams), 0)
+
+        elif tensorboard_dir and not TENSORBOARD_AVAILABLE:
+            print("Warning: TensorBoard requested but not available. Install with: pip install tensorboard")
 
         # Initialize instance and solution
         instance = problem_generator()
@@ -216,7 +287,29 @@ class RLLocalSearch(BaseLocalSearch):
             if step_losses:
                 self.training_history['losses'].append(avg_loss)
 
-            # Logging # TODO add TensorBoard logging
+            # TensorBoard logging
+            if writer:
+                writer.add_scalar('Episode/Reward', episode_reward, episode)
+                writer.add_scalar('Episode/BestFitness', best_fitness, episode)
+                writer.add_scalar('Episode/Length', episode_length, episode)
+                writer.add_scalar('Training/Epsilon', self.agent.epsilon, episode)
+                if step_losses:
+                    writer.add_scalar('Training/Loss', avg_loss, episode)
+
+                # Rolling averages
+                if len(self.training_history['episode_rewards']) >= 10:
+                    avg_reward_10 = np.mean(self.training_history['episode_rewards'][-10:])
+                    avg_fitness_10 = np.mean(self.training_history['episode_best_fitness'][-10:])
+                    writer.add_scalar('Episode/Reward_Avg10', avg_reward_10, episode)
+                    writer.add_scalar('Episode/Fitness_Avg10', avg_fitness_10, episode)
+
+                if len(self.training_history['episode_rewards']) >= 100:
+                    avg_reward_100 = np.mean(self.training_history['episode_rewards'][-100:])
+                    avg_fitness_100 = np.mean(self.training_history['episode_best_fitness'][-100:])
+                    writer.add_scalar('Episode/Reward_Avg100', avg_reward_100, episode)
+                    writer.add_scalar('Episode/Fitness_Avg100', avg_fitness_100, episode)
+
+            # Console logging
             if self.verbose and (episode % 10 == 0 or episode == num_episodes - 1):
                 elapsed = time.time() - start_time
                 episode_time = time.time() - episode_start_time
@@ -254,6 +347,12 @@ class RLLocalSearch(BaseLocalSearch):
             print(f"Total time: {total_time:.2f}s ({total_time/num_episodes:.2f}s per episode)")
             print(f"Final epsilon: {self.agent.epsilon:.3f}")
             print(f"Replay buffer size: {len(self.replay_buffer)}")
+
+        # Close TensorBoard writer
+        if writer:
+            writer.close()
+            if self.verbose:
+                print(f"TensorBoard logs saved to {tensorboard_dir}")
 
         return self.training_history
 

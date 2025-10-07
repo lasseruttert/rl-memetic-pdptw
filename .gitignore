@@ -13,7 +13,10 @@ build/
 
 results/
 models/
+runs/
+logs/
 
 # ignore all .md except README.md
 *.md
 !README.md
+

@@ -26,7 +26,6 @@ class GuidedEjectionSearch:
         if not non_empty_routes:
             return new_solution
         
-        # Line 1: Select route and remove all requests (random instead of min)
         route_to_eliminate = random.choice(non_empty_routes)
         new_solution.routes.remove(route_to_eliminate)
         new_solution.routes.append([0, 0])
@@ -34,20 +33,16 @@ class GuidedEjectionSearch:
         
         # Try to reinsert all requests
         for ejection_iter in range(self.max_ejection_iterations):
-            # Insert ALL unserved requests at once (like RouteEliminationOperator)
             new_solution = self.inserter.insert(problem, new_solution)
             
             unserved = new_solution.get_unserved_requests(problem=problem)
             
             if not unserved:
-                # Success! All requests inserted
                 break
             
             if ejection_iter < self.max_ejection_iterations - 1:
-                # Line 14: Eject some requests to make room
                 new_solution = self._guided_ejection(problem, new_solution, unserved)
             else:
-                # Last attempt: perturbation
                 new_solution = self._perturb_solution(problem, new_solution)
         
         return new_solution
@@ -61,7 +56,6 @@ class GuidedEjectionSearch:
         if not served_requests:
             return solution
         
-        # Eject 1-2 requests with large time windows (easy to reinsert)
         num_to_eject = min(2, len(served_requests))
         ejection_candidates = self._select_ejection_candidates(
             problem, new_solution, served_requests, num_to_eject
@@ -86,7 +80,7 @@ class GuidedEjectionSearch:
         return [req for req, _ in scores[:num_to_eject]]
     
     def _perturb_solution(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
-        """Line 16: Perturb solution"""
+        """Perturb solution"""
         new_solution = solution.clone()
         if random.random() < 0.5:
             new_solution = self.swapper.apply(problem, new_solution)

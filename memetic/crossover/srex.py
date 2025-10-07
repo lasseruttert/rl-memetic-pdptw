@@ -8,7 +8,14 @@ from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.insertion.greedy_insertion import GreedyInsertion
 
 class SREXCrossover(BaseCrossover):
+    """Sequential Route Exchange Crossover (SREX) for PDPTW."""
     def __init__(self, n_total: int = 10, n_cross: int = 2):
+        """Initialize SREXCrossover.
+
+        Args:
+            n_total (int, optional): Total number of local search iterations. Defaults to 10.
+            n_cross (int, optional): Number of crossover operations to perform. Defaults to 2.
+        """
         super().__init__()
         operators = [ReinsertOperator()]
         self.local_search = NaiveLocalSearch(operators=operators, max_no_improvement=1, max_iterations=10)
@@ -17,6 +24,16 @@ class SREXCrossover(BaseCrossover):
         self.n_cross = n_cross
 
     def crossover(self, problem: PDPTWProblem, parent1: PDPTWSolution, parent2: PDPTWSolution) -> list[PDPTWSolution]:
+        """Perform crossover between two parent solutions.
+
+        Args:
+            problem (PDPTWProblem): The PDPTW problem instance.
+            parent1 (PDPTWSolution): The first parent solution.
+            parent2 (PDPTWSolution): The second parent solution.
+
+        Returns:
+            list[PDPTWSolution]: A list of offspring solutions generated from the crossover.
+        """
         return self._srex_overall(problem, parent1, parent2)
     
     def _get_arcs(self, solution: PDPTWSolution) -> set:
@@ -28,6 +45,7 @@ class SREXCrossover(BaseCrossover):
         return arcs
     
     def _srex_overall(self, problem: PDPTWProblem, parent1: PDPTWSolution, parent2: PDPTWSolution) -> list[PDPTWSolution]:
+        """Overall SREX procedure to generate offspring from two parents."""
         # Step 1: Execute local search n_total times
         pairs = []
         for _ in range(self.n_total):
@@ -81,6 +99,7 @@ class SREXCrossover(BaseCrossover):
 
     def _srex_sub(self, problem: PDPTWProblem, parent1: PDPTWSolution, parent2: PDPTWSolution, 
                 s_a: PDPTWSolution, s_b: PDPTWSolution) -> list[PDPTWSolution]:
+        """Perform the SREX crossover for a selected pair of solutions."""
         
         offspring1 = parent1.clone()
         offspring2 = parent1.clone()

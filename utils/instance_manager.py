@@ -35,7 +35,6 @@ class InstanceManager:
     
     def _get_categories(self, size: int) -> dict:
         if size == 100:
-            # Original-Namen für size 100
             return {
                 'lc1': ['lc101', 'lc102', 'lc103', 'lc104', 'lc105', 'lc106', 'lc107', 'lc108', 'lc109'],
                 'lc2': ['lc201', 'lc202', 'lc203', 'lc204', 'lc205', 'lc206', 'lc207', 'lc208'],
@@ -45,7 +44,6 @@ class InstanceManager:
                 'lrc2': ['lrc201', 'lrc202', 'lrc203', 'lrc204', 'lrc205', 'lrc206', 'lrc207', 'lrc208']
             }
         else:
-            # Für 200, 400, 600, 1000: Format LR1_SIZE_NUM
             size_code = size // 100
             return {
                 'lc1': [f'LC1_{size_code}_{i}' for i in range(1, 11)],

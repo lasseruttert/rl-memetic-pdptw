@@ -5,10 +5,10 @@ import numpy as np
 
 def compute_edge_embedding(problem: PDPTWProblem, solution: PDPTWSolution) -> np.ndarray:
     """
-    Berechnet Edge-frequency Embedding für eine Lösung.
+    Calculates a binary edge frequency embedding for a PDPTW solution.
     
     Returns:
-        embedding: Binary vector der Länge n*(n-1)/2 (nur obere Dreiecksmatrix)
+        embedding: Binary vector of length n*(n-1)/2 (only upper triangular matrix)
     """
     n = len(problem.nodes)
     edge_dim = n * (n - 1) // 2
@@ -30,7 +30,7 @@ def compute_edge_embedding(problem: PDPTWProblem, solution: PDPTWSolution) -> np
 
 class PopulationCentroid:
     """
-    Verwaltet den Population-Centroid mit automatischer Dimensionsreduktion.
+    Maintains the centroid of solution embeddings in the population.
     """
     def __init__(self, embedding_dim: int):
         self.full_dim = embedding_dim
@@ -41,14 +41,14 @@ class PopulationCentroid:
         self.reduced_centroid = None
         
     def add_solution(self, embedding: np.ndarray):
-        """Fügt eine neue Lösung zur Population hinzu."""
+        """Adds a new solution to the population."""
         self.centroid = (self.centroid * self.population_size + embedding) / (self.population_size + 1)
         self.population_size += 1
         self.embeddings.append(embedding)
         self._update_variance_mask()
     
     def remove_solution(self, embedding: np.ndarray):
-        """Entfernt eine Lösung aus der Population."""
+        """Removes a solution from the population."""
         if self.population_size <= 1:
             raise ValueError("Cannot remove from empty or single-element population")
         self.centroid = (self.centroid * self.population_size - embedding) / (self.population_size - 1)
@@ -58,7 +58,7 @@ class PopulationCentroid:
         self._update_variance_mask()
     
     def replace_solution(self, old_embedding: np.ndarray, new_embedding: np.ndarray):
-        """Ersetzt eine Lösung durch eine andere."""
+        """Replaces one solution with another."""
         self.centroid = self.centroid + (new_embedding - old_embedding) / self.population_size
         # Update embeddings list
         for i, emb in enumerate(self.embeddings):
@@ -68,7 +68,7 @@ class PopulationCentroid:
         self._update_variance_mask()
     
     def _update_variance_mask(self):
-        """Berechnet Maske für Dimensionen mit Varianz > 0."""
+        """Calculates variance mask and reduced centroid."""
         if len(self.embeddings) > 1:
             embeddings_array = np.array(self.embeddings)
             variance = np.var(embeddings_array, axis=0)
@@ -77,14 +77,14 @@ class PopulationCentroid:
     
     def compute_diversity(self, embedding: np.ndarray, use_reduction: bool = True) -> float:
         """
-        Berechnet Diversität einer Lösung relativ zum Population-Centroid.
+        Calculates the diversity of a solution relative to the population centroid.
         
         Args:
-            embedding: Das Embedding der zu bewertenden Lösung
-            use_reduction: Wenn True, nutze nur Dimensionen mit Varianz
-            
+            embedding: The embedding of the solution to evaluate
+            use_reduction: If True, only use dimensions with variance
+
         Returns:
-            diversity: L2-Distanz zum Centroid (höher = diverser)
+            diversity: L2 distance to the centroid (higher = more diverse)
         """
         if use_reduction and self.variance_mask is not None:
             reduced_embedding = embedding[self.variance_mask]
@@ -93,7 +93,7 @@ class PopulationCentroid:
             return np.linalg.norm(embedding - self.centroid)
     
     def get_statistics(self) -> dict:
-        """Gibt Statistiken über die Population zurück."""
+        """Returns statistics about the population."""
         stats = {
             'population_size': self.population_size,
             'full_dimensions': self.full_dim,
@@ -128,7 +128,7 @@ class PopulationCentroid:
 # Sparse alternative für sehr große Instanzen
 class SparseCentroid:
     """
-    Sparse Repräsentation nur mit verwendeten Kanten.
+    Sparse representation using only the utilized edges.
     """
     def __init__(self):
         self.edge_counts = Counter()
@@ -136,13 +136,13 @@ class SparseCentroid:
         self.all_edges = []
     
     def add_solution(self, edges: set):
-        """Fügt eine Lösung (als Kantenmenge) hinzu."""
+        """Adds a solution (as an edge set) to the population."""
         self.edge_counts.update(edges)
         self.all_edges.append(edges)
         self.population_size += 1
     
     def remove_solution(self, edges: set):
-        """Entfernt eine Lösung."""
+        """Removes a solution."""
         if self.population_size <= 1:
             raise ValueError("Cannot remove from empty population")
         for edge in edges:
@@ -153,13 +153,13 @@ class SparseCentroid:
         self.population_size -= 1
     
     def replace_solution(self, old_edges: set, new_edges: set):
-        """Ersetzt eine Lösung."""
-        # Entferne alte Kanten
+        """Replaces one solution with another."""
+        # Remove old edges
         for edge in old_edges:
             self.edge_counts[edge] -= 1
             if self.edge_counts[edge] == 0:
                 del self.edge_counts[edge]
-        # Füge neue Kanten hinzu
+        # Add new edges 
         self.edge_counts.update(new_edges)
         # Update list
         for i, edges in enumerate(self.all_edges):
@@ -169,9 +169,9 @@ class SparseCentroid:
     
     def compute_diversity(self, edges: set) -> float:
         """
-        Berechnet Diversität basierend auf Seltenheit der verwendeten Kanten.
+        Calculates diversity based on the rarity of the utilized edges.
         
-        Höhere Werte = Lösung nutzt seltenere Kanten
+        Higher value = more diverse (uses rare edges)
         """
         if not edges:
             return 0.0
@@ -185,7 +185,7 @@ class SparseCentroid:
     
     def compute_jaccard_diversity(self, edges: set) -> float:
         """
-        Berechnet durchschnittliche Jaccard-Distanz zu allen Lösungen.
+        Calculates the average Jaccard distance to all solutions.
         """
         if not self.all_edges:
             return 0.0
@@ -202,14 +202,14 @@ class SparseCentroid:
 
 def compute_sparse_edges(solution: PDPTWSolution, include_depot: bool = False) -> set:
     """
-    Extrahiert die Kantenmenge einer Lösung.
+    Extracts the edge set of a solution.
     
     Args:
-        solution: Die PDPTW-Lösung
-        include_depot: Wenn False, werden Depot-Kanten ignoriert
+        solution: PDPTWSolution instance
+        include_depot: If False, edges involving the depot (node 0) are excluded.
         
     Returns:
-        Set von Kanten als (i, j) Tupel mit i < j
+        Set of edges as (i, j) tuples with i < j
     """
     edges = set()
     for route in solution.routes:

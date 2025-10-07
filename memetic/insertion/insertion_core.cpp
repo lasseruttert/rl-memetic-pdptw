@@ -12,7 +12,6 @@
 
 namespace py = pybind11;
 
-// Helper: Check if route is feasible (keine semantische Änderung, nur intern optimiert)
 bool is_feasible_route(
     const std::vector<int> &route,
     const py::array_t<double> &distance_matrix,
@@ -28,20 +27,17 @@ bool is_feasible_route(
         return false;
     }
 
-    // create unchecked views ONCE
     auto dist = distance_matrix.unchecked<2>();
     auto tw = time_windows.unchecked<2>();
     auto service = service_times.unchecked<1>();
     auto dem = demands.unchecked<1>();
 
-    // number of nodes (used to size 'seen'); assumes time_windows rows == number of nodes
     const auto n_nodes_py = tw.shape(0);
     size_t n_nodes = static_cast<size_t>(n_nodes_py);
 
     double load = 0.0;
     double current_time = 0.0;
 
-    // use a compact boolean array for seen-checks (much faster than set)
     std::vector<char> seen(n_nodes, 0);
 
     for (size_t i = 0; i < route.size() - 1; ++i)
@@ -66,7 +62,7 @@ bool is_feasible_route(
             return false;
         }
 
-        // Check 3: Time window (use unchecked accessor)
+        // Check 3: Time window 
         current_time += dist(from_node, to_node);
         double tw_start = tw(to_node, 0);
         double tw_end = tw(to_node, 1);
@@ -120,14 +116,11 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
     const std::map<int, int> &delivery_to_pickup_map,
     const std::map<int, int> &pickup_to_delivery_map)
 {
-    // Create unchecked view once for cost computations
     auto dist = distance_matrix.unchecked<2>();
 
-    // Convert maps to unordered_map for faster repeated lookup
     std::unordered_map<int, int> delivery_to_pickup(delivery_to_pickup_map.begin(), delivery_to_pickup_map.end());
     std::unordered_map<int, int> pickup_to_delivery(pickup_to_delivery_map.begin(), pickup_to_delivery_map.end());
 
-    // Convert not-allowed vector to set for O(1) membership tests
     std::unordered_set<int> not_allowed(not_allowed_vehicle_idxs.begin(), not_allowed_vehicle_idxs.end());
 
     double best_increase = std::numeric_limits<double>::infinity();
@@ -151,7 +144,6 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
 
         const auto &route = routes[route_idx];
 
-        // Fast path: empty route (depot-depot)
         if (route.size() == 2 && route[0] == 0 && route[1] == 0)
         {
             std::vector<int> new_route = {0, pickup, delivery, 0};
@@ -164,7 +156,7 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
             }
 
             double cost = dist(0, pickup) + dist(pickup, delivery) + dist(delivery, 0);
-            cost *= 10.0; // keep existing scale factor
+            cost *= 10.0; 
 
             if (cost < best_increase)
             {
@@ -177,69 +169,56 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
             continue;
         }
 
-        // Precompute old route cost once
         double old_cost = 0.0;
         for (size_t i = 0; i < route.size() - 1; ++i)
         {
             old_cost += dist(route[i], route[i + 1]);
         }
 
-        // Try all insertion positions (pickup_pos in [1, route.size()-1], delivery_pos in [pickup_pos, route.size()-1])
         for (size_t pickup_pos = 1; pickup_pos < route.size(); ++pickup_pos)
         {
             for (size_t delivery_pos = pickup_pos; delivery_pos < route.size(); ++delivery_pos)
             {
-                // Compute local cost delta without building full route
                 double removed = 0.0;
                 double added = 0.0;
 
                 if (delivery_pos > pickup_pos)
                 {
-                    // we remove two original edges, add four new edges
                     removed = dist(route[pickup_pos - 1], route[pickup_pos]) + dist(route[delivery_pos - 1], route[delivery_pos]);
                     added = dist(route[pickup_pos - 1], pickup) + dist(pickup, route[pickup_pos])
                           + dist(route[delivery_pos - 1], delivery) + dist(delivery, route[delivery_pos]);
                 }
                 else
                 {
-                    // delivery_pos == pickup_pos: one original edge replaced by three edges
                     removed = dist(route[pickup_pos - 1], route[pickup_pos]);
                     added = dist(route[pickup_pos - 1], pickup) + dist(pickup, delivery) + dist(delivery, route[pickup_pos]);
                 }
 
                 double increase = added - removed;
 
-                // Early prune: if not better than current best, skip feasibility check
                 if (!(increase < best_increase))
                 {
                     continue;
                 }
 
-                // Build candidate route (reserve once)
                 std::vector<int> new_route;
                 new_route.reserve(route.size() + 2);
 
-                // copy up to pickup_pos-1 (i.e., indices [0..pickup_pos-1])
                 for (size_t i = 0; i < pickup_pos; ++i)
                 {
                     new_route.push_back(route[i]);
                 }
-                // insert pickup
                 new_route.push_back(pickup);
-                // copy [pickup_pos .. delivery_pos-1]
                 for (size_t i = pickup_pos; i < delivery_pos; ++i)
                 {
                     new_route.push_back(route[i]);
                 }
-                // insert delivery
                 new_route.push_back(delivery);
-                // copy [delivery_pos .. end]
                 for (size_t i = delivery_pos; i < route.size(); ++i)
                 {
                     new_route.push_back(route[i]);
                 }
 
-                // Final feasibility check using exact routine
                 if (!is_feasible_route(new_route, distance_matrix, time_windows,
                                        service_times, demands, vehicle_capacity,
                                        delivery_to_pickup, pickup_to_delivery))
@@ -247,7 +226,6 @@ std::tuple<int, int, int, double, std::vector<int>> find_best_position_for_reque
                     continue;
                 }
 
-                // If feasible and better, update best
                 if (increase < best_increase)
                 {
                     best_increase = increase;

@@ -21,7 +21,7 @@ class JSONResultLogger:
             "runtime_seconds": runtime,
             "is_feasible": solution.is_feasible,
             "routes": solution.routes,
-            **kwargs  # Extra metadata
+            **kwargs
         }
         
         with open(filepath, 'w') as f:

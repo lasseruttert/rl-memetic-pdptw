@@ -4,9 +4,11 @@ from utils.pdptw_solution import PDPTWSolution
 from abc import ABC, abstractmethod
 
 class BaseInsertion(ABC):
+    """Base class for insertion heuristics."""
     def __init__(self):
         pass
 
     @abstractmethod
-    def insert(self, problem: PDPTWProblem, solution: PDPTWSolution, unserved_requests: list[tuple[int, int]] = None) -> PDPTWSolution:
+    def insert(self, problem: PDPTWProblem, solution: PDPTWSolution, unserved_requests: list[tuple[int, int]] = None) -> PDPTWSolution:#
+        """Insert unserved requests into the solution."""
         pass

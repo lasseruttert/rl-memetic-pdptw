@@ -21,7 +21,7 @@ class FlipOperator(BaseOperator):
         for route in routes:
             if self.max_attempts is not None and attempts >= self.max_attempts:
                 break
-            if len(route) > 2:  # Ensure there are at least two nodes to swap
+            if len(route) > 2: 
                 i, j = random.sample(range(1, len(route) - 1), 2)
                 route[i], route[j] = route[j], route[i]
         new_solution._clear_cache()

@@ -42,7 +42,6 @@ class RandomInsertion:
         if unserved_requests is None:
             unserved_requests = solution.get_unserved_requests(problem)
         
-        # Shuffle to randomize insertion order
         unserved_requests = list(unserved_requests)
         random.shuffle(unserved_requests)
         
@@ -57,7 +56,6 @@ class RandomInsertion:
                 if self.force_vehicle_idx is not None and route_idx != self.force_vehicle_idx:
                     continue
                 
-                # Empty route case
                 if not route or (len(route) <= 2 and route[0] == 0 and route[-1] == 0 and not looked_at_empty):
                     if not self.allow_new_vehicles:
                         continue
@@ -70,7 +68,6 @@ class RandomInsertion:
                         increase += problem.distance_baseline
                         feasible_insertions.append((route_idx, new_route, increase))
                 
-                # Regular insertion - collect all feasible positions
                 for pickup_pos in range(1, len(route)):
                     for delivery_pos in range(pickup_pos + 1, len(route) + 1):
                         new_route = (route[:pickup_pos] + [pickup] + 
@@ -81,19 +78,14 @@ class RandomInsertion:
                             feasible_insertions.append((route_idx, new_route, increase))
             
             if not feasible_insertions:
-                # No feasible insertion found, skip this request
                 continue
             
-            # Select random insertion from feasible options
             if self.weighted and len(feasible_insertions) > 1:
-                # Weight by inverse cost (slightly prefer better positions, but still random)
                 costs = [insertion[2] for insertion in feasible_insertions]
                 max_cost = max(costs)
-                # Invert costs: high cost → low weight
                 weights = [max_cost - cost + 1 for cost in costs]
                 selected = random.choices(feasible_insertions, weights=weights)[0]
             else:
-                # Pure uniform random
                 selected = random.choice(feasible_insertions)
             
             route_idx, new_route, _ = selected

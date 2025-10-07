@@ -2,6 +2,10 @@
 
 import sys
 import os
+import argparse
+import random
+import time
+import numpy as np
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -13,8 +17,6 @@ from memetic.local_search.rl_local_search.rl_local_search import RLLocalSearch
 from memetic.local_search.naive_local_search import NaiveLocalSearch
 from memetic.local_search.random_local_search import RandomLocalSearch
 from memetic.solution_generators.random_generator import RandomGenerator
-import random
-import time
 
 # fitness function for initial solution evaluation
 from memetic.fitness.fitness import fitness
@@ -61,12 +63,68 @@ def create_solution_generator(problem: PDPTWProblem) -> PDPTWSolution:
     return solution
 
 
+def set_seed(seed: int):
+    """Set random seeds for reproducibility.
+
+    Args:
+        seed: Random seed value
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+
+    # Set PyTorch seeds
+    try:
+        import torch
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        # Make PyTorch deterministic (may reduce performance)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    except ImportError:
+        pass
+
+
 def main():
     """Main training script for RL local search."""
 
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Train RL-based local search with configurable strategies")
+    parser.add_argument("--acceptance_strategy", type=str, default="epsilon_greedy",
+                        choices=["greedy", "always", "epsilon_greedy", "adaptive_epsilon_greedy",
+                                 "simulated_annealing", "simulated_annealing_linear",
+                                 "simulated_annealing_adaptive", "great_deluge", "record_to_record",
+                                 "threshold_accepting", "late_acceptance"],
+                        help="Acceptance strategy for local search")
+    parser.add_argument("--reward_strategy", type=str, default="initial_improvement",
+                        choices=["initial_improvement", "old_improvement", "hybrid_improvement",
+                                 "distance_baseline", "log_improvement", "binary",
+                                 "distance_baseline_clipped", "multi_objective",
+                                 "distance_baseline_shaped", "adaptive_baseline",
+                                 "exponential_improvement"],
+                        help="Reward strategy for RL agent")
+    parser.add_argument("--problem_size", type=int, default=100,
+                        choices=[100, 200, 400, 600, 1000],
+                        help="Problem size")
+    parser.add_argument("--num_episodes", type=int, default=1000,
+                        help="Number of training episodes")
+    parser.add_argument("--seed", type=int, default=42,
+                        help="Random seed for reproducibility (default: 42)")
+    args = parser.parse_args()
+
+    # Set random seed if provided
+    if args.seed is not None:
+        print(f"Setting random seed to {args.seed}")
+        set_seed(args.seed)
+
     # Configuration
-    PROBLEM_SIZE = 100  
-    CATEGORIES = ['lc1', 'lr1']  
+    PROBLEM_SIZE = args.problem_size
+    CATEGORIES = ['lc1', 'lr1']
+    ACCEPTANCE_STRATEGY = args.acceptance_strategy
+    REWARD_STRATEGY = args.reward_strategy
+    SEED = args.seed
+    seed_suffix = f"_seed{SEED}" if SEED is not None else ""
+    RUN_NAME = f"rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{seed_suffix}_{int(time.time())}"
 
     # Define operators to learn from
     operators = [
@@ -93,7 +151,8 @@ def main():
         target_update_interval=100,
         alpha=10.0,  
         beta=0.0,    
-        acceptance_strategy="epsilon_greedy",  
+        acceptance_strategy=ACCEPTANCE_STRATEGY,  
+        reward_strategy = REWARD_STRATEGY,
         max_steps_per_episode=200,
         replay_buffer_capacity=100000,
         batch_size=64,
@@ -112,13 +171,15 @@ def main():
     training_history = rl_local_search.train(
         problem_generator=problem_generator,
         initial_solution_generator=create_solution_generator,
-        num_episodes=1000,         
-        new_instance_interval=20,   
-        new_solution_interval=5,    
-        update_interval=1,       
-        warmup_episodes=10,   
-        save_interval=1000,          
-        save_path=f"models/rl_local_search_{PROBLEM_SIZE}"
+        num_episodes=args.num_episodes,
+        new_instance_interval=20,
+        new_solution_interval=5,
+        update_interval=1,
+        warmup_episodes=10,
+        save_interval=1000,
+        save_path=f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}",
+        tensorboard_dir=f"runs/{RUN_NAME}",
+        seed=SEED, 
     )
 
     print("\nTraining completed!")
@@ -126,17 +187,19 @@ def main():
     print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
 
     naive_local_search = NaiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200, first_improvement=True)
+    
+    naive_with_best_local_search = NaiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200, first_improvement=False)
 
     random_local_search = RandomLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200)
 
     # You can provide up to 6 different RL model paths to evaluate here.
     RL_MODEL_PATHS = [
         # f"models/rl_local_search_{PROBLEM_SIZE}_always-baseline.pt",
-        f"models/rl_local_search_{PROBLEM_SIZE}_epsilon-one.pt",
+        # f"models/rl_local_search_{PROBLEM_SIZE}_epsilon-one.pt",
         # f"models/rl_local_search_{PROBLEM_SIZE}_epsilon-(initial-new).pt",
         # f"models/rl_local_search_{PROBLEM_SIZE}_episode_2000.pt",
         # f"models/rl_local_search_{PROBLEM_SIZE}_epsilon-(old-new).pt",
-        f"models/rl_local_search_{PROBLEM_SIZE}_final.pt",
+        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final.pt",
     ]
 
     # Build RLLocalSearch instances for each provided path and try to load them.
@@ -179,6 +242,7 @@ def main():
     NUM_TESTS = 50
     rl_results = [[] for _ in range(len(rl_models))]  # per-model collected tuples (initial, best, time)
     naive_results = []
+    naive_with_best_results = []
     random_results = []
 
     print("\n--- Comparing RL models vs Naive/Random Local Search ---")
@@ -219,6 +283,17 @@ def main():
         naive_time = time.time() - t0
         print(f"Naive: best fitness: {naive_best_fitness:.2f} (time: {naive_time:.2f}s)")
         naive_results.append((initial_fitness, naive_best_fitness, naive_time))
+        
+        # Naive local search with best improvement
+        naive_with_best_solution = initial_solution.clone()
+        t0 = time.time()
+        naive_with_best_best_solution, naive_with_best_best_fitness = naive_with_best_local_search.search(
+            problem=test_problem,
+            solution=naive_with_best_solution
+        )
+        naive_with_best_time = time.time() - t0
+        print(f"Naive (best improvement): best fitness: {naive_with_best_best_fitness:.2f} (time: {naive_with_best_time:.2f}s)")
+        naive_with_best_results.append((initial_fitness, naive_with_best_best_fitness, naive_with_best_time))
 
         # Random local search
         random_solution = initial_solution.clone()
@@ -242,9 +317,12 @@ def main():
 
     avg_naive = sum(r[1] for r in naive_results) / NUM_TESTS
     avg_time_naive = sum(r[2] for r in naive_results) / NUM_TESTS
+    avg_naive_with_best = sum(r[1] for r in naive_with_best_results) / NUM_TESTS
+    avg_time_naive_with_best = sum(r[2] for r in naive_with_best_results) / NUM_TESTS
     avg_random = sum(r[1] for r in random_results) / NUM_TESTS
     avg_time_random = sum(r[2] for r in random_results) / NUM_TESTS
     print(f"Naive: Avg best fitness: {avg_naive:.2f} (avg time: {avg_time_naive:.2f}s)")
+    print(f"Naive (best improvement): Avg best fitness: {avg_naive_with_best:.2f} (avg time: {avg_time_naive_with_best:.2f}s)")
     print(f"Random: Avg best fitness: {avg_random:.2f} (avg time: {avg_time_random:.2f}s)")
 
     # Note: we do not re-save models here. Change RL_MODEL_PATHS above to evaluate different files.

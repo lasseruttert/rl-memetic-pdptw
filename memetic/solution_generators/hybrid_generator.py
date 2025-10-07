@@ -17,7 +17,6 @@ class HybridGenerator(BaseGenerator):
         solutions = []
         
         for i in range(num_solutions):
-            # Für jede Lösung individuell entscheiden: greedy oder random?
             if random.random() < self.greedy_ratio:
                 solution = self.greedy_generator.generate(problem, num_solutions=1)[0]
             else:

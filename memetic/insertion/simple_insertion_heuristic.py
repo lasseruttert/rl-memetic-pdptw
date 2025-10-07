@@ -26,19 +26,19 @@ def greedy_insertion(
             pickup, delivery = request
             looked_at_empty = False
             for route_idx, route in enumerate(solution.routes):
-                if not route or len(route) <= 2 and route[0] == 0 and route[-1] == 0 and not looked_at_empty:  # Empty route, just add pickup and delivery
+                if not route or len(route) <= 2 and route[0] == 0 and route[-1] == 0 and not looked_at_empty:  
                     new_route = [0, pickup, delivery, 0]
                     if _is_feasible_insertion(problem, new_route):
                         looked_at_empty = True
                         increase = (problem.distance_matrix[0, pickup] + 
                                     problem.distance_matrix[pickup, delivery] + 
                                     problem.distance_matrix[delivery, 0])
-                        increase += problem.distance_baseline  # Small penalty for using a new vehicle
+                        increase += problem.distance_baseline  
                         if increase < best_increase:
                             best_insertion = route_idx, new_route, pickup, delivery
                             best_increase = increase
-                for pickup_pos in range(1, len(route)):  # Position to insert pickup
-                    for delivery_pos in range(pickup_pos + 1, len(route) + 1):  # Position to insert delivery
+                for pickup_pos in range(1, len(route)): 
+                    for delivery_pos in range(pickup_pos + 1, len(route) + 1):  
                         new_route = route[:pickup_pos] + [pickup] + route[pickup_pos:delivery_pos] + [delivery] + route[delivery_pos:]
                         if _is_feasible_insertion(problem, new_route):
                             increase = _cost_increase(problem, route, new_route)
@@ -52,8 +52,7 @@ def greedy_insertion(
             unserved_requests.remove((pickup, delivery))
             solution._clear_cache()
         else:
-            # print("No feasible insertion found for remaining requests")
-            break  # No feasible insertion found, exit loop
+            break 
     return solution
 
 

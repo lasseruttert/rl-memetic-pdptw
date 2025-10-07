@@ -26,6 +26,7 @@ class LocalSearchEnv(gym.Env):
         operators: list[BaseOperator],
         alpha: float = 1.0,
         acceptance_strategy: str = "greedy",
+        reward_strategy: str = "initial_improvement",
         max_steps: int = 100
     ):
         """Initialize the local search environment.
@@ -42,6 +43,7 @@ class LocalSearchEnv(gym.Env):
         self.operators = operators
         self.alpha = alpha
         self.acceptance_strategy = acceptance_strategy
+        self.reward_strategy = reward_strategy
         self.max_steps = max_steps
 
         # Action space: discrete selection of operators (no no-op)
@@ -64,6 +66,8 @@ class LocalSearchEnv(gym.Env):
         self.initial_fitness: Optional[float] = None
         self.best_solution: Optional[PDPTWSolution] = None
         self.best_fitness: float = float('inf')
+
+        self.epsilon_value = 0.1
 
         # Simulated annealing parameters
         self.initial_temp = 1000.0
@@ -153,9 +157,10 @@ class LocalSearchEnv(gym.Env):
         # Increment step counter
         self.step_count += 1
 
-        # Decay temperature for simulated annealing
+        # Update acceptance strategy state
         if self.acceptance_strategy == "simulated_annealing":
             self.temperature *= self.temp_decay
+
 
         # Check termination
         terminated = False  # local search doesn't have a terminal state
@@ -190,34 +195,52 @@ class LocalSearchEnv(gym.Env):
         Returns:
             Reward value (normalized)
         """
-        # Relative improvement (instance-independent)
-        # if old_fitness <= 0:
-        #     reward = 0.0
-        # else:
-        #     improvement_pct = (old_fitness - new_fitness) / old_fitness if old_fitness > 0 else 0.0
-        #     reward = self.alpha * improvement_pct
+        if self.reward_strategy == "initial_improvement":
+            if self.initial_fitness <= 0:
+                reward = 0.0
+            else:
+                improvement_pct = (self.initial_fitness - new_fitness) / self.initial_fitness if self.initial_fitness > 0 else 0.0
+                reward = self.alpha * improvement_pct
+                
+        elif self.reward_strategy == "old_improvement":
+            if old_fitness <= 0:
+                reward = 0.0
+            else:
+                improvement_pct = (old_fitness - new_fitness) / old_fitness if old_fitness > 0 else 0.0
+                reward = self.alpha * improvement_pct
+                
+        elif self.reward_strategy == "hybrid_improvement":
+            if self.initial_fitness <= 0 or old_fitness <= 0:
+                reward = 0.0
+            else:
+                initial_improvement = (self.initial_fitness - new_fitness) / self.initial_fitness
+                old_improvement = (old_fitness - new_fitness) / old_fitness
+                reward = self.alpha * (0.5 * initial_improvement + 0.5 * old_improvement)
+                
+        elif self.reward_strategy == "distance_baseline":
+            baseline = self.problem.distance_baseline
+            fitness_improvement = (old_fitness - new_fitness) / baseline
+            reward = self.alpha * fitness_improvement
             
-        # improvement based on initial fitness (instance-dependent)
-        # if self.initial_fitness <= 0:
-        #     reward = 0.0
-        # else:
-        #     improvement_pct = (self.initial_fitness - new_fitness) / self.initial_fitness if self.initial_fitness > 0 else 0.0
-        #     reward = self.alpha * improvement_pct
+        elif self.reward_strategy == "log_improvement":
+            if new_fitness < old_fitness:
+                reward = self.alpha * np.log(old_fitness / new_fitness)
+            else:
+                reward = -self.alpha * np.log(new_fitness / old_fitness)
+                
+        elif self.reward_strategy == "binary":
+            if new_fitness < old_fitness:
+                reward = 1.0
+            else:
+                reward = -1.0
 
-        # Old version (distance baseline normalization)
-        # baseline = self.problem.distance_baseline
-        # fitness_improvement = (old_fitness - new_fitness) / baseline
-        # reward = self.alpha * fitness_improvement
-        
-        # if new_fitness < old_fitness:
-        #     reward = self.alpha * np.log(old_fitness / new_fitness)
-        # else:
-        #     reward = -self.alpha * np.log(new_fitness / old_fitness)
-        
-        if new_fitness < old_fitness:
-            reward = 1.0
+        elif self.reward_strategy == "distance_baseline_clipped":
+            baseline = self.problem.distance_baseline
+            fitness_improvement = (old_fitness - new_fitness) / baseline
+            reward = np.clip(self.alpha * fitness_improvement, -5.0, 5.0)
+
         else:
-            reward = -10.0
+            raise ValueError(f"Unknown reward strategy: {self.reward_strategy}")
 
         return reward
 
@@ -233,14 +256,16 @@ class LocalSearchEnv(gym.Env):
         """
         if self.acceptance_strategy == "greedy":
             return new_fitness < old_fitness
+
         elif self.acceptance_strategy == "always":
             return True
+
         elif self.acceptance_strategy == "epsilon_greedy":
-            epsilon = 0.1  # This could be parameterized
             if new_fitness < old_fitness:
                 return True
             else:
-                return np.random.rand() < epsilon
+                return np.random.rand() < self.epsilon_value
+
         elif self.acceptance_strategy == "simulated_annealing":
             if new_fitness < old_fitness:
                 return True

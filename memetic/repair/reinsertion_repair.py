@@ -27,7 +27,6 @@ class ReinsertionRepair(BaseRepair):
                     from_node = route[i]
                     to_node = route[i + 1]
                     
-                    # Check all constraints
                     violation = False
                     pair_to_remove = None
                     
@@ -41,7 +40,6 @@ class ReinsertionRepair(BaseRepair):
                             violation = True
                             pair_to_remove = (pickup, to_node)
                 
-                    # Time and capacity checks
                     current_time += problem.distance_matrix[from_node, to_node]
                     current_time = max(current_time, problem.time_windows[to_node][0])
                     
@@ -58,15 +56,13 @@ class ReinsertionRepair(BaseRepair):
                             pair_to_remove = problem.get_pair(to_node)
                     
                     if violation and pair_to_remove:
-                        # Remove pair immediately and restart
                         nodes_to_remove = set(pair_to_remove)
                         solution.routes[route_idx] = [n for n in route if n not in nodes_to_remove]
                         changed = True
-                        break  # Restart this route
+                        break 
                     
                     seen.add(to_node)
         
-        # Reinsert
         unserved = solution.get_unserved_requests(problem)
         if unserved:
             solution = self.inserter.insert(solution, problem, unserved)

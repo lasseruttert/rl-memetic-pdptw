@@ -87,7 +87,7 @@ class BestKnownSolutions:
             instance_name: The name of the problem instance.
 
         Returns:
-            The best known fitness value.
+            the best known number of vehicles and distance as a tuple (num_vehicles, distance)
 
         Raises:
             KeyError: If the instance name is not found.

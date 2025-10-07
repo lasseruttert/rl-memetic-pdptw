@@ -37,4 +37,4 @@ class RouletteWheelSelection(BaseSelection):
             if rand_value <= cum_prob:
                 return population[i]
         
-        return population[-1]  # Fallback in case of rounding errors
+        return population[-1] 
