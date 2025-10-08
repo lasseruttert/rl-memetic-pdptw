@@ -9,11 +9,20 @@ from memetic.local_search.base_local_search import BaseLocalSearch
 from memetic.selection.base_selection import BaseSelection
 
 from memetic.solution_generators.random_generator import RandomGenerator
-from memetic.selection.k_tournament import KTournamentSelection
-from memetic.crossover.srex import SREXCrossover
-from memetic.mutation.naive_mutation import NaiveMutation
-from memetic.local_search.naive_local_search import NaiveLocalSearch
+from memetic.solution_generators.greedy_generator import GreedyGenerator
+from memetic.solution_generators.hybrid_generator import HybridGenerator
 
+from memetic.selection.k_tournament import KTournamentSelection
+
+from memetic.crossover.srex import SREXCrossover
+
+from memetic.mutation.naive_mutation import NaiveMutation
+
+from memetic.local_search.naive_local_search import NaiveLocalSearch
+from memetic.local_search.adaptive_local_search import AdaptiveLocalSearch
+from memetic.local_search.random_local_search import RandomLocalSearch
+
+from memetic.solution_operators.base_operator import BaseOperator
 from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.solution_operators.route_elimination import RouteEliminationOperator
 from memetic.solution_operators.flip import FlipOperator
@@ -24,6 +33,8 @@ from memetic.solution_operators.cls_m1 import CLSM1Operator
 from memetic.solution_operators.cls_m2 import CLSM2Operator
 from memetic.solution_operators.cls_m3 import CLSM3Operator
 from memetic.solution_operators.cls_m4 import CLSM4Operator
+from memetic.solution_operators.two_opt import TwoOptOperator
+from memetic.solution_operators.two_opt_star import TwoOptStarOperator
 
 from memetic.utils.distance_measure import DistanceMeasure
 from memetic.utils.edge_frequency import SparseCentroid, compute_sparse_edges
@@ -32,73 +43,253 @@ import time
 import random
 import copy
 from dataclasses import dataclass
+from typing import Union, Optional
 
-class MemeticSolver: # TODO change parameters so you can init using strings to decide operators etc but also objects
+class MemeticSolver: 
+    """
+    Modular Memetic Algorithm for solving PDPTW problems.
+    """
     def __init__(
         self, 
         population_size: int = 10, 
-        max_generations: int = 100,
-        max_time_seconds: int = 600,
-        max_no_improvement: int = 10,
+        max_generations: Optional[int] = None,
+        max_time_seconds: Optional[int] = 300,
+        max_no_improvement: Optional[int] = 50,
         
-        initial_solution_generator: BaseGenerator = None,
-        
-        selection_operator: BaseSelection = None,
-        crossover_operator: BaseCrossover = None,
-        mutation_operator: BaseMutation = None,
-        local_search_operator: BaseLocalSearch = None,
+        initial_solution_generator: Union[BaseGenerator, str] = None,
+
+        selection_operator: Union[BaseSelection, str] = None,
+        crossover_operator: Union[BaseCrossover, str] = None,
+        mutation_operators: Union[list[BaseOperator], list[str]] = None,
+        mutation_operator: Union[BaseMutation, str] = None,
+        local_search_operators: Union[list[BaseOperator], list[str]] = None,
+        local_search_operator: Union[BaseLocalSearch, str] = None,
         
         fitness_function = fitness,
         
         ensure_diversity_interval: int = 3,
+        use_centroid: bool = False,
         
         evaluation_interval: int = 10,
         verbose: bool = False,
         track_history: bool = False
     ):
+        """
+        Args:
+            population_size (int): Number of individuals in the population.
+            max_generations (Optional[int]): Maximum number of generations to run. If None, no limit on generations.
+            max_time_seconds (Optional[int]): Maximum time in seconds to run the algorithm. If None, no limit on time.
+            max_no_improvement (Optional[int]): Maximum number of generations without improvement before stopping. If None, no limit on no improvement.
+            initial_solution_generator (Union[BaseGenerator, str]): Initial solution generator to use. Can be an instance of BaseGenerator or a string identifier.
+            selection_operator (Union[BaseSelection, str]): Selection operator to use. Can be an instance of BaseSelection or a string identifier.
+            crossover_operator (Union[BaseCrossover, str]): Crossover operator to use. Can be an instance of BaseCrossover or a string identifier.
+            mutation_operators (Union[list[BaseOperator], list[str]]): List operators to use within mutation to apply to a solution.
+            mutation_operator (Union[BaseMutation, str]): Mutation operator to use. Can be an instance of BaseMutation or a string identifier.
+            local_search_operators (Union[list[BaseOperator], list[str]]): List of local search operators to use within local search to apply to a solution.
+            local_search_operator (Union[BaseLocalSearch, str]): Local search operator to use.
+            fitness_function: Function to evaluate the fitness of a solution.
+            ensure_diversity_interval (int): Interval (in generations) to ensure diversity in the population.
+            use_centroid (bool): Whether to use centroid-based diversity measure.
+            evaluation_interval (int): Interval (in generations) to evaluate the population.
+            verbose (bool): Whether to print verbose output.
+            track_history (bool): Whether to track the history of the algorithm.
+        """
+        
         self.population_size = population_size
+        
+        if all(param is None for param in [max_generations, max_time_seconds, max_no_improvement]):
+            raise ValueError("At least one stopping criteria must be provided (max_generations, max_time_seconds, max_no_improvement).")
+        
         self.max_generations = max_generations
         self.max_time_seconds = max_time_seconds
         self.max_no_improvement = max_no_improvement
         
-        self.initial_solution_generator = initial_solution_generator if initial_solution_generator is not None else RandomGenerator()
+        # * Initial Solution Generator
+        if initial_solution_generator is None:
+            initial_solution_generator = 'random'
+        if isinstance(initial_solution_generator, str):
+            if initial_solution_generator.lower() == 'random':
+                initial_solution_generator = RandomGenerator()
+            elif initial_solution_generator.lower() == 'greedy':
+                initial_solution_generator = GreedyGenerator()
+            elif initial_solution_generator.lower() == 'hybrid':
+                initial_solution_generator = HybridGenerator()
+            else:
+                raise ValueError(f"Unknown initial solution generator: {initial_solution_generator}")
+        if isinstance(initial_solution_generator, BaseGenerator):
+            self.initial_solution_generator = initial_solution_generator
         
-        self.selection_operator = selection_operator if selection_operator is not None else KTournamentSelection(k=2)
-        self.crossover_operator = crossover_operator if crossover_operator is not None else SREXCrossover()
+        # * Selection Operator
+        if isinstance(selection_operator, str):
+            if selection_operator.lower() == 'k_tournament':
+                selection_operator = KTournamentSelection(k=2)
+            else:
+                raise ValueError(f"Unknown selection operator: {selection_operator}")
+        if isinstance(selection_operator, BaseSelection):
+            self.selection_operator = selection_operator
+            
+        # * Crossover Operator
+        if crossover_operator is None:
+            crossover_operator = 'srex'
+        if isinstance(crossover_operator, str):
+            if crossover_operator.lower() == 'srex':
+                crossover_operator = SREXCrossover()
+            else:
+                raise ValueError(f"Unknown crossover operator: {crossover_operator}")
+        if isinstance(crossover_operator, BaseCrossover):
+            self.crossover_operator = crossover_operator
+
+        # * Mutation Operators
+        if isinstance(mutation_operators, list) and all(isinstance(op, str) for op in mutation_operators):
+            ops = []
+            for op in mutation_operators:
+                if op.lower() == 'reinsert':
+                    ops.append(ReinsertOperator())
+                elif op.lower() == 'route_elimination':
+                    ops.append(RouteEliminationOperator())
+                elif op.lower() == 'flip':
+                    ops.append(FlipOperator())
+                elif op.lower() == 'swap_within':
+                    ops.append(SwapWithinOperator())
+                elif op.lower() == 'swap_between':
+                    ops.append(SwapBetweenOperator())
+                elif op.lower() == 'transfer':
+                    ops.append(TransferOperator())
+                elif op.lower() == 'cls_m1':
+                    ops.append(CLSM1Operator())
+                elif op.lower() == 'cls_m2':
+                    ops.append(CLSM2Operator())
+                elif op.lower() == 'cls_m3':
+                    ops.append(CLSM3Operator())
+                elif op.lower() == 'cls_m4':
+                    ops.append(CLSM4Operator())
+                elif op.lower() == 'two_opt':
+                    ops.append(TwoOptOperator())
+                elif op.lower() == 'two_opt_star':
+                    ops.append(TwoOptStarOperator())
+                else:
+                    raise ValueError(f"Unknown mutation operator: {op}")
+            mutation_operators = ops
+
+        self.mutation_operators = None
+        if isinstance(mutation_operators, list) and all(isinstance(op, BaseOperator) for op in mutation_operators):
+            self.mutation_operators = mutation_operators
         
-        self.mutation_operator = mutation_operator if mutation_operator is not None else NaiveMutation(
-            operators=[
+        if self.mutation_operators is None or len(self.mutation_operators) == 0:
+            self.mutation_operators = [
                 ReinsertOperator(),
+                RouteEliminationOperator(),
                 FlipOperator(),
                 SwapWithinOperator(),
                 SwapBetweenOperator(),
-                TransferOperator()
-            ],
-            max_iterations=1
-        )
-        
-        self.local_search_operator = local_search_operator if local_search_operator is not None else NaiveLocalSearch(
-            operators=[
-                ReinsertOperator(),
-                ReinsertOperator(max_attempts=5,clustered=True),
-                ReinsertOperator(allow_same_vehicle=False),
-                ReinsertOperator(allow_same_vehicle=False, allow_new_vehicles=False),
-                
-                RouteEliminationOperator(),
-                
+                TransferOperator(),
                 CLSM1Operator(),
                 CLSM2Operator(),
                 CLSM3Operator(),
                 CLSM4Operator(),
+                TwoOptOperator(),
+                # TwoOptStarOperator()
+            ]
+
+        # * Mutation Operator
+        if mutation_operator is None:
+            mutation_operator = 'naive'
+        if isinstance(mutation_operator, str):
+            if mutation_operator.lower() == 'naive':
+                mutation_operator = NaiveMutation(
+                    operators=self.mutation_operators,
+                    max_iterations=1
+                )
+            else:
+                raise ValueError(f"Unknown mutation operator: {mutation_operator}")
+        if isinstance(mutation_operator, BaseMutation):
+            self.mutation_operator = mutation_operator
+
+        # * Local Search Operators
+        if isinstance(local_search_operators, list) and all(isinstance(op, str) for op in local_search_operators):
+            ops = []
+            for op in local_search_operators:
+                if op.lower() == 'reinsert':
+                    ops.append(ReinsertOperator())
+                elif op.lower() == 'route_elimination':
+                    ops.append(RouteEliminationOperator())
+                elif op.lower() == 'flip':
+                    ops.append(FlipOperator())
+                elif op.lower() == 'swap_within':
+                    ops.append(SwapWithinOperator())
+                elif op.lower() == 'swap_between':
+                    ops.append(SwapBetweenOperator())
+                elif op.lower() == 'transfer':
+                    ops.append(TransferOperator())
+                elif op.lower() == 'cls_m1':
+                    ops.append(CLSM1Operator())
+                elif op.lower() == 'cls_m2':
+                    ops.append(CLSM2Operator())
+                elif op.lower() == 'cls_m3':
+                    ops.append(CLSM3Operator())
+                elif op.lower() == 'cls_m4':
+                    ops.append(CLSM4Operator())
+                elif op.lower() == 'two_opt':
+                    ops.append(TwoOptOperator())
+                elif op.lower() == 'two_opt_star':
+                    ops.append(TwoOptStarOperator())
+                else:
+                    raise ValueError(f"Unknown local search operator: {op}")
+            local_search_operators = ops
+            
+        self.local_search_operators = None
+        if isinstance(local_search_operators, list) and all(isinstance(op, BaseOperator) for op in local_search_operators):
+            self.local_search_operators = local_search_operators
+
+        if self.local_search_operators is None or len(self.local_search_operators) == 0:
+            self.local_search_operators = [
+                ReinsertOperator(),
+                ReinsertOperator(max_attempts=5, clustered=True),
+                ReinsertOperator(allow_same_vehicle=False),
                 
-                TransferOperator(single_route=True),
-                TransferOperator(max_attempts=5,single_route=True),
-                
-                SwapBetweenOperator(),
-            ],
-            max_no_improvement=10,
-            max_iterations=30
-        )
+                RouteEliminationOperator(),
+                TransferOperator(),
+                CLSM1Operator(),
+                CLSM2Operator(),
+                CLSM3Operator(),
+                CLSM4Operator(),
+            ]
+
+        # * Local Search Operator
+        if local_search_operator is None:
+            local_search_operator = 'naive'
+        if isinstance(local_search_operator, str):
+            if local_search_operator.lower() == 'naive':
+                local_search_operator = NaiveLocalSearch(
+                    operators=self.local_search_operators,
+                    max_no_improvement=10,
+                    max_iterations=30
+                )
+            elif local_search_operator.lower() == 'naive_best':
+                local_search_operator = NaiveLocalSearch(
+                    operators=self.local_search_operators,
+                    max_no_improvement=20,
+                    max_iterations=60,
+                    best_improvement=True
+                )
+            elif local_search_operator.lower() == 'adaptive':
+                local_search_operator = AdaptiveLocalSearch(
+                    operators=self.local_search_operators,
+                    max_no_improvement=20,
+                    max_iterations=60,
+                    use_centroid=use_centroid
+                )
+            elif local_search_operator.lower() == 'random':
+                local_search_operator = RandomLocalSearch(
+                    operators=self.local_search_operators,
+                    max_no_improvement=20,
+                    max_iterations=60
+                )
+            else:
+                raise ValueError(f"Unknown local search operator: {local_search_operator}")
+        if isinstance(local_search_operator, BaseLocalSearch):
+            self.local_search_operator = local_search_operator
+        
         
         self.fitness_function = fitness_function
         
@@ -112,6 +303,15 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
             self.history = {}
     
     def solve(self, problem: PDPTWProblem, initial_solution: PDPTWSolution = None) -> PDPTWSolution:
+        """Solve the PDPTW problem using the memetic algorithm.
+
+        Args:
+            problem (PDPTWProblem): The PDPTW problem instance.
+            initial_solution (PDPTWSolution, optional): Initial solution to start the search. Defaults to None.
+
+        Returns:
+            PDPTWSolution: The best solution found.
+        """
         best_solution = None
         best_fitness = float('inf')
         
@@ -165,6 +365,7 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
                 parent2 = population[i + 1] if i + 1 < len(population) else population[0]
                 
                 children = self.crossover_operator.crossover(problem, parent1, parent2)
+                if not children: continue
                 child = random.choice(children) if children else None
                 child = self.mutation_operator.mutate(problem, child)
                 child, fitness = self.local_search_operator.search(problem, child)
@@ -187,8 +388,8 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
                 no_improvement_count += 1
                 
             generation += 1
-            
-            if generation >= self.max_generations or no_improvement_count >= self.max_no_improvement or (time.time() - start_time) >= self.max_time_seconds:
+
+            if self._check_if_done(generation, no_improvement_count, start_time):
                 if self.verbose: print("\033[1;31mStopping criteria met.\033[0m\n")
                 done = True
         
@@ -197,12 +398,13 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
         return best_solution
         
     def _ensure_diversity(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list):
+        """Ensure diversity in the population by removing duplicates and using a distance metric."""
         # Remove duplicates
         seen = set()
         for i in range(len(population)):
             identifier = population[i].hashed_encoding
             if identifier in seen:
-                population[i] = self.initial_solution_generator.generate(population[i].problem, 1)[0]
+                population[i] = self.initial_solution_generator.generate(problem, 1)[0]
                 current_fitnesses[i] = self.fitness_function(problem, population[i])
             else:
                 seen.add(identifier)
@@ -212,6 +414,7 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
         return population, current_fitnesses
         
     def _evaluate(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, iteration: int, start_time: float):
+        """Evaluate the population and store statistics."""
         min_fitness = float('inf')
         max_fitness = float('-inf')
         avg_fitness = 0.0
@@ -224,7 +427,7 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
             if fitness > max_fitness:
                 max_fitness = fitness
             avg_fitness += fitness
-        avg_fitness /= len(population)
+        avg_fitness /= len(population) if len(population) > 0 else 0.0
         
         
         self.evaluations[iteration] = {
@@ -236,6 +439,7 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
         return # TODO
     
     def _calculate_upper_bound_vehicles(self, problem: PDPTWProblem) -> int:
+        """Calculate an upper bound on the number of vehicles needed to serve all customers."""
         old_num_no_improvement = self.local_search_operator.max_no_improvement
         self.local_search_operator.max_no_improvement = 30
         old_num_iterations = self.local_search_operator.max_iterations
@@ -259,6 +463,17 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
         self.local_search_operator.max_no_improvement = old_num_no_improvement
         self.local_search_operator.max_iterations = old_num_iterations
         return temp_problem.num_vehicles
+    
+    def _check_if_done(self, generation: int, no_improvement_count: int, start_time: float) -> bool:
+        """Check if stopping criteria are met."""
+        if self.max_generations is not None and generation >= self.max_generations:
+            return True
+        if self.max_no_improvement is not None and no_improvement_count >= self.max_no_improvement:
+            return True
+        if self.max_time_seconds is not None and (time.time() - start_time) >= self.max_time_seconds:
+            return True
+        return False
+    
 @dataclass
 class Individual: # TODO use this
     solution: PDPTWSolution
