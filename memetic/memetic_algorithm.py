@@ -41,7 +41,7 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
         max_time_seconds: int = 600,
         max_no_improvement: int = 10,
         
-        inital_solution_generator: BaseGenerator = None,
+        initial_solution_generator: BaseGenerator = None,
         
         selection_operator: BaseSelection = None,
         crossover_operator: BaseCrossover = None,
@@ -61,7 +61,7 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
         self.max_time_seconds = max_time_seconds
         self.max_no_improvement = max_no_improvement
         
-        self.initial_solution_generator = inital_solution_generator if inital_solution_generator is not None else RandomGenerator()
+        self.initial_solution_generator = initial_solution_generator if initial_solution_generator is not None else RandomGenerator()
         
         self.selection_operator = selection_operator if selection_operator is not None else KTournamentSelection(k=2)
         self.crossover_operator = crossover_operator if crossover_operator is not None else SREXCrossover()
@@ -124,7 +124,14 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
         
         start_time = time.time()
         
-        # TODO: (Optional) Calculate Upper Bound of num vehicles via iterative LS
+        original_num_vehicles = problem.num_vehicles
+        if self.verbose: 
+            print(f"Original number of vehicles: {original_num_vehicles}")
+            print(f"Calculating upper bound on number of vehicles...")
+        upper_bound_vehicles = self._calculate_upper_bound_vehicles(problem)
+        if upper_bound_vehicles < problem.num_vehicles:
+            if self.verbose: print(f"Setting number of vehicles to upper bound of {upper_bound_vehicles} vehicles")
+            problem.num_vehicles = upper_bound_vehicles
         
         population = self.initial_solution_generator.generate(problem, self.population_size)
         for i in range(len(population)):
@@ -134,7 +141,9 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
                 best_fitness = current_fitnesses[i]
         
         while not done:
-            if self.verbose: print(f"Generation {generation} at {time.time() - start_time} seconds, Best Fitness: {best_fitness}")
+            if self.verbose: 
+                print(f"\n\033[4;34mGeneration {generation}:\033[0m {(time.time() - start_time):.2f} seconds, Best Fitness: {best_fitness:.2f}")
+                print(f"\033[1;33mBest Solution - Number of Vehicles: {best_solution.num_vehicles_used}, Total Distance: {best_solution.total_distance:.2f}\033[0m\n")
             if self.track_history:
                 self.history[generation] = {
                     'population': copy.deepcopy(population),
@@ -165,7 +174,7 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
                     current_fitnesses[i] = fitness
                 
                 if fitness < best_fitness:
-                    if self.verbose: print(f"New best solution found with fitness {fitness} at generation {generation}")
+                    if self.verbose: print(f"New best solution found with fitness {fitness:.2f} at generation {generation}")
                     best_solution = child
                     best_fitness = fitness
                     
@@ -180,8 +189,10 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
             generation += 1
             
             if generation >= self.max_generations or no_improvement_count >= self.max_no_improvement or (time.time() - start_time) >= self.max_time_seconds:
-                if self.verbose: print("Stopping criteria met.")
+                if self.verbose: print("\033[1;31mStopping criteria met.\033[0m\n")
                 done = True
+        
+        problem.num_vehicles = original_num_vehicles
         
         return best_solution
         
@@ -195,9 +206,9 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
                 current_fitnesses[i] = self.fitness_function(problem, population[i])
             else:
                 seen.add(identifier)
-        
+
         # TODO: Use some distance metric to ensure diversity
-        
+
         return population, current_fitnesses
         
     def _evaluate(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, iteration: int, start_time: float):
@@ -223,7 +234,31 @@ class MemeticSolver: # TODO change parameters so you can init using strings to d
             'avg': avg_fitness
         }
         return # TODO
-
+    
+    def _calculate_upper_bound_vehicles(self, problem: PDPTWProblem) -> int:
+        old_num_no_improvement = self.local_search_operator.max_no_improvement
+        self.local_search_operator.max_no_improvement = 30
+        old_num_iterations = self.local_search_operator.max_iterations
+        self.local_search_operator.max_iterations = 50
+        temp_problem = copy.deepcopy(problem)
+        solution_found = True
+        while solution_found:
+            temp_problem.num_vehicles -= 1
+            if temp_problem.num_vehicles <= 0:
+                temp_problem.num_vehicles = 1
+                break
+            temp_solution = self.initial_solution_generator.generate(temp_problem, 1)[0]
+            temp_solution, fitness = self.local_search_operator.search(temp_problem, temp_solution)
+            if temp_solution.is_feasible:
+                if self.verbose: print(f"Feasible with {temp_problem.num_vehicles} vehicles")
+                continue
+            else:
+                if self.verbose: print(f"Infeasible with {temp_problem.num_vehicles} vehicles")
+                solution_found = False
+                temp_problem.num_vehicles += 1
+        self.local_search_operator.max_no_improvement = old_num_no_improvement
+        self.local_search_operator.max_iterations = old_num_iterations
+        return temp_problem.num_vehicles
 @dataclass
 class Individual: # TODO use this
     solution: PDPTWSolution

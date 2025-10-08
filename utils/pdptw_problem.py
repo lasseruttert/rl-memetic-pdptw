@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 import numpy as np
+import re
+
+from pyparsing import line
 
 @dataclass
 class Node:
@@ -81,6 +84,64 @@ class PDPTWProblem:
         self.distance_baseline = sum(self.distance_matrix[0, i] for i in range(1, len(self.distance_matrix))) * 2
         total_demand = sum(node.demand for node in self.nodes if node.demand > 0)
         self.num_vehicles_baseline = max(1, (total_demand + self.vehicle_capacity - 1) // self.vehicle_capacity)
+        
+    def __str__(self) -> str:
+        header = (
+            f"\033[1;33mPDPTW Problem\033[1;30m | "
+            f"\033[1;33mVehicles: {self.num_vehicles}\033[1;30m | "
+            f"\033[1;33mCapacity: {self.vehicle_capacity}\033[1;30m | "
+            f"\033[1;33mNodes: {len(self.nodes)}\033[1;30m | "
+            f"\033[1;33mRequests: {self.num_requests}\033[0m"
+        )
+
+        # ANSI-strip for line length
+        ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+        visible_text = ansi_escape.sub('', header)
+        line = "\033[1;35m" + "=" * len(visible_text) + "\033[0m"
+
+        total_demand = sum(node.demand for node in self.nodes if node.demand > 0)
+        avg_distance = self.distance_matrix[self.distance_matrix > 0].mean() if len(self.nodes) > 1 else 0
+
+        # 2. Request distance stats
+        request_distances = [r.distance for r in self.requests]
+        if request_distances:
+            avg_req_dist = np.mean(request_distances)
+            min_req_dist = np.min(request_distances)
+            max_req_dist = np.max(request_distances)
+        else:
+            avg_req_dist = min_req_dist = max_req_dist = 0
+
+        # 3. Time window tightness
+        tw_widths = [tw[1] - tw[0] for tw in self.time_windows]
+        avg_tw_width = np.mean(tw_widths) if tw_widths else 0
+
+        # 4. Vehicle utilization ratio
+        utilization_ratio = (
+            total_demand / (self.num_vehicles * self.vehicle_capacity)
+            if self.num_vehicles * self.vehicle_capacity > 0 else 0
+        )
+
+        # 5. Depot spread (assuming depot is node 0)
+        if len(self.nodes) > 1:
+            depot_dists = self.distance_matrix[0, 1:]
+            avg_depot_dist = np.mean(depot_dists)
+            max_depot_dist = np.max(depot_dists)
+        else:
+            avg_depot_dist = max_depot_dist = 0
+
+        stats = [
+            f"\033[1;36mTotal demand:\033[0m {total_demand}",
+            f"\033[1;36mBaseline vehicles:\033[0m {self.num_vehicles_baseline}",
+            f"\033[1;36mVehicle utilization ratio:\033[0m {utilization_ratio:.2f}",
+            f"\033[1;36mAverage pairwise distance:\033[0m {avg_distance:.2f}",
+            f"\033[1;36mBaseline distance:\033[0m {self.distance_baseline:.2f}",
+            "",
+            f"\033[1;36mRequest distance:\033[0m avg={avg_req_dist:.2f}, min={min_req_dist:.2f}, max={max_req_dist:.2f}",
+            f"\033[1;36mTime window width:\033[0m avg={avg_tw_width:.1f}",
+            f"\033[1;36mDepot distance:\033[0m avg={avg_depot_dist:.2f}, max={max_depot_dist:.2f}"
+        ]
+
+        return "\n".join([line, header, line] + stats) + "\n"
     
     @property
     def num_locations(self) -> int:
