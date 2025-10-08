@@ -51,8 +51,8 @@ class MemeticSolver:
         self, 
         population_size: int = 10, 
         max_generations: Optional[int] = None,
-        max_time_seconds: Optional[int] = 300,
-        max_no_improvement: Optional[int] = 50,
+        max_time_seconds: Optional[int] = None,
+        max_no_improvement: Optional[int] = None,
         
         initial_solution_generator: Union[BaseGenerator, str] = None,
 
