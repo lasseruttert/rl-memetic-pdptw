@@ -45,7 +45,7 @@ class PDPTWSolution:
         }
         
     def __str__(self) -> str:
-        header = f"\033[1;33mPDPTW Solution\033[1;30m | \033[1;33mDistance: {self.total_distance:.2f}\033[1;30m | \033[1;33mVehicles used: {self.num_vehicles_used}\033[0m"
+        header = f"\033[1;33mPDPTW Solution\033[1;30m | \033[1;33mVehicles used: {self.num_vehicles_used}\033[1;30m | \033[1;33mDistance: {self.total_distance:.2f}\033[0m"
         ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
         visible_text = ansi_escape.sub('', header)
         

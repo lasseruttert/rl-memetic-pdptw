@@ -43,12 +43,10 @@ import time
 import random
 import copy
 from dataclasses import dataclass
-from typing import Union, Optional
+from typing import Union, Optional, Callable
 
 class MemeticSolver: 
-    """
-    Modular Memetic Algorithm for solving PDPTW problems.
-    """
+
     def __init__(
         self, 
         population_size: int = 10, 
@@ -64,8 +62,8 @@ class MemeticSolver:
         mutation_operator: Union[BaseMutation, str] = None,
         local_search_operators: Union[list[BaseOperator], list[str]] = None,
         local_search_operator: Union[BaseLocalSearch, str] = None,
-        
-        fitness_function = fitness,
+
+        fitness_function: Callable = None,
         
         ensure_diversity_interval: int = 3,
         use_centroid: bool = False,
@@ -75,18 +73,21 @@ class MemeticSolver:
         track_history: bool = False
     ):
         """
+        A modular memetic algorithm for solving the Pickup and Delivery Problem with Time Windows (PDPTW).
+        
         Args:
             population_size (int): Number of individuals in the population.
             max_generations (Optional[int]): Maximum number of generations to run. If None, no limit on generations.
             max_time_seconds (Optional[int]): Maximum time in seconds to run the algorithm. If None, no limit on time.
             max_no_improvement (Optional[int]): Maximum number of generations without improvement before stopping. If None, no limit on no improvement.
-            initial_solution_generator (Union[BaseGenerator, str]): Initial solution generator to use. Can be an instance of BaseGenerator or a string identifier.
-            selection_operator (Union[BaseSelection, str]): Selection operator to use. Can be an instance of BaseSelection or a string identifier.
-            crossover_operator (Union[BaseCrossover, str]): Crossover operator to use. Can be an instance of BaseCrossover or a string identifier.
-            mutation_operators (Union[list[BaseOperator], list[str]]): List operators to use within mutation to apply to a solution.
-            mutation_operator (Union[BaseMutation, str]): Mutation operator to use. Can be an instance of BaseMutation or a string identifier.
-            local_search_operators (Union[list[BaseOperator], list[str]]): List of local search operators to use within local search to apply to a solution.
-            local_search_operator (Union[BaseLocalSearch, str]): Local search operator to use.
+            
+            initial_solution_generator (Union[BaseGenerator, str]): Initial solution generator to use. Can be an instance of BaseGenerator or a string identifier. Choose from 'random', 'greedy', or 'hybrid'.
+            selection_operator (Union[BaseSelection, str]): Selection operator to use. Can be an instance of BaseSelection or a string identifier. Choose from 'k_tournament'.
+            crossover_operator (Union[BaseCrossover, str]): Crossover operator to use. Can be an instance of BaseCrossover or a string identifier. Choose from 'srex'.
+            mutation_operators (Union[list[BaseOperator], list[str]]): List operators to use within mutation to apply to a solution. Choose from 'reinsert', 'route_elimination', 'flip', 'swap_within', 'swap_between', 'transfer', 'cls_m1', 'cls_m2', 'cls_m3', 'cls_m4', 'two_opt', 'two_opt_star'.
+            mutation_operator (Union[BaseMutation, str]): Mutation operator to use. Can be an instance of BaseMutation or a string identifier. Choose from 'naive'.
+            local_search_operators (Union[list[BaseOperator], list[str]]): List of local search operators to use within local search to apply to a solution. Choose from 'reinsert', 'route_elimination', 'flip', 'swap_within', 'swap_between', 'transfer', 'cls_m1', 'cls_m2', 'cls_m3', 'cls_m4', 'two_opt', 'two_opt_star'.
+            local_search_operator (Union[BaseLocalSearch, str]): Local search operator to use. Choose from 'naive', 'first_improvement', or 'best_improvement'.
             fitness_function: Function to evaluate the fitness of a solution.
             ensure_diversity_interval (int): Interval (in generations) to ensure diversity in the population.
             use_centroid (bool): Whether to use centroid-based diversity measure.
@@ -291,6 +292,8 @@ class MemeticSolver:
             self.local_search_operator = local_search_operator
         
         
+        if fitness_function is None:
+            fitness_function = fitness
         self.fitness_function = fitness_function
         
         self.ensure_diversity_interval = ensure_diversity_interval
