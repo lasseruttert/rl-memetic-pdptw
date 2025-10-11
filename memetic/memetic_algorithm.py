@@ -1,6 +1,7 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from memetic.fitness.fitness import fitness
+from memetic.utils.compare import compare
 
 from memetic.solution_generators.base_generator import BaseGenerator
 from memetic.crossover.base_crossover import BaseCrossover
@@ -348,6 +349,7 @@ class MemeticSolver:
         
         fitness_cache = {}
         current_fitnesses = [None for _ in range(self.population_size)]
+        current_num_vehicles = [None for _ in range(self.population_size)]
         
         done = False
         generation = 0
@@ -376,12 +378,14 @@ class MemeticSolver:
             if self.verbose: print("Improving initial population with local search...")
             for i in range(len(population)):
                 population[i], current_fitnesses[i] = self.local_search_operator.search(problem, population[i])
+                current_num_vehicles[i] = population[i].num_vehicles_used
                 if current_fitnesses[i] < best_fitness:
                     best_solution = population[i]
                     best_fitness = current_fitnesses[i]
         else:
             for i in range(len(population)):
                 current_fitnesses[i] = self.fitness_function(problem, population[i])
+                current_num_vehicles[i] = population[i].num_vehicles_used
                 if current_fitnesses[i] < best_fitness:
                     best_solution = population[i]
                     best_fitness = current_fitnesses[i]
@@ -403,7 +407,7 @@ class MemeticSolver:
                 self._evaluate(problem, population, current_fitnesses, generation, start_time)
             if generation % self.ensure_diversity_interval == 0:
                 if self.verbose: print(f"Ensuring diversity at generation {generation}")
-                population, current_fitnesses = self._ensure_diversity(problem, population, current_fitnesses)
+                population, current_fitnesses, current_num_vehicles = self._ensure_diversity(problem, population, current_fitnesses, current_num_vehicles)
             
             no_improvement_in_generation = True
             for i in range(len(population)):
@@ -416,11 +420,12 @@ class MemeticSolver:
                 child = self.mutation_operator.mutate(problem, child)
                 child, fitness = self.local_search_operator.search(problem, child)
                 
-                if fitness < current_fitnesses[i]:
+                if compare(fitness, child.num_vehicles_used, current_fitnesses[i], current_num_vehicles[i]):
                     population[i] = child
                     current_fitnesses[i] = fitness
-                
-                if fitness < best_fitness:
+                    current_num_vehicles[i] = child.num_vehicles_used
+
+                if compare(fitness, child.num_vehicles_used, best_fitness, best_solution.num_vehicles_used):
                     if self.verbose: print(f"New best solution found with fitness {fitness:.2f} at generation {generation}")
                     best_solution = child
                     best_fitness = fitness
@@ -443,7 +448,7 @@ class MemeticSolver:
         
         return best_solution
         
-    def _ensure_diversity(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list):
+    def _ensure_diversity(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, current_num_vehicles: list):
         """Ensure diversity in the population by removing duplicates and using a distance metric."""
         # Remove duplicates
         seen = set()
@@ -452,12 +457,14 @@ class MemeticSolver:
             if identifier in seen:
                 population[i] = self.initial_solution_generator.generate(problem, 1)[0]
                 current_fitnesses[i] = self.fitness_function(problem, population[i])
+                current_num_vehicles[i] = population[i].num_vehicles_used
+                
             else:
                 seen.add(identifier)
 
         # TODO: Use some distance metric to ensure diversity
 
-        return population, current_fitnesses
+        return population, current_fitnesses, current_num_vehicles
         
     def _evaluate(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, iteration: int, start_time: float):
         """Evaluate the population and store statistics."""

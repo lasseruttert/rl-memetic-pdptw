@@ -4,6 +4,7 @@ from utils.pdptw_solution import PDPTWSolution
 from memetic.local_search.base_local_search import BaseLocalSearch
 
 from memetic.fitness.fitness import fitness
+from memetic.utils.compare import compare
 import random
 
 from memetic.solution_operators.reinsert import ReinsertOperator
@@ -71,7 +72,7 @@ class NaiveLocalSearch(BaseLocalSearch):
                 new_solution = operator.apply(problem, best_solution)
                 operator.applications += 1
                 new_fitness = fitness(problem, new_solution)
-                if new_fitness < best_fitness:
+                if compare(new_fitness, new_solution.num_vehicles_used, best_fitness, best_solution.num_vehicles_used):
                     operator.improvements += 1
                     if self.first_improvement:
                         best_solution = new_solution
@@ -79,7 +80,7 @@ class NaiveLocalSearch(BaseLocalSearch):
                         improved = True
                         break
                     else:
-                        if new_fitness < best_fitness_neighbor:
+                        if compare(new_fitness, new_solution.num_vehicles_used, best_fitness_neighbor, best_neighbor.num_vehicles_used):
                             best_neighbor = new_solution
                             best_fitness_neighbor = new_fitness
             

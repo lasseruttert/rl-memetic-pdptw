@@ -5,8 +5,8 @@ from utils.li_lim_reader import li_lim_reader
 from memetic.memetic_algorithm import MemeticSolver
 
 if __name__ == "__main__":
-    problem = li_lim_reader('G:/Meine Ablage/rl-memetic-pdptw/data/pdp_100/lc203.txt')
+    problem = li_lim_reader('G:/Meine Ablage/rl-memetic-pdptw/data/pdp_100/lc109.txt')
     print(problem)
-    memetic_algorithm = MemeticSolver(max_time_seconds=10, verbose=True)
+    memetic_algorithm = MemeticSolver(max_time_seconds=90, verbose=True)
     best_solution = memetic_algorithm.solve(problem)
     print(best_solution)
