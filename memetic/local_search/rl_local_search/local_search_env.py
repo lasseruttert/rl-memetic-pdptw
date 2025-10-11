@@ -9,8 +9,6 @@ from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from memetic.solution_operators.base_operator import BaseOperator
 from memetic.fitness.fitness import fitness
-from memetic.local_search.rl_local_search.rl_utils import extract_solution_features, calculate_constraint_violations
-
 
 class LocalSearchEnv(gym.Env):
     """Gymnasium environment for learning local search operator selection.
@@ -34,8 +32,8 @@ class LocalSearchEnv(gym.Env):
         Args:
             operators: List of local search operators to choose from
             alpha: Weight for fitness improvement in reward function
-            beta: Weight for feasibility improvement in reward function
             acceptance_strategy: "greedy" (only accept improvements) or "always"
+            reward_strategy: Strategy for calculating rewards
             max_steps: Maximum number of steps per episode
         """
         super().__init__()
@@ -49,11 +47,21 @@ class LocalSearchEnv(gym.Env):
         # Action space: discrete selection of operators (no no-op)
         self.action_space = spaces.Discrete(len(operators))
 
-        # Observation space: feature vector 
+        # Initialize operator metrics (needed for dimension inference)
+        self.operator_metrics = [{} for _ in self.operators]
+
+        # Infer observation space dimensions dynamically
+        dummy_problem = self._create_minimal_problem()
+        dummy_solution = self._create_minimal_solution(dummy_problem)
+        solution_feature_dim = len(self._extract_solution_features(dummy_problem, dummy_solution))
+        operator_feature_dim = len(self._get_operator_features().flatten())
+        obs_dim = solution_feature_dim + operator_feature_dim
+
+        # Observation space: feature vector
         self.observation_space = spaces.Box(
             low=-np.inf,
-            high=np.inf, 
-            shape=(17,),
+            high=np.inf,
+            shape=(obs_dim,),
             dtype=np.float32
         )
 
@@ -61,7 +69,6 @@ class LocalSearchEnv(gym.Env):
         self.problem: Optional[PDPTWProblem] = None
         self.current_solution: Optional[PDPTWSolution] = None
         self.current_fitness: Optional[float] = None
-        self.current_violations: Optional[dict] = None
         self.step_count: int = 0
         self.initial_fitness: Optional[float] = None
         self.best_solution: Optional[PDPTWSolution] = None
@@ -83,6 +90,7 @@ class LocalSearchEnv(gym.Env):
         # Late acceptance parameters
         self.late_acceptance_length = 20  # History buffer size L
         self.fitness_history = []
+        self.operator_history = []
 
         # Rising epsilon parameters
         self.rising_epsilon_start = 0.05
@@ -111,7 +119,6 @@ class LocalSearchEnv(gym.Env):
         self.problem = problem
         self.current_solution = initial_solution.clone()
         self.current_fitness = fitness(problem, self.current_solution)
-        self.current_violations = calculate_constraint_violations(problem, self.current_solution)
         self.step_count = 0
         self.initial_fitness = self.current_fitness
         self.best_solution = self.current_solution.clone()
@@ -122,12 +129,15 @@ class LocalSearchEnv(gym.Env):
 
         # Clear fitness history for late acceptance
         self.fitness_history = []
-
-        observation = extract_solution_features(problem, self.current_solution)
         
+        self.operator_history = []
+        
+        self.operator_metrics = [{} for _ in self.operators]
+
+        observation = self._get_state()
+
         info = {
             'fitness': self.current_fitness,
-            'violations': self.current_violations,
             'step': self.step_count
         }
 
@@ -149,9 +159,8 @@ class LocalSearchEnv(gym.Env):
         operator = self.operators[action]
         new_solution = operator.apply(self.problem, self.current_solution)
 
-        # Calculate new fitness and violations
+        # Calculate new fitness
         new_fitness = fitness(self.problem, new_solution)
-        new_violations = calculate_constraint_violations(self.problem, new_solution)
 
         # Calculate reward 
         reward = self._calculate_reward(self.current_solution, new_solution, self.current_fitness, new_fitness)
@@ -170,7 +179,14 @@ class LocalSearchEnv(gym.Env):
         if accepted:
             self.current_solution = new_solution
             self.current_fitness = new_fitness
-            self.current_violations = new_violations
+        
+        self.operator_history.append(action)
+        # Update operator metrics
+        self.operator_metrics[action]['applications'] = self.operator_metrics[action].get('applications', 0) + 1
+        self.operator_metrics[action]['improvements'] = self.operator_metrics[action].get('improvements', 0) + (1 if fitness_improvement > 0 else 0)
+        if accepted:
+            self.operator_metrics[action]['acceptances'] = self.operator_metrics[action].get('acceptances', 0) + 1
+            self.operator_metrics[action]['total_improvement'] = self.operator_metrics[action].get('total_improvement', 0.0) + fitness_improvement
 
         # Increment step counter
         self.step_count += 1
@@ -189,12 +205,11 @@ class LocalSearchEnv(gym.Env):
         truncated = self.step_count >= self.max_steps
 
         # Observation and info
-        observation = extract_solution_features(self.problem, self.current_solution)
+        observation = self._get_state()
 
         info = {
             'fitness': self.current_fitness,
             'new_fitness': new_fitness,
-            'violations': self.current_violations,
             'accepted': accepted,
             'step': self.step_count,
             'best_fitness': self.best_fitness,
@@ -418,6 +433,155 @@ class LocalSearchEnv(gym.Env):
 
         else:
             raise ValueError(f"Unknown acceptance strategy: {self.acceptance_strategy}")
+        
+    def _get_operator_features(self) -> np.ndarray:
+        """Extract features for each operator based on historical performance.
+
+        Returns:
+            np.ndarray: Feature matrix of shape (num_operators, num_features)
+        """
+        features = []
+        for metrics in self.operator_metrics:
+            applications = metrics.get('applications', 0)
+            improvements = metrics.get('improvements', 0)
+            acceptances = metrics.get('acceptances', 0)
+            total_improvement = metrics.get('total_improvement', 0.0)
+
+            success_rate = improvements / applications if applications > 0 else 0.0
+            acceptance_rate = acceptances / applications if applications > 0 else 0.0
+            avg_improvement = total_improvement / acceptances if acceptances > 0 else 0.0
+
+            features.append([
+                applications,
+                improvements,
+                acceptances,
+                success_rate,
+                acceptance_rate,
+                avg_improvement
+            ])
+        
+        return np.array(features, dtype=np.float32)
+    
+    def _extract_solution_features(self, problem: PDPTWProblem, solution: PDPTWSolution) -> np.ndarray:
+        """Extract feature vector from a solution for RL state representation.
+
+        Features include:
+        - Problem features: num_requests, vehicle_capacity, avg_distance, time_window_tightness
+        - Solution features: num_routes, num_customers_served, total_distance, route statistics
+
+        Args:
+            problem: PDPTW problem instance
+            solution: PDPTW solution
+
+        Returns:
+            np.ndarray: Feature vector
+        """
+        # Problem features
+        num_requests = problem.num_requests
+        vehicle_capacity = problem.vehicle_capacity
+        num_vehicles = problem.num_vehicles
+        avg_distance = np.mean(problem.distance_matrix[problem.distance_matrix > 0])
+
+        # Time window tightness: average ratio of time window span to total time horizon
+        time_window_spans = problem.time_windows[:, 1] - problem.time_windows[:, 0]
+        max_time_horizon = np.max(problem.time_windows[:, 1])
+        avg_tw_tightness = np.mean(time_window_spans) / max_time_horizon if max_time_horizon > 0 else 0
+
+        # Solution features
+        num_routes = solution.num_vehicles_used
+        num_customers_served = solution.num_customers_served
+        total_distance = solution.total_distance
+        feasible = solution.is_feasible
+
+        # Route statistics
+        route_lengths = [len(r) - 2 for r in solution.routes if len(r) > 2]  # excluding depot
+        avg_route_length = np.mean(route_lengths) if route_lengths else 0
+        max_route_length = np.max(route_lengths) if route_lengths else 0
+        min_route_length = np.min(route_lengths) if route_lengths else 0
+        std_route_length = np.std(route_lengths) if route_lengths else 0
+
+        # Route distance statistics
+        route_distances = [solution.route_lengths[i] for i in range(len(solution.routes)) if len(solution.routes[i]) > 2]
+        avg_route_distance = np.mean(route_distances) if route_distances else 0
+        max_route_distance = np.max(route_distances) if route_distances else 0
+        std_route_distance = np.std(route_distances) if route_distances else 0
+
+
+        # Normalized features
+        features = np.array([
+            # Problem features
+            # num_requests,
+            # vehicle_capacity,
+            # num_vehicles,
+            # avg_distance,
+            # avg_tw_tightness,
+
+            # Solution features (normalized)
+            num_routes / num_vehicles if num_vehicles > 0 else 0,
+            num_customers_served / (num_requests * 2) if num_requests > 0 else 0,  # *2 for pickup+delivery
+            total_distance / problem.distance_baseline if problem.distance_baseline > 0 else 0,
+            int(feasible),
+
+            # Route statistics (normalized)
+            avg_route_length / num_requests if num_requests > 0 else 0,
+            max_route_length / num_requests if num_requests > 0 else 0,
+            min_route_length / num_requests if num_requests > 0 else 0,
+            std_route_length / num_requests if num_requests > 0 else 0,
+            avg_route_distance / problem.distance_baseline if problem.distance_baseline > 0 else 0,
+            max_route_distance / problem.distance_baseline if problem.distance_baseline > 0 else 0,
+            std_route_distance / problem.distance_baseline if problem.distance_baseline > 0 else 0,
+
+        ], dtype=np.float32)
+
+        return features
+    
+    def _get_state(self) -> np.ndarray:
+        """Get the current state representation.
+
+        Returns:
+            np.ndarray: Combined feature vector of solution and operators
+        """
+        if self.problem is None or self.current_solution is None:
+            raise RuntimeError("Environment must be reset before getting state")
+
+        solution_features = self._extract_solution_features(self.problem, self.current_solution)
+        operator_features = self._get_operator_features().flatten()
+
+        # Combine features
+        state = np.concatenate([solution_features, operator_features])
+
+        return state
+
+    def _create_minimal_problem(self) -> PDPTWProblem:
+        """Create minimal dummy problem for dimension inference.
+
+        Returns:
+            Minimal PDPTWProblem instance
+        """
+        return PDPTWProblem(
+            num_requests=1,
+            num_vehicles=1,
+            vehicle_capacity=100,
+            distance_matrix=np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]], dtype=np.float32),
+            time_windows=np.array([[0, 1000], [0, 1000], [0, 1000]], dtype=np.float32),
+            service_times=np.zeros(3, dtype=np.float32),
+            demands=np.array([0, 1, -1], dtype=np.float32),
+            distance_baseline=1.0
+        )
+
+    def _create_minimal_solution(self, problem: PDPTWProblem) -> PDPTWSolution:
+        """Create minimal dummy solution for dimension inference.
+
+        Args:
+            problem: Problem instance to create solution for
+
+        Returns:
+            Minimal PDPTWSolution instance
+        """
+        return PDPTWSolution(
+            routes=[[0, 1, 2, 0]],
+            problem=problem
+        )
 
     def get_best_solution(self) -> Tuple[PDPTWSolution, float]:
         """Get the best solution found during the episode.
