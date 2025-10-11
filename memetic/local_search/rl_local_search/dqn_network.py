@@ -150,15 +150,16 @@ class DQNAgent:
         # Normalize with small epsilon to avoid division by zero
         normalized = (state - self.state_mean) / (self.state_std + 1e-8)
         # Clip to reasonable range
-        # normalized = np.clip(normalized, -10, 10)
+        normalized = np.clip(normalized, -10, 10)
         return normalized
 
-    def get_action(self, state: np.ndarray, epsilon: Optional[float] = None) -> int:
+    def get_action(self, state: np.ndarray, epsilon: Optional[float] = None, update_stats: bool = True) -> int:
         """Select an action using epsilon-greedy policy.
 
         Args:
             state: Current state observation
             epsilon: Exploration rate (uses self.epsilon if None)
+            update_stats: Whether to update normalization statistics (False during testing)
 
         Returns:
             Selected action index
@@ -171,7 +172,7 @@ class DQNAgent:
             return np.random.randint(0, self.action_dim)
         else:
             # Normalize state
-            normalized_state = self.normalize_state(state, update_stats=True)
+            normalized_state = self.normalize_state(state, update_stats=update_stats)
 
             # Greedy action
             self.q_network.eval()  # Set to eval mode to disable dropout
@@ -181,6 +182,26 @@ class DQNAgent:
                 action = q_values.argmax(dim=1).item()
             self.q_network.train()  # Set back to train mode
             return action
+
+    def get_q_values(self, state: np.ndarray, update_stats: bool = False) -> np.ndarray:
+        """Get Q-values for all actions for a given state.
+
+        Args:
+            state: Current state observation
+            update_stats: Whether to update normalization statistics
+
+        Returns:
+            Array of Q-values for each action
+        """
+        normalized_state = self.normalize_state(state, update_stats=update_stats)
+
+        self.q_network.eval()
+        with torch.no_grad():
+            state_tensor = torch.FloatTensor(normalized_state).unsqueeze(0).to(self.device)
+            q_values = self.q_network(state_tensor)
+        self.q_network.train()
+
+        return q_values.cpu().numpy().flatten()
 
     def update(self, batch: dict) -> float:
         """Update the Q-network using a batch of transitions.

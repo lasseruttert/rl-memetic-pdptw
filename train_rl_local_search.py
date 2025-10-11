@@ -25,11 +25,15 @@ from memetic.fitness.fitness import fitness
 # Import operators
 from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.solution_operators.route_elimination import RouteEliminationOperator
+from memetic.solution_operators.flip import FlipOperator
 from memetic.solution_operators.swap_within import SwapWithinOperator
 from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
 from memetic.solution_operators.cls_m1 import CLSM1Operator
 from memetic.solution_operators.cls_m2 import CLSM2Operator
+from memetic.solution_operators.cls_m3 import CLSM3Operator
+from memetic.solution_operators.cls_m4 import CLSM4Operator
+from memetic.solution_operators.two_opt import TwoOptOperator
 
 
 def create_problem_generator(size: int = 100, categories: list[str] = None):
@@ -106,7 +110,8 @@ def main():
     "distance_baseline",
     "log_improvement",
     "binary",
-    "distance_baseline_clipped"],
+    "distance_baseline_clipped",
+    "another_one"],
                         help="Reward strategy for RL agent")
     parser.add_argument("--problem_size", type=int, default=100,
                         choices=[100, 200, 400, 600, 1000],
@@ -124,7 +129,7 @@ def main():
 
     # Configuration
     PROBLEM_SIZE = args.problem_size
-    CATEGORIES = ['lc1', 'lr1']
+    CATEGORIES = ['lc1', 'lc2', 'lr1', 'lr2']
     ACCEPTANCE_STRATEGY = args.acceptance_strategy
     REWARD_STRATEGY = args.reward_strategy
     SEED = args.seed
@@ -132,23 +137,35 @@ def main():
     RUN_NAME = f"rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{seed_suffix}_{int(time.time())}"
 
     # Define operators to learn from
+    # operators = [
+    #     ReinsertOperator(max_attempts=1, clustered=False),
+    #     ReinsertOperator(max_attempts=3, clustered=True),
+    #     ReinsertOperator(allow_same_vehicle=False),
+    #     RouteEliminationOperator(),
+    #     SwapWithinOperator(),
+    #     SwapBetweenOperator(),
+    #     TransferOperator(single_route=True),
+    #     CLSM1Operator(),
+    #     CLSM2Operator(),
+    # ]
+    
     operators = [
-        ReinsertOperator(max_attempts=1, clustered=False),
-        ReinsertOperator(max_attempts=3, clustered=True),
-        ReinsertOperator(allow_same_vehicle=False),
-        RouteEliminationOperator(),
-        SwapWithinOperator(),
-        SwapBetweenOperator(),
-        TransferOperator(single_route=True),
-        CLSM1Operator(),
-        CLSM2Operator(),
+        # SwapWithinOperator(),
+        # SwapWithinOperator(single_route=True),
+        # SwapBetweenOperator(),
+        # TransferOperator(),
+        # TransferOperator(single_route=True),
+        FlipOperator(),
+        # FlipOperator(single_route=True),
+        # TwoOptOperator(),
+        ReinsertOperator(),
     ]
 
     # Initialize RL local search
     rl_local_search = RLLocalSearch(
         operators=operators,
         hidden_dims=[128, 128, 64],
-        learning_rate=1e-3,
+        learning_rate=1e-4,
         gamma=0.99,
         epsilon_start=1.0, 
         epsilon_end=0.05,
@@ -177,8 +194,8 @@ def main():
         problem_generator=problem_generator,
         initial_solution_generator=create_solution_generator,
         num_episodes=args.num_episodes,
-        new_instance_interval=20,
-        new_solution_interval=5,
+        new_instance_interval=5,
+        new_solution_interval=1,
         update_interval=1,
         warmup_episodes=10,
         save_interval=1000,
@@ -213,7 +230,7 @@ def main():
         model = RLLocalSearch(
             operators=operators,
             hidden_dims=[128, 128, 64],
-            learning_rate=1e-3,
+            learning_rate=1e-4,
             gamma=0.99,
             epsilon_start=1.0,
             epsilon_end=0.05,

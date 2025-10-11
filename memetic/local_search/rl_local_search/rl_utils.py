@@ -152,16 +152,16 @@ def extract_solution_features(problem: PDPTWProblem, solution: PDPTWSolution) ->
     # Normalized features
     features = np.array([
         # Problem features 
-        num_requests,  
-        vehicle_capacity,  
-        num_vehicles,  
-        avg_distance,  
-        avg_tw_tightness,  
+        # num_requests,  
+        # vehicle_capacity,  
+        # num_vehicles,  
+        # avg_distance,  
+        # avg_tw_tightness,  
 
         # Solution features (normalized)
         num_routes / num_vehicles if num_vehicles > 0 else 0,
         num_customers_served / (num_requests * 2) if num_requests > 0 else 0,  # *2 for pickup+delivery
-        total_distance / (avg_distance * num_requests * 2) if (avg_distance * num_requests) > 0 else 0,
+        total_distance / problem.distance_baseline,
 
         # Route statistics (normalized)
         avg_route_length / num_requests,

@@ -53,7 +53,7 @@ class LocalSearchEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf, 
-            shape=(22,),
+            shape=(17,),
             dtype=np.float32
         )
 
@@ -153,11 +153,8 @@ class LocalSearchEnv(gym.Env):
         new_fitness = fitness(self.problem, new_solution)
         new_violations = calculate_constraint_violations(self.problem, new_solution)
 
-        # Calculate reward
-        reward = self._calculate_reward(
-            self.current_fitness,
-            new_fitness
-        )
+        # Calculate reward 
+        reward = self._calculate_reward(self.current_solution, new_solution, self.current_fitness, new_fitness)
 
         # Update best solution
         if new_fitness < self.best_fitness:
@@ -166,6 +163,10 @@ class LocalSearchEnv(gym.Env):
 
         # Accept solution based on strategy
         accepted = self._accept_solution(self.current_fitness, new_fitness)
+
+        # Track fitness improvement for this step
+        fitness_improvement = self.current_fitness - new_fitness
+
         if accepted:
             self.current_solution = new_solution
             self.current_fitness = new_fitness
@@ -197,7 +198,8 @@ class LocalSearchEnv(gym.Env):
             'accepted': accepted,
             'step': self.step_count,
             'best_fitness': self.best_fitness,
-            'operator': operator.name if hasattr(operator, 'name') else f"Operator{action}"
+            'operator': operator.name if hasattr(operator, 'name') else f"Operator{action}",
+            'fitness_improvement': fitness_improvement,
         }
 
         return observation, reward, terminated, truncated, info
@@ -225,6 +227,8 @@ class LocalSearchEnv(gym.Env):
 
     def _calculate_reward(
         self,
+        old_solution: PDPTWSolution,
+        new_solution: PDPTWSolution,
         old_fitness: float,
         new_fitness: float,
     ) -> float:
@@ -282,7 +286,7 @@ class LocalSearchEnv(gym.Env):
                 reward = -1.0
                 
         elif self.reward_strategy == "tanh":
-            fitness_improvement = old_fitness - new_fitness / 1
+            fitness_improvement = (old_fitness - new_fitness) / 1
             reward = np.tanh(self.alpha * fitness_improvement)
 
         elif self.reward_strategy == "distance_baseline_normalized":
@@ -323,6 +327,42 @@ class LocalSearchEnv(gym.Env):
                 reward = np.tanh(self.alpha * fitness_improvement)
             else:  # Degradation - penalize 2x more
                 reward = np.tanh(self.alpha * fitness_improvement * 2.0)
+                
+        elif self.reward_strategy == "another_one":
+            if old_fitness <= 0 or self.initial_fitness <= 0:
+                reward = 0.0
+            else:
+                old_improvement = (old_fitness - new_fitness) / old_fitness
+                old_improvement = np.clip(old_improvement, -1.0, 1.0)
+                initial_improvement = (self.initial_fitness - new_fitness) / self.initial_fitness
+                initial_improvement = np.clip(initial_improvement, -1.0, 1.0)
+                reward = self.alpha * max(old_improvement, initial_improvement)
+                
+        elif self.reward_strategy == "component":
+            old_total_distance = old_solution.total_distance
+            old_num_vehicles = old_solution.num_vehicles_used
+            old_feasible = old_solution.is_feasible
+
+            new_total_distance = new_solution.total_distance
+            new_num_vehicles = new_solution.num_vehicles_used
+            new_feasible = new_solution.is_feasible
+
+            # Weights for different components
+            w_distance = 1.0
+            w_vehicles = 0.0
+            w_feasibility = 10.0
+            # Calculate components
+            distance_improvement = 1 if new_total_distance < old_total_distance else -1
+            vehicle_improvement = 1 if new_num_vehicles < old_num_vehicles else -1
+            feasibility_improvement = int(new_feasible) - int(old_feasible)
+
+            # Component contributions to reward
+            distance_component = w_distance * distance_improvement
+            vehicle_component = w_vehicles * vehicle_improvement
+            feasibility_component = w_feasibility * feasibility_improvement
+
+            # Total reward
+            reward = distance_component + vehicle_component + feasibility_component
 
         else:
             raise ValueError(f"Unknown reward strategy: {self.reward_strategy}")

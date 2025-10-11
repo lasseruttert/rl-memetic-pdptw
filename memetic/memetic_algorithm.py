@@ -68,6 +68,10 @@ class MemeticSolver:
         ensure_diversity_interval: int = 3,
         use_centroid: bool = False,
         
+        calculate_upper_bound_vehicles: bool = False,
+
+        init_with_local_search: bool = True,
+
         evaluation_interval: int = 10,
         verbose: bool = False,
         track_history: bool = False
@@ -146,16 +150,28 @@ class MemeticSolver:
             for op in mutation_operators:
                 if op.lower() == 'reinsert':
                     ops.append(ReinsertOperator())
+                elif op.lower() == 'reinsert_clustered':
+                    ops.append(ReinsertOperator(max_attempts=5, clustered=True))
+                elif op.lower() == 'reinsert_no_same_vehicle':
+                    ops.append(ReinsertOperator(allow_same_vehicle=False))
+                elif op.lower() == 'reinsert_no_same_vehicle_no_new_route':
+                    ops.append(ReinsertOperator(allow_same_vehicle=False, allow_new_route=False))
                 elif op.lower() == 'route_elimination':
                     ops.append(RouteEliminationOperator())
                 elif op.lower() == 'flip':
                     ops.append(FlipOperator())
+                elif op.lower() == 'flip_single':
+                    ops.append(FlipOperator(single=True))
                 elif op.lower() == 'swap_within':
                     ops.append(SwapWithinOperator())
+                elif op.lower() == 'swap_within_single':
+                    ops.append(SwapWithinOperator(single=True))
                 elif op.lower() == 'swap_between':
                     ops.append(SwapBetweenOperator())
                 elif op.lower() == 'transfer':
                     ops.append(TransferOperator())
+                elif op.lower() == 'transfer_single':
+                    ops.append(TransferOperator(single=True))
                 elif op.lower() == 'cls_m1':
                     ops.append(CLSM1Operator())
                 elif op.lower() == 'cls_m2':
@@ -166,8 +182,6 @@ class MemeticSolver:
                     ops.append(CLSM4Operator())
                 elif op.lower() == 'two_opt':
                     ops.append(TwoOptOperator())
-                elif op.lower() == 'two_opt_star':
-                    ops.append(TwoOptStarOperator())
                 else:
                     raise ValueError(f"Unknown mutation operator: {op}")
             mutation_operators = ops
@@ -189,7 +203,6 @@ class MemeticSolver:
                 CLSM3Operator(),
                 CLSM4Operator(),
                 TwoOptOperator(),
-                # TwoOptStarOperator()
             ]
 
         # * Mutation Operator
@@ -212,16 +225,28 @@ class MemeticSolver:
             for op in local_search_operators:
                 if op.lower() == 'reinsert':
                     ops.append(ReinsertOperator())
+                elif op.lower() == 'reinsert_clustered':
+                    ops.append(ReinsertOperator(max_attempts=5, clustered=True))
+                elif op.lower() == 'reinsert_no_same_vehicle':
+                    ops.append(ReinsertOperator(allow_same_vehicle=False))
+                elif op.lower() == 'reinsert_no_same_vehicle_no_new_route':
+                    ops.append(ReinsertOperator(allow_same_vehicle=False, allow_new_route=False))
                 elif op.lower() == 'route_elimination':
                     ops.append(RouteEliminationOperator())
                 elif op.lower() == 'flip':
                     ops.append(FlipOperator())
+                elif op.lower() == 'flip_single':
+                    ops.append(FlipOperator(single=True))
                 elif op.lower() == 'swap_within':
                     ops.append(SwapWithinOperator())
+                elif op.lower() == 'swap_within_single':
+                    ops.append(SwapWithinOperator(single=True))
                 elif op.lower() == 'swap_between':
                     ops.append(SwapBetweenOperator())
                 elif op.lower() == 'transfer':
                     ops.append(TransferOperator())
+                elif op.lower() == 'transfer_single':
+                    ops.append(TransferOperator(single=True))
                 elif op.lower() == 'cls_m1':
                     ops.append(CLSM1Operator())
                 elif op.lower() == 'cls_m2':
@@ -232,8 +257,6 @@ class MemeticSolver:
                     ops.append(CLSM4Operator())
                 elif op.lower() == 'two_opt':
                     ops.append(TwoOptOperator())
-                elif op.lower() == 'two_opt_star':
-                    ops.append(TwoOptStarOperator())
                 else:
                     raise ValueError(f"Unknown local search operator: {op}")
             local_search_operators = ops
@@ -297,6 +320,11 @@ class MemeticSolver:
         self.fitness_function = fitness_function
         
         self.ensure_diversity_interval = ensure_diversity_interval
+        self.use_centroid = use_centroid
+        
+        self.calculate_upper_bound_vehicles = calculate_upper_bound_vehicles
+        
+        self.init_with_local_search = init_with_local_search
         
         self.evaluation_interval = evaluation_interval
         self.evaluations = {}
@@ -304,13 +332,13 @@ class MemeticSolver:
         self.track_history = track_history
         if self.track_history:
             self.history = {}
-    
-    def solve(self, problem: PDPTWProblem, initial_solution: PDPTWSolution = None) -> PDPTWSolution:
+
+    def solve(self, problem: PDPTWProblem, initial_population: list[PDPTWSolution] = None) -> PDPTWSolution:
         """Solve the PDPTW problem using the memetic algorithm.
 
         Args:
             problem (PDPTWProblem): The PDPTW problem instance.
-            initial_solution (PDPTWSolution, optional): Initial solution to start the search. Defaults to None.
+            initial_population (list[PDPTWSolution], optional): Initial population to start the search. Defaults to None.
 
         Returns:
             PDPTWSolution: The best solution found.
@@ -327,21 +355,36 @@ class MemeticSolver:
         
         start_time = time.time()
         
-        original_num_vehicles = problem.num_vehicles
-        if self.verbose: 
-            print(f"Original number of vehicles: {original_num_vehicles}")
-            print(f"Calculating upper bound on number of vehicles...")
-        upper_bound_vehicles = self._calculate_upper_bound_vehicles(problem)
-        if upper_bound_vehicles < problem.num_vehicles:
-            if self.verbose: print(f"Setting number of vehicles to upper bound of {upper_bound_vehicles} vehicles")
-            problem.num_vehicles = upper_bound_vehicles
+        if self.calculate_upper_bound_vehicles:
+            original_num_vehicles = problem.num_vehicles
+            if self.verbose: 
+                print(f"Original number of vehicles: {original_num_vehicles}")
+                print(f"Calculating upper bound on number of vehicles...")
+            upper_bound_vehicles = self._calculate_upper_bound_vehicles(problem)
+            if upper_bound_vehicles < problem.num_vehicles:
+                if self.verbose: print(f"Setting number of vehicles to upper bound of {upper_bound_vehicles} vehicles")
+                problem.num_vehicles = upper_bound_vehicles
         
-        population = self.initial_solution_generator.generate(problem, self.population_size)
-        for i in range(len(population)):
-            population[i], current_fitnesses[i] = self.local_search_operator.search(problem, population[i])
-            if current_fitnesses[i] < best_fitness:
-                best_solution = population[i]
-                best_fitness = current_fitnesses[i]
+        if initial_population is not None:
+            if len(initial_population) != self.population_size:
+                raise ValueError(f"Initial population size {len(initial_population)} does not match specified population size {self.population_size}.")
+            population = initial_population
+        else:
+            population = self.initial_solution_generator.generate(problem, self.population_size)
+        
+        if self.init_with_local_search:
+            if self.verbose: print("Improving initial population with local search...")
+            for i in range(len(population)):
+                population[i], current_fitnesses[i] = self.local_search_operator.search(problem, population[i])
+                if current_fitnesses[i] < best_fitness:
+                    best_solution = population[i]
+                    best_fitness = current_fitnesses[i]
+        else:
+            for i in range(len(population)):
+                current_fitnesses[i] = self.fitness_function(problem, population[i])
+                if current_fitnesses[i] < best_fitness:
+                    best_solution = population[i]
+                    best_fitness = current_fitnesses[i]
         
         while not done:
             if self.verbose: 
@@ -396,7 +439,7 @@ class MemeticSolver:
                 if self.verbose: print("\033[1;31mStopping criteria met.\033[0m\n")
                 done = True
         
-        problem.num_vehicles = original_num_vehicles
+        if self.calculate_upper_bound_vehicles: problem.num_vehicles = original_num_vehicles
         
         return best_solution
         

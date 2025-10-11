@@ -154,7 +154,8 @@ class RLLocalSearch(BaseLocalSearch):
         save_interval: int = 100,
         save_path: Optional[str] = None,
         tensorboard_dir: Optional[str] = None,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        log_interval: int = 10
     ) -> Dict:
         """Train the RL policy for operator selection.
 
@@ -170,6 +171,7 @@ class RLLocalSearch(BaseLocalSearch):
             save_path: Path to save model checkpoints
             tensorboard_dir: Directory for TensorBoard logs (None to disable)
             seed: Random seed for reproducibility (None for random)
+            log_interval: Log detailed metrics every N episodes (default: 10)
 
         Returns:
             Dictionary containing training history
@@ -241,11 +243,25 @@ class RLLocalSearch(BaseLocalSearch):
             episode_reward = 0.0
             episode_length = 0
             step_losses = []
+            episode_actions = []  # Track operator selections
+
+            # Metric tracking
+            num_accepted = 0
+            num_rejected = 0
+            accepted_improvements = []
+            rejected_degradations = []
+
+            # Per-operator tracking (Metric 3)
+            operator_uses = [0] * len(self.operators)
+            operator_successes = [0] * len(self.operators)  # improved fitness
+            operator_accepted = [0] * len(self.operators)  # move was accepted
+            operator_improvements = [[] for _ in range(len(self.operators))]  # fitness changes
 
             # Episode loop
             for step in range(self.max_steps_per_episode):
                 # Select action (epsilon-greedy)
                 action = self.agent.get_action(state)
+                episode_actions.append(action)
 
                 # Take step in environment
                 next_state, reward, terminated, truncated, step_info = self.env.step(action)
@@ -257,6 +273,25 @@ class RLLocalSearch(BaseLocalSearch):
                 # Update statistics
                 episode_reward += reward
                 episode_length += 1
+
+                # Track metrics
+                # Metric 2: Acceptance tracking
+                if step_info['accepted']:
+                    num_accepted += 1
+                    accepted_improvements.append(step_info['fitness_improvement'])
+                else:
+                    num_rejected += 1
+                    rejected_degradations.append(step_info['fitness_improvement'])
+
+
+                # Metric 3: Operator effectiveness
+                operator_uses[action] += 1
+                fitness_change = step_info['fitness_improvement']
+                operator_improvements[action].append(fitness_change)
+                if fitness_change > 0:  # Improvement (fitness decreased)
+                    operator_successes[action] += 1
+                if step_info['accepted']:
+                    operator_accepted[action] += 1
 
                 # Update policy (after warmup and if enough samples)
                 if episode >= warmup_episodes and len(self.replay_buffer) >= self.batch_size:
@@ -289,12 +324,74 @@ class RLLocalSearch(BaseLocalSearch):
 
             # TensorBoard logging
             if writer:
+                # Always log core metrics
                 writer.add_scalar('Episode/Reward', episode_reward, episode)
                 writer.add_scalar('Episode/BestFitness', best_fitness, episode)
                 writer.add_scalar('Episode/Length', episode_length, episode)
                 writer.add_scalar('Training/Epsilon', self.agent.epsilon, episode)
                 if step_losses:
                     writer.add_scalar('Training/Loss', avg_loss, episode)
+
+                # Log detailed metrics every log_interval episodes
+                if episode % log_interval == 0 or episode == num_episodes - 1:
+                    # Log state features
+                    for i, feature_val in enumerate(state):
+                        writer.add_scalar(f'Features/feature_{i}', feature_val, episode)
+
+                    # Log operator selection statistics
+                    action_counts = np.bincount(episode_actions, minlength=len(self.operators))
+                    for i, count in enumerate(action_counts):
+                        writer.add_scalar(f'Operators/operator_{i}_count', count, episode)
+                        writer.add_scalar(f'Operators/operator_{i}_ratio', count / len(episode_actions) if episode_actions else 0, episode)
+
+                    # Log Q-values for current state
+                    q_values = self.agent.get_q_values(state, update_stats=False)
+                    for i, q_val in enumerate(q_values):
+                        writer.add_scalar(f'QValues/operator_{i}_qvalue', q_val, episode)
+                    writer.add_scalar('QValues/max_qvalue', np.max(q_values), episode)
+                    writer.add_scalar('QValues/mean_qvalue', np.mean(q_values), episode)
+                    writer.add_scalar('QValues/std_qvalue', np.std(q_values), episode)
+
+                    # Metric 1: Reward 
+                    writer.add_scalar('Reward/total_reward', episode_reward, episode)
+
+                    # Metric 2: Acceptance rate tracking
+                    total_moves = num_accepted + num_rejected
+                    acceptance_rate = num_accepted / total_moves if total_moves > 0 else 0
+                    avg_accepted_improvement = np.mean(accepted_improvements) if accepted_improvements else 0
+                    avg_rejected_degradation = np.mean(rejected_degradations) if rejected_degradations else 0
+
+                    writer.add_scalar('Acceptance/acceptance_rate', acceptance_rate, episode)
+                    writer.add_scalar('Acceptance/num_accepted', num_accepted, episode)
+                    writer.add_scalar('Acceptance/num_rejected', num_rejected, episode)
+                    writer.add_scalar('Acceptance/avg_accepted_improvement', avg_accepted_improvement, episode)
+                    writer.add_scalar('Acceptance/avg_rejected_degradation', avg_rejected_degradation, episode)
+
+                    # Metric 3: Operator effectiveness
+                    for i in range(len(self.operators)):
+                        if operator_uses[i] > 0:
+                            success_rate = operator_successes[i] / operator_uses[i]
+                            acceptance_rate_op = operator_accepted[i] / operator_uses[i]
+                            avg_improvement = np.mean(operator_improvements[i]) if operator_improvements[i] else 0
+                        else:
+                            success_rate = 0
+                            acceptance_rate_op = 0
+                            avg_improvement = 0
+
+                        writer.add_scalar(f'Effectiveness/operator_{i}_success_rate', success_rate, episode)
+                        writer.add_scalar(f'Effectiveness/operator_{i}_acceptance_rate', acceptance_rate_op, episode)
+                        writer.add_scalar(f'Effectiveness/operator_{i}_avg_improvement', avg_improvement, episode)
+
+                    # Metric 5: Raw solution metrics
+                    writer.add_scalar('Solution/raw_total_distance', best_solution.total_distance, episode)
+                    writer.add_scalar('Solution/raw_num_vehicles', best_solution.num_vehicles_used, episode)
+                    writer.add_scalar('Solution/is_feasible', int(best_solution.is_feasible), episode)
+
+                    # Check for invalid states
+                    if np.any(np.isnan(state)) or np.any(np.isinf(state)):
+                        print(f"WARNING: Invalid state at episode {episode}")
+                        print(f"  NaN: {np.any(np.isnan(state))}, Inf: {np.any(np.isinf(state))}")
+                        print(f"  State: {state}")
 
                 # Rolling averages
                 if len(self.training_history['episode_rewards']) >= 10:
@@ -385,7 +482,8 @@ class RLLocalSearch(BaseLocalSearch):
         # Inference loop
         for iteration in range(max_iterations):
             # Select action using learned policy (greedy or with small epsilon)
-            action = self.agent.get_action(state, epsilon=epsilon)
+            # Don't update normalization stats during testing
+            action = self.agent.get_action(state, epsilon=epsilon, update_stats=False)
 
             # Apply operator
             next_state, reward, terminated, truncated, step_info = self.env.step(action)
