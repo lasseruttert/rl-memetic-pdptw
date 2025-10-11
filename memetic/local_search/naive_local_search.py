@@ -66,6 +66,7 @@ class NaiveLocalSearch(BaseLocalSearch):
         while no_improvement_count < self.max_no_improvement and iteration < self.max_iterations:
             improved = False
             best_neighbor = None
+            best_num_vehicles_neighbor = float('inf')
             best_fitness_neighbor = float('inf')
             if self.random_operator_order: random.shuffle(self.operators)
             for operator in self.operators:
@@ -80,9 +81,10 @@ class NaiveLocalSearch(BaseLocalSearch):
                         improved = True
                         break
                     else:
-                        if compare(new_fitness, new_solution.num_vehicles_used, best_fitness_neighbor, best_neighbor.num_vehicles_used):
+                        if compare(new_fitness, new_solution.num_vehicles_used, best_fitness_neighbor, best_num_vehicles_neighbor):
                             best_neighbor = new_solution
                             best_fitness_neighbor = new_fitness
+                            best_num_vehicles_neighbor = new_solution.num_vehicles_used
             
             if not self.first_improvement and best_neighbor is not None:
                 best_solution = best_neighbor

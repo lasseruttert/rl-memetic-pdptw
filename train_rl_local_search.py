@@ -150,10 +150,10 @@ def main():
     # ]
     
     operators = [
-        # SwapWithinOperator(),
+        SwapWithinOperator(),
         # SwapWithinOperator(single_route=True),
-        # SwapBetweenOperator(),
-        # TransferOperator(),
+        SwapBetweenOperator(),
+        TransferOperator(),
         # TransferOperator(single_route=True),
         FlipOperator(),
         # FlipOperator(single_route=True),
@@ -166,7 +166,7 @@ def main():
         operators=operators,
         hidden_dims=[128, 128, 64],
         learning_rate=1e-4,
-        gamma=0.99,
+        gamma=0.90,
         epsilon_start=1.0, 
         epsilon_end=0.05,
         epsilon_decay=0.9975,

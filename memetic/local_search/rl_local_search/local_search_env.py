@@ -5,7 +5,7 @@ from gymnasium import spaces
 import numpy as np
 from typing import Optional, Tuple
 
-from utils.pdptw_problem import PDPTWProblem
+from utils.pdptw_problem import PDPTWProblem, Node
 from utils.pdptw_solution import PDPTWSolution
 from memetic.solution_operators.base_operator import BaseOperator
 from memetic.fitness.fitness import fitness
@@ -50,6 +50,15 @@ class LocalSearchEnv(gym.Env):
         # Initialize operator metrics (needed for dimension inference)
         self.operator_metrics = [{} for _ in self.operators]
 
+        # Episode state
+        self.problem: Optional[PDPTWProblem] = None
+        self.current_solution: Optional[PDPTWSolution] = None
+        self.current_fitness: Optional[float] = None
+        self.step_count: int = 0
+        self.initial_fitness: Optional[float] = None
+        self.best_solution: Optional[PDPTWSolution] = None
+        self.best_fitness: float = float('inf')
+        
         # Infer observation space dimensions dynamically
         dummy_problem = self._create_minimal_problem()
         dummy_solution = self._create_minimal_solution(dummy_problem)
@@ -65,14 +74,6 @@ class LocalSearchEnv(gym.Env):
             dtype=np.float32
         )
 
-        # Episode state
-        self.problem: Optional[PDPTWProblem] = None
-        self.current_solution: Optional[PDPTWSolution] = None
-        self.current_fitness: Optional[float] = None
-        self.step_count: int = 0
-        self.initial_fitness: Optional[float] = None
-        self.best_solution: Optional[PDPTWSolution] = None
-        self.best_fitness: float = float('inf')
 
         self.epsilon_value = 0.1
 
@@ -85,7 +86,7 @@ class LocalSearchEnv(gym.Env):
         self.reward_mean = 0.0
         self.reward_std = 1.0
         self.reward_samples = 0
-        self.max_reward_samples = 10000  # Stop updating after this many samples
+        self.max_reward_samples = 100000  # Stop updating after this many samples
 
         # Late acceptance parameters
         self.late_acceptance_length = 20  # History buffer size L
@@ -452,12 +453,11 @@ class LocalSearchEnv(gym.Env):
             avg_improvement = total_improvement / acceptances if acceptances > 0 else 0.0
 
             features.append([
-                applications,
-                improvements,
-                acceptances,
+                applications / self.step_count if self.step_count > 0 else 0.0,
+                improvements / self.step_count if self.step_count > 0 else 0.0,
+                acceptances / self.step_count if self.step_count > 0 else 0.0,
                 success_rate,
                 acceptance_rate,
-                avg_improvement
             ])
         
         return np.array(features, dtype=np.float32)
@@ -558,15 +558,13 @@ class LocalSearchEnv(gym.Env):
         Returns:
             Minimal PDPTWProblem instance
         """
+        node_depot = Node(index=0, x=0.0, y=0.0, demand=0, time_window=(0, 1000), service_time=0, pickup_index=0, delivery_index=0)
+        node_pickup = Node(index=1, x=1.0, y=1.0, demand=1, time_window=(0, 1000), service_time=0, pickup_index=0, delivery_index=2)
+        node_delivery = Node(index=2, x=2.0, y=2.0, demand=-1, time_window=(0, 1000), service_time=0, pickup_index=1, delivery_index=0)
         return PDPTWProblem(
-            num_requests=1,
-            num_vehicles=1,
-            vehicle_capacity=100,
-            distance_matrix=np.array([[0, 1, 1], [1, 0, 1], [1, 1, 0]], dtype=np.float32),
-            time_windows=np.array([[0, 1000], [0, 1000], [0, 1000]], dtype=np.float32),
-            service_times=np.zeros(3, dtype=np.float32),
-            demands=np.array([0, 1, -1], dtype=np.float32),
-            distance_baseline=1.0
+            nodes=[node_depot, node_pickup, node_delivery],
+            vehicle_capacity=10,
+            num_vehicles=10
         )
 
     def _create_minimal_solution(self, problem: PDPTWProblem) -> PDPTWSolution:

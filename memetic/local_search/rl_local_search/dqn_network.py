@@ -139,7 +139,7 @@ class DQNAgent:
             self.state_mean = np.zeros(self.state_dim, dtype=np.float32)
             self.state_std = np.ones(self.state_dim, dtype=np.float32)
 
-        if update_stats and self.normalization_samples < 10000:
+        if update_stats and self.normalization_samples < 100000:
             # Update running statistics (online mean/std)
             self.normalization_samples += 1
             alpha = 1.0 / self.normalization_samples
@@ -233,12 +233,12 @@ class DQNAgent:
 
         with torch.no_grad():
             # --- OPTION 1: Double DQN (DDQN) ---
-            # next_actions = self.q_network(next_states).argmax(dim=1)  # Select with Q-network
-            # next_q_values = self.target_network(next_states).gather(1, next_actions.unsqueeze(1)).squeeze(1)  # Evaluate with target
+            next_actions = self.q_network(next_states).argmax(dim=1)  # Select with Q-network
+            next_q_values = self.target_network(next_states).gather(1, next_actions.unsqueeze(1)).squeeze(1)  # Evaluate with target
 
             # --- OPTION 2: Standard DQN ---
             # Uncomment this line and comment out the two DDQN lines above:
-            next_q_values = self.target_network(next_states).max(dim=1)[0]
+            # next_q_values = self.target_network(next_states).max(dim=1)[0]
 
             target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
 
