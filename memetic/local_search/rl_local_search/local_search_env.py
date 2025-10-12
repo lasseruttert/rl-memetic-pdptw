@@ -434,35 +434,8 @@ class LocalSearchEnv(gym.Env):
 
         else:
             raise ValueError(f"Unknown acceptance strategy: {self.acceptance_strategy}")
-        
-    def _get_operator_features(self) -> np.ndarray:
-        """Extract features for each operator based on historical performance.
-
-        Returns:
-            np.ndarray: Feature matrix of shape (num_operators, num_features)
-        """
-        features = []
-        for metrics in self.operator_metrics:
-            applications = metrics.get('applications', 0)
-            improvements = metrics.get('improvements', 0)
-            acceptances = metrics.get('acceptances', 0)
-            total_improvement = metrics.get('total_improvement', 0.0)
-
-            success_rate = improvements / applications if applications > 0 else 0.0
-            acceptance_rate = acceptances / applications if applications > 0 else 0.0
-            avg_improvement = total_improvement / acceptances if acceptances > 0 else 0.0
-
-            features.append([
-                applications / self.step_count if self.step_count > 0 else 0.0,
-                improvements / self.step_count if self.step_count > 0 else 0.0,
-                acceptances / self.step_count if self.step_count > 0 else 0.0,
-                success_rate,
-                acceptance_rate,
-            ])
-        
-        return np.array(features, dtype=np.float32)
     
-    def _extract_solution_features(self, problem: PDPTWProblem, solution: PDPTWSolution) -> np.ndarray:
+    def _get_solution_features(self, problem: PDPTWProblem, solution: PDPTWSolution) -> np.ndarray:
         """Extract feature vector from a solution for RL state representation.
 
         Features include:
@@ -510,11 +483,9 @@ class LocalSearchEnv(gym.Env):
         # Normalized features
         features = np.array([
             # Problem features
-            # num_requests,
-            # vehicle_capacity,
-            # num_vehicles,
-            # avg_distance,
-            # avg_tw_tightness,
+            num_requests / 1000,
+            vehicle_capacity / 200,
+            num_vehicles / 250,
 
             # Solution features (normalized)
             num_routes / num_vehicles if num_vehicles > 0 else 0,
@@ -535,6 +506,33 @@ class LocalSearchEnv(gym.Env):
 
         return features
     
+    def _get_operator_features(self) -> np.ndarray:
+        """Extract features for each operator based on historical performance.
+
+        Returns:
+            np.ndarray: Feature matrix of shape (num_operators, num_features)
+        """
+        features = []
+        for metrics in self.operator_metrics:
+            applications = metrics.get('applications', 0)
+            improvements = metrics.get('improvements', 0)
+            acceptances = metrics.get('acceptances', 0)
+            total_improvement = metrics.get('total_improvement', 0.0)
+
+            success_rate = improvements / applications if applications > 0 else 0.0
+            acceptance_rate = acceptances / applications if applications > 0 else 0.0
+            avg_improvement = total_improvement / acceptances if acceptances > 0 else 0.0
+
+            features.append([
+                applications / self.step_count if self.step_count > 0 else 0.0,
+                improvements / self.step_count if self.step_count > 0 else 0.0,
+                acceptances / self.step_count if self.step_count > 0 else 0.0,
+                # success_rate,
+                # acceptance_rate,
+            ])
+        
+        return np.array(features, dtype=np.float32)
+    
     def _get_state(self) -> np.ndarray:
         """Get the current state representation.
 
@@ -544,7 +542,7 @@ class LocalSearchEnv(gym.Env):
         if self.problem is None or self.current_solution is None:
             raise RuntimeError("Environment must be reset before getting state")
 
-        solution_features = self._extract_solution_features(self.problem, self.current_solution)
+        solution_features = self._get_solution_features(self.problem, self.current_solution)
         operator_features = self._get_operator_features().flatten()
 
         # Combine features
@@ -554,7 +552,6 @@ class LocalSearchEnv(gym.Env):
 
     def _create_minimal_problem(self) -> PDPTWProblem:
         """Create minimal dummy problem for dimension inference.
-
         Returns:
             Minimal PDPTWProblem instance
         """

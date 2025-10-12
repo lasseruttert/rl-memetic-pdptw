@@ -1,5 +1,3 @@
-# TODO Implement guided ejection search heuristic
-
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 

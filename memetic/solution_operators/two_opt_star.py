@@ -3,7 +3,7 @@ from utils.pdptw_solution import PDPTWSolution
 from memetic.solution_operators.base_operator import BaseOperator
 import random
 
-class TwoOptStarOperator(BaseOperator):
+class TwoOptStarOperator(BaseOperator): # TODO: fix, creates invalid solutions
     """2-opt* exchanges route tails between two different routes.
     
     For routes r1 and r2, cuts at positions i and j, then swaps:

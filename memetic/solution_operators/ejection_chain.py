@@ -1,1 +1,1 @@
-# TODO
+# TODO: implement ejection-chain operator

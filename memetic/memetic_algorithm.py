@@ -38,7 +38,7 @@ from memetic.solution_operators.two_opt import TwoOptOperator
 from memetic.solution_operators.two_opt_star import TwoOptStarOperator
 
 from memetic.utils.distance_measure import DistanceMeasure
-from memetic.utils.edge_frequency import SparseCentroid, compute_sparse_edges
+from memetic.utils.edge_frequency import SparseCentroid, compute_sparse_edges # TODO: use centroid for diversity
 
 import time
 import random
@@ -462,7 +462,7 @@ class MemeticSolver:
             else:
                 seen.add(identifier)
 
-        # TODO: Use some distance metric to ensure diversity
+        # TODO: use some distance metric to ensure diversity
 
         return population, current_fitnesses, current_num_vehicles
         
@@ -489,7 +489,7 @@ class MemeticSolver:
             'max': max_fitness,
             'avg': avg_fitness
         }
-        return # TODO
+        return # TODO: add more detailed evaluation
     
     def _calculate_upper_bound_vehicles(self, problem: PDPTWProblem) -> int:
         """Calculate an upper bound on the number of vehicles needed to serve all customers."""
@@ -528,6 +528,6 @@ class MemeticSolver:
         return False
     
 @dataclass
-class Individual: # TODO use this
+class Individual: # TODO: use this class instead of multiple lists
     solution: PDPTWSolution
     fitness: float
