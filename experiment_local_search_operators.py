@@ -37,8 +37,11 @@ if __name__ == "__main__":
         SwapWithinOperator(),
         SwapWithinOperator(max_attempts=5),
         SwapWithinOperator(single_route=True),
+        SwapWithinOperator(single_route=True, type="best"),
+        SwapWithinOperator(single_route=False, type="best"),
 
         SwapBetweenOperator(),
+        SwapBetweenOperator(type="best"),
         
         TransferOperator(),
         TransferOperator(single_route=True),

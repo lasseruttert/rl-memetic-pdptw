@@ -8,7 +8,7 @@ class TransferOperator(BaseOperator):
         super().__init__()
         self.max_attempts = max_attempts
         self.single_route = single_route
-        
+
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()
         
