@@ -43,6 +43,7 @@ class RLLocalSearch(BaseLocalSearch):
         beta: float = 1.0,   # Feasibility weight (normalized to [0, 1] range)
         acceptance_strategy: str = "greedy",
         reward_strategy: str = "initial_improvement",
+        type: str = "OneShot",  # "OneShot", "Roulette", or "Ranking"
         max_steps_per_episode: int = 100,
         replay_buffer_capacity: int = 100000,
         batch_size: int = 64,
@@ -74,9 +75,14 @@ class RLLocalSearch(BaseLocalSearch):
         self.operators = operators
         self.acceptance_strategy = acceptance_strategy
         self.reward_strategy = reward_strategy
+        self.type = type
         self.max_steps_per_episode = max_steps_per_episode
         self.batch_size = batch_size
         self.verbose = verbose
+
+        # Validate configuration
+        if self.type in ["Ranking", "Roulette"] and self.acceptance_strategy != "greedy":
+            raise ValueError(f"{self.type} type requires greedy acceptance strategy")
 
         # Environment
         self.env = LocalSearchEnv(
@@ -352,8 +358,6 @@ class RLLocalSearch(BaseLocalSearch):
                     writer.add_scalar('QValues/mean_qvalue', np.mean(q_values), episode)
                     writer.add_scalar('QValues/std_qvalue', np.std(q_values), episode)
 
-                    # Metric 1: Reward 
-                    writer.add_scalar('Reward/total_reward', episode_reward, episode)
 
                     # Metric 2: Acceptance rate tracking
                     total_moves = num_accepted + num_rejected
@@ -473,6 +477,10 @@ class RLLocalSearch(BaseLocalSearch):
         Returns:
             Tuple of (best_solution, best_fitness)
         """
+        # Temporarily disable step limit for inference (Ranking mode may use many steps per iteration)
+        original_max_steps = self.env.max_steps
+        self.env.max_steps = float('inf')
+
         # Reset environment
         state, info = self.env.reset(problem, solution)
 
@@ -480,30 +488,85 @@ class RLLocalSearch(BaseLocalSearch):
         best_fitness = fitness(problem, best_solution)
 
         # Inference loop
+        done = False
         for iteration in range(max_iterations):
-            # Select action using learned policy (greedy or with small epsilon)
-            # Don't update normalization stats during testing
-            action = self.agent.get_action(state, epsilon=epsilon, update_stats=False)
-
-            # Apply operator
-            next_state, reward, terminated, truncated, step_info = self.env.step(action)
-
-            # Update best solution
-            if step_info['fitness'] < best_fitness:
-                best_solution = self.env.current_solution.clone()
-                best_fitness = step_info['fitness']
-
-            # Move to next state
-            state = next_state
-
-            if terminated or truncated:
+            if done:
                 break
+
+            # Select action using learned policy
+            # - OneShot: Single operator per iteration
+            # - Roulette: Try operators in Q-value weighted random order until one improves
+            # - Ranking: Try operators in strict Q-value order (best first) until one improves
+            if self.type == "OneShot":
+                action = self.agent.get_action(state, epsilon=epsilon, update_stats=False)
+
+                # Apply operator
+                next_state, reward, terminated, truncated, step_info = self.env.step(action)
+
+                # Update best solution
+                if step_info['fitness'] < best_fitness:
+                    best_solution = self.env.current_solution.clone()
+                    best_fitness = step_info['fitness']
+
+                # Move to next state
+                state = next_state
+                done = terminated or truncated
+
+            elif self.type == "Roulette":
+                q_values = self.agent.get_q_values(state, update_stats=False)
+
+                # Sample sequence based on Q-values (weighted, without replacement)
+                exp_q = np.exp(q_values - np.max(q_values))  # numerical stability
+                probs = exp_q / np.sum(exp_q)
+                action_sequence = np.random.choice(len(self.operators), size=len(self.operators),
+                                                  replace=False, p=probs)
+
+                # Try operators in sequence until one improves (greedy acceptance handles rejection)
+                for action in action_sequence:
+                    # Apply operator (environment handles state management)
+                    next_state, reward, terminated, truncated, step_info = self.env.step(action)
+                    state = next_state
+
+                    # Check if this operator improved fitness
+                    if step_info['fitness'] < best_fitness:
+                        best_solution = self.env.current_solution.clone()
+                        best_fitness = step_info['fitness']
+                        break  # Stop at first improvement
+
+                    if terminated or truncated:
+                        done = True
+                        break
+
+            elif self.type == "Ranking":
+                q_values = self.agent.get_q_values(state, update_stats=False)
+
+                # Rank operators by Q-value (best first, descending order)
+                action_sequence = np.argsort(-q_values)
+
+                # Try operators in ranked order until one improves (greedy acceptance handles rejection)
+                for action in action_sequence:
+                    # Apply operator (environment handles state management)
+                    next_state, reward, terminated, truncated, step_info = self.env.step(action)
+                    state = next_state
+
+                    # Check if this operator improved fitness
+                    if step_info['fitness'] < best_fitness:
+                        best_solution = self.env.current_solution.clone()
+                        best_fitness = step_info['fitness']
+                        break  # Stop at first improvement
+
+                    if terminated or truncated:
+                        done = True
+                        break
 
         # Get final best solution
         env_best_solution, env_best_fitness = self.env.get_best_solution()
         if env_best_fitness < best_fitness:
             best_solution = env_best_solution
             best_fitness = env_best_fitness
+
+        # Restore original max_steps
+        self.env.max_steps = original_max_steps
 
         return best_solution, best_fitness
 

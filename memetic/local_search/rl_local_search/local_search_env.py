@@ -62,7 +62,7 @@ class LocalSearchEnv(gym.Env):
         # Infer observation space dimensions dynamically
         dummy_problem = self._create_minimal_problem()
         dummy_solution = self._create_minimal_solution(dummy_problem)
-        solution_feature_dim = len(self._extract_solution_features(dummy_problem, dummy_solution))
+        solution_feature_dim = len(self._get_solution_features(dummy_problem, dummy_solution))
         operator_feature_dim = len(self._get_operator_features().flatten())
         obs_dim = solution_feature_dim + operator_feature_dim
 
@@ -484,7 +484,7 @@ class LocalSearchEnv(gym.Env):
         features = np.array([
             # Problem features
             num_requests / 1000,
-            vehicle_capacity / 200,
+            vehicle_capacity / 1000,
             num_vehicles / 250,
 
             # Solution features (normalized)

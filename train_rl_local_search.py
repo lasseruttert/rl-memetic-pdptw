@@ -95,11 +95,11 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Train RL-based local search with configurable strategies")
-    parser.add_argument("--acceptance_strategy", type=str, default="epsilon_greedy",
+    parser.add_argument("--acceptance_strategy", type=str, default="greedy",
                         choices=["greedy", "always", "epsilon_greedy",
                                  "simulated_annealing", "late_acceptance", "rising_epsilon_greedy"],
                         help="Acceptance strategy for local search")
-    parser.add_argument("--reward_strategy", type=str, default="initial_improvement",
+    parser.add_argument("--reward_strategy", type=str, default="binary",
                         choices=[    "tanh", "distance_baseline_tanh",
     "distance_baseline_normalized",
     "pure_normalized",
@@ -185,28 +185,28 @@ def main():
     # # Create problem and solution generators
     problem_generator = create_problem_generator(size=PROBLEM_SIZE, categories=CATEGORIES)
 
-    # Train the RL agent
-    print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
-    print(f"Categories: {CATEGORIES}")
-    print(f"Operators: {len(operators)}")
+    # # Train the RL agent
+    # print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
+    # print(f"Categories: {CATEGORIES}")
+    # print(f"Operators: {len(operators)}")
 
-    training_history = rl_local_search.train(
-        problem_generator=problem_generator,
-        initial_solution_generator=create_solution_generator,
-        num_episodes=args.num_episodes,
-        new_instance_interval=5,
-        new_solution_interval=1,
-        update_interval=1,
-        warmup_episodes=10,
-        save_interval=1000,
-        save_path=f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}",
-        tensorboard_dir=f"runs/{RUN_NAME}",
-        seed=SEED, 
-    )
+    # training_history = rl_local_search.train(
+    #     problem_generator=problem_generator,
+    #     initial_solution_generator=create_solution_generator,
+    #     num_episodes=args.num_episodes,
+    #     new_instance_interval=5,
+    #     new_solution_interval=1,
+    #     update_interval=1,
+    #     warmup_episodes=10,
+    #     save_interval=1000,
+    #     save_path=f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}",
+    #     tensorboard_dir=f"runs/{RUN_NAME}",
+    #     seed=SEED, 
+    # )
 
-    print("\nTraining completed!")
-    print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
-    print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
+    # print("\nTraining completed!")
+    # print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
+    # print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
     
     adaptive_local_search = AdaptiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200)
 
@@ -227,7 +227,8 @@ def main():
     for path in RL_MODEL_PATHS:
         if not path:
             continue
-        model = RLLocalSearch(
+        # OneShot model
+        model_oneshot = RLLocalSearch(
             operators=operators,
             hidden_dims=[128, 128, 64],
             learning_rate=1e-4,
@@ -239,6 +240,47 @@ def main():
             alpha=10.0,
             beta=0.0,
             acceptance_strategy="greedy",
+            type="OneShot",
+            max_steps_per_episode=200,
+            replay_buffer_capacity=100000,
+            batch_size=64,
+            device="cuda",
+            verbose=False
+        )
+        # Roulette model (probabilistic sampling based on Q-values)
+        model_roulette = RLLocalSearch(
+            operators=operators,
+            hidden_dims=[128, 128, 64],
+            learning_rate=1e-4,
+            gamma=0.99,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.995,
+            target_update_interval=100,
+            alpha=10.0,
+            beta=0.0,
+            acceptance_strategy="greedy",
+            type="Roulette",
+            max_steps_per_episode=200,
+            replay_buffer_capacity=100000,
+            batch_size=64,
+            device="cuda",
+            verbose=False
+        )
+        # Ranking model (strict Q-value order, best first)
+        model_ranking = RLLocalSearch(
+            operators=operators,
+            hidden_dims=[128, 128, 64],
+            learning_rate=1e-4,
+            gamma=0.99,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.995,
+            target_update_interval=100,
+            alpha=10.0,
+            beta=0.0,
+            acceptance_strategy="greedy",
+            type="Ranking",
             max_steps_per_episode=200,
             replay_buffer_capacity=100000,
             batch_size=64,
@@ -246,10 +288,17 @@ def main():
             verbose=False
         )
         try:
-            model.load(path)
-            print(f"Loaded RL model from {path}")
-            rl_models.append(model)
-            model_names.append(os.path.basename(path))
+            model_oneshot.load(path)
+            model_roulette.load(path)
+            model_ranking.load(path)
+            print(f"Loaded RL models (OneShot + Roulette + Ranking) from {path}")
+            rl_models.append(model_oneshot)
+            rl_models.append(model_roulette)
+            rl_models.append(model_ranking)
+            base_name = os.path.basename(path)
+            model_names.append(f"{base_name} (OneShot)")
+            model_names.append(f"{base_name} (Roulette)")
+            model_names.append(f"{base_name} (Ranking)")
         except Exception as e:
             print(f"Warning: could not load RL model from {path}: {e}")
 
@@ -258,7 +307,7 @@ def main():
         return
 
     # Compare RL local search models vs Naive local search and Random local search
-    NUM_TESTS = 50
+    NUM_TESTS = 100
     rl_results = [[] for _ in range(len(rl_models))]  # per-model collected tuples (initial, best, time)
     adaptive_results = []
     naive_results = []
@@ -275,8 +324,13 @@ def main():
         initial_fitness = fitness(test_problem, initial_solution)
         print(f"Initial fitness: {initial_fitness:.2f}")
 
+        # Base seed for this test (ensures all methods see same randomness)
+        base_seed = (SEED + i) if SEED is not None else None
+
         # Run each RL model
         for midx, model in enumerate(rl_models):
+            if base_seed is not None:
+                set_seed(base_seed)  # Reset to same seed for fair comparison
             rl_solution = initial_solution.clone()
             t0 = time.time()
             try:
@@ -294,6 +348,8 @@ def main():
             rl_results[midx].append((initial_fitness, rl_best_fitness, rl_time))
 
         # Adaptive local search
+        if base_seed is not None:
+            set_seed(base_seed)
         adaptive_solution = initial_solution.clone()
         t0 = time.time()
         adaptive_best_solution, adaptive_best_fitness = adaptive_local_search.search(
@@ -305,6 +361,8 @@ def main():
         adaptive_results.append((initial_fitness, adaptive_best_fitness, adaptive_time))
 
         # Naive local search
+        if base_seed is not None:
+            set_seed(base_seed)
         naive_solution = initial_solution.clone()
         t0 = time.time()
         naive_best_solution, naive_best_fitness = naive_local_search.search(
@@ -314,8 +372,10 @@ def main():
         naive_time = time.time() - t0
         print(f"Naive: best fitness: {naive_best_fitness:.2f} (time: {naive_time:.2f}s)")
         naive_results.append((initial_fitness, naive_best_fitness, naive_time))
-        
+
         # Naive local search with best improvement
+        if base_seed is not None:
+            set_seed(base_seed)
         naive_with_best_solution = initial_solution.clone()
         t0 = time.time()
         naive_with_best_best_solution, naive_with_best_best_fitness = naive_with_best_local_search.search(
@@ -327,6 +387,8 @@ def main():
         naive_with_best_results.append((initial_fitness, naive_with_best_best_fitness, naive_with_best_time))
 
         # Random local search
+        if base_seed is not None:
+            set_seed(base_seed)
         random_solution = initial_solution.clone()
         t0 = time.time()
         random_best_solution, random_best_fitness = random_local_search.search(
