@@ -118,7 +118,7 @@ def main():
                         help="Problem size")
     parser.add_argument("--num_episodes", type=int, default=1000,
                         help="Number of training episodes")
-    parser.add_argument("--seed", type=int, default=42,
+    parser.add_argument("--seed", type=int, default=422,
                         help="Random seed for reproducibility (default: 42)")
     args = parser.parse_args()
 
@@ -167,18 +167,19 @@ def main():
         hidden_dims=[128, 128, 64],
         learning_rate=1e-4,
         gamma=0.90,
-        epsilon_start=1.0, 
+        epsilon_start=1.0,
         epsilon_end=0.05,
         epsilon_decay=0.9975,
         target_update_interval=100,
-        alpha=10.0,  
-        beta=0.0,    
-        acceptance_strategy=ACCEPTANCE_STRATEGY,  
+        alpha=10.0,
+        beta=0.0,
+        acceptance_strategy=ACCEPTANCE_STRATEGY,
         reward_strategy = REWARD_STRATEGY,
-        max_steps_per_episode=200,
+        max_iterations=200,
+        max_no_improvement=50,
         replay_buffer_capacity=100000,
         batch_size=64,
-        device="cuda",  
+        device="cuda",
         verbose=True
     )
 
@@ -241,7 +242,8 @@ def main():
             beta=0.0,
             acceptance_strategy="greedy",
             type="OneShot",
-            max_steps_per_episode=200,
+            max_iterations=200,
+            max_no_improvement=50,
             replay_buffer_capacity=100000,
             batch_size=64,
             device="cuda",
@@ -261,7 +263,8 @@ def main():
             beta=0.0,
             acceptance_strategy="greedy",
             type="Roulette",
-            max_steps_per_episode=200,
+            max_iterations=200,
+            max_no_improvement=50,
             replay_buffer_capacity=100000,
             batch_size=64,
             device="cuda",
@@ -281,7 +284,8 @@ def main():
             beta=0.0,
             acceptance_strategy="greedy",
             type="Ranking",
-            max_steps_per_episode=200,
+            max_iterations=200,
+            max_no_improvement=50,
             replay_buffer_capacity=100000,
             batch_size=64,
             device="cuda",
@@ -317,6 +321,9 @@ def main():
     print("\n--- Comparing RL models vs Naive/Random Local Search ---")
     for i in range(NUM_TESTS):
         print(f"\nTest {i+1}/{NUM_TESTS}")
+        # Base seed for this test (ensures all methods see same randomness)
+        base_seed = (SEED + i) if SEED is not None else None
+        set_seed(base_seed)
         test_problem = problem_generator()
         initial_solution = create_solution_generator(test_problem)
 
@@ -324,8 +331,6 @@ def main():
         initial_fitness = fitness(test_problem, initial_solution)
         print(f"Initial fitness: {initial_fitness:.2f}")
 
-        # Base seed for this test (ensures all methods see same randomness)
-        base_seed = (SEED + i) if SEED is not None else None
 
         # Run each RL model
         for midx, model in enumerate(rl_models):
@@ -337,7 +342,6 @@ def main():
                 rl_best_solution, rl_best_fitness = model.search(
                     problem=test_problem,
                     solution=rl_solution,
-                    max_iterations=200,
                     epsilon=0.0
                 )
             except Exception as e:

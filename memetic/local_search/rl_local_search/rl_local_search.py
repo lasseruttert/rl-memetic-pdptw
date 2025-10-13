@@ -44,7 +44,8 @@ class RLLocalSearch(BaseLocalSearch):
         acceptance_strategy: str = "greedy",
         reward_strategy: str = "initial_improvement",
         type: str = "OneShot",  # "OneShot", "Roulette", or "Ranking"
-        max_steps_per_episode: int = 100,
+        max_iterations: int = 100,
+        max_no_improvement: Optional[int] = None,
         replay_buffer_capacity: int = 100000,
         batch_size: int = 64,
         device: str = "cuda",
@@ -64,7 +65,8 @@ class RLLocalSearch(BaseLocalSearch):
             alpha: Weight for fitness improvement in reward (normalized by distance_baseline)
             beta: Weight for feasibility improvement in reward (normalized to [0,1])
             acceptance_strategy: "greedy" or "always"
-            max_steps_per_episode: Maximum steps per episode during training
+            max_iterations: Maximum iterations for both training episodes and inference
+            max_no_improvement: Early stopping after N steps without improvement (None to disable)
             replay_buffer_capacity: Size of replay buffer
             batch_size: Batch size for training
             device: Device for training ("cuda" or "cpu")
@@ -76,7 +78,7 @@ class RLLocalSearch(BaseLocalSearch):
         self.acceptance_strategy = acceptance_strategy
         self.reward_strategy = reward_strategy
         self.type = type
-        self.max_steps_per_episode = max_steps_per_episode
+        self.max_iterations = max_iterations
         self.batch_size = batch_size
         self.verbose = verbose
 
@@ -90,7 +92,8 @@ class RLLocalSearch(BaseLocalSearch):
             alpha=alpha,
             acceptance_strategy=acceptance_strategy,
             reward_strategy=reward_strategy,
-            max_steps=max_steps_per_episode
+            max_steps=max_iterations,
+            max_no_improvement=max_no_improvement
         )
 
         # DQN Agent
@@ -207,7 +210,7 @@ class RLLocalSearch(BaseLocalSearch):
                 'epsilon_decay': self.agent.epsilon_decay,
                 'batch_size': self.batch_size,
                 'num_episodes': num_episodes,
-                'max_steps_per_episode': self.max_steps_per_episode,
+                'max_iterations': self.max_iterations,
                 'acceptance_strategy': self.acceptance_strategy,
                 'reward_strategy': self.reward_strategy,
                 'alpha': self.env.alpha,
@@ -264,7 +267,7 @@ class RLLocalSearch(BaseLocalSearch):
             operator_improvements = [[] for _ in range(len(self.operators))]  # fitness changes
 
             # Episode loop
-            for step in range(self.max_steps_per_episode):
+            for step in range(self.max_iterations):
                 # Select action (epsilon-greedy)
                 action = self.agent.get_action(state)
                 episode_actions.append(action)
@@ -461,7 +464,7 @@ class RLLocalSearch(BaseLocalSearch):
         self,
         problem: PDPTWProblem,
         solution: PDPTWSolution,
-        max_iterations: int = 150,
+        max_iterations: Optional[int] = None,
         epsilon: float = 0.0
     ) -> Tuple[PDPTWSolution, float]:
         """Perform local search using trained RL policy (inference mode).
@@ -471,15 +474,21 @@ class RLLocalSearch(BaseLocalSearch):
         Args:
             problem: PDPTW problem instance
             solution: Initial solution to improve
-            max_iterations: Maximum number of iterations
+            max_iterations: Maximum number of iterations (None to use init value)
             epsilon: Exploration rate (0.0 = fully greedy)
 
         Returns:
             Tuple of (best_solution, best_fitness)
         """
-        # Temporarily disable step limit for inference (Ranking mode may use many steps per iteration)
+        # Use provided max_iterations or default from init
+        if max_iterations is None:
+            max_iterations = self.max_iterations
+
+        # Temporarily disable step limit for inference (Ranking/Roulette may use many steps per iteration)
         original_max_steps = self.env.max_steps
+        original_max_no_improvement = self.env.max_no_improvement
         self.env.max_steps = float('inf')
+        self.env.max_no_improvement = float('inf')
 
         # Reset environment
         state, info = self.env.reset(problem, solution)
@@ -567,6 +576,7 @@ class RLLocalSearch(BaseLocalSearch):
 
         # Restore original max_steps
         self.env.max_steps = original_max_steps
+        self.env.max_no_improvement = original_max_no_improvement
 
         return best_solution, best_fitness
 

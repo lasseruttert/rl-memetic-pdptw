@@ -25,7 +25,8 @@ class LocalSearchEnv(gym.Env):
         alpha: float = 1.0,
         acceptance_strategy: str = "greedy",
         reward_strategy: str = "initial_improvement",
-        max_steps: int = 100
+        max_steps: int = 100,
+        max_no_improvement: Optional[int] = None
     ):
         """Initialize the local search environment.
 
@@ -35,6 +36,7 @@ class LocalSearchEnv(gym.Env):
             acceptance_strategy: "greedy" (only accept improvements) or "always"
             reward_strategy: Strategy for calculating rewards
             max_steps: Maximum number of steps per episode
+            max_no_improvement: Early stopping after N steps without improvement (None to disable)
         """
         super().__init__()
 
@@ -43,6 +45,7 @@ class LocalSearchEnv(gym.Env):
         self.acceptance_strategy = acceptance_strategy
         self.reward_strategy = reward_strategy
         self.max_steps = max_steps
+        self.max_no_improvement = max_no_improvement
 
         # Action space: discrete selection of operators (no no-op)
         self.action_space = spaces.Discrete(len(operators))
@@ -58,6 +61,10 @@ class LocalSearchEnv(gym.Env):
         self.initial_fitness: Optional[float] = None
         self.best_solution: Optional[PDPTWSolution] = None
         self.best_fitness: float = float('inf')
+
+        # Early stopping tracking
+        self.no_improvement_count: int = 0
+        self.last_best_fitness: float = float('inf')
         
         # Infer observation space dimensions dynamically
         dummy_problem = self._create_minimal_problem()
@@ -125,14 +132,18 @@ class LocalSearchEnv(gym.Env):
         self.best_solution = self.current_solution.clone()
         self.best_fitness = self.current_fitness
 
+        # Reset early stopping tracking
+        self.no_improvement_count = 0
+        self.last_best_fitness = self.current_fitness
+
         # Reset temperature for simulated annealing
         self.temperature = self.initial_temp
 
         # Clear fitness history for late acceptance
         self.fitness_history = []
-        
+
         self.operator_history = []
-        
+
         self.operator_metrics = [{} for _ in self.operators]
 
         observation = self._get_state()
@@ -171,6 +182,13 @@ class LocalSearchEnv(gym.Env):
             self.best_solution = new_solution.clone()
             self.best_fitness = new_fitness
 
+        # Track improvement for early stopping
+        if self.best_fitness < self.last_best_fitness:
+            self.no_improvement_count = 0
+            self.last_best_fitness = self.best_fitness
+        else:
+            self.no_improvement_count += 1
+
         # Accept solution based on strategy
         accepted = self._accept_solution(self.current_fitness, new_fitness)
 
@@ -203,6 +221,11 @@ class LocalSearchEnv(gym.Env):
 
         # Check termination
         terminated = False  # local search doesn't have a terminal state
+
+        # Early termination if no improvement for too long
+        if self.max_no_improvement is not None and self.no_improvement_count >= self.max_no_improvement:
+            terminated = True
+
         truncated = self.step_count >= self.max_steps
 
         # Observation and info
@@ -427,7 +450,7 @@ class LocalSearchEnv(gym.Env):
             # Always accept improvements
             if new_fitness < old_fitness:
                 return True
-            # Epsilon rises from start to end over max_steps
+            # Epsilon rises from start to end over max_steps (max_iterations)
             progress = min(self.step_count / self.max_steps, 1.0)
             epsilon = self.rising_epsilon_start + (self.rising_epsilon_end - self.rising_epsilon_start) * progress
             return np.random.rand() < epsilon
