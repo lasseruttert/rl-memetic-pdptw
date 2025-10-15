@@ -161,7 +161,7 @@ def main():
         ReinsertOperator(),
     ]
 
-    # Initialize RL local search
+    # Initialize RL local search:
     rl_local_search = RLLocalSearch(
         operators=operators,
         hidden_dims=[128, 128, 64],
@@ -174,11 +174,15 @@ def main():
         alpha=10.0,
         beta=0.0,
         acceptance_strategy=ACCEPTANCE_STRATEGY,
-        reward_strategy = REWARD_STRATEGY,
+        reward_strategy=REWARD_STRATEGY,
         max_iterations=200,
         max_no_improvement=50,
         replay_buffer_capacity=100000,
         batch_size=64,
+        n_step=3, 
+        use_prioritized_replay=True,  
+        per_alpha=0.6,  
+        per_beta_start=0.4,  
         device="cuda",
         verbose=True
     )
@@ -186,28 +190,28 @@ def main():
     # # Create problem and solution generators
     problem_generator = create_problem_generator(size=PROBLEM_SIZE, categories=CATEGORIES)
 
-    # # Train the RL agent
-    # print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
-    # print(f"Categories: {CATEGORIES}")
-    # print(f"Operators: {len(operators)}")
+    # Train the RL agent
+    print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
+    print(f"Categories: {CATEGORIES}")
+    print(f"Operators: {len(operators)}")
 
-    # training_history = rl_local_search.train(
-    #     problem_generator=problem_generator,
-    #     initial_solution_generator=create_solution_generator,
-    #     num_episodes=args.num_episodes,
-    #     new_instance_interval=5,
-    #     new_solution_interval=1,
-    #     update_interval=1,
-    #     warmup_episodes=10,
-    #     save_interval=1000,
-    #     save_path=f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}",
-    #     tensorboard_dir=f"runs/{RUN_NAME}",
-    #     seed=SEED, 
-    # )
+    training_history = rl_local_search.train(
+        problem_generator=problem_generator,
+        initial_solution_generator=create_solution_generator,
+        num_episodes=args.num_episodes,
+        new_instance_interval=5,
+        new_solution_interval=1,
+        update_interval=1,
+        warmup_episodes=10,
+        save_interval=1000,
+        save_path=f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}",
+        tensorboard_dir=f"runs/{RUN_NAME}",
+        seed=SEED, 
+    )
 
-    # print("\nTraining completed!")
-    # print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
-    # print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
+    print("\nTraining completed!")
+    print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
+    print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
     
     adaptive_local_search = AdaptiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200)
 
@@ -219,6 +223,7 @@ def main():
 
     # You can provide up to 6 different RL model paths to evaluate here.
     RL_MODEL_PATHS = [
+        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final1.pt",
         f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final.pt",
     ]
 
@@ -228,7 +233,7 @@ def main():
     for path in RL_MODEL_PATHS:
         if not path:
             continue
-        # OneShot model
+        # OneShot model (same architecture as training)
         model_oneshot = RLLocalSearch(
             operators=operators,
             hidden_dims=[128, 128, 64],
@@ -246,6 +251,8 @@ def main():
             max_no_improvement=50,
             replay_buffer_capacity=100000,
             batch_size=64,
+            n_step=3,  
+            use_prioritized_replay=False,  
             device="cuda",
             verbose=False
         )
@@ -267,6 +274,8 @@ def main():
             max_no_improvement=50,
             replay_buffer_capacity=100000,
             batch_size=64,
+            n_step=3,  
+            use_prioritized_replay=False,  
             device="cuda",
             verbose=False
         )
@@ -288,6 +297,8 @@ def main():
             max_no_improvement=50,
             replay_buffer_capacity=100000,
             batch_size=64,
+            n_step=3, 
+            use_prioritized_replay=False, 
             device="cuda",
             verbose=False
         )

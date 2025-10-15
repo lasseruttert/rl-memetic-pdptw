@@ -7,17 +7,96 @@ import numpy as np
 from typing import Optional
 
 
+# ============================================================================
+# STANDARD DQN 
+# ============================================================================
+# class DQNNetwork(nn.Module):
+#     """Deep Q-Network for estimating Q-values of local search operators."""
+#
+#     def __init__(
+#         self,
+#         state_dim: int,
+#         action_dim: int,
+#         hidden_dims: list[int] = [128, 128, 64],
+#         dropout_rate: float = 0.05
+#     ):
+#         """Initialize the DQN network.
+#
+#         Args:
+#             state_dim: Dimension of state/observation space
+#             action_dim: Number of possible actions (operators)
+#             hidden_dims: List of hidden layer dimensions
+#             dropout_rate: Dropout rate for regularization
+#         """
+#         super().__init__()
+#
+#         self.state_dim = state_dim
+#         self.action_dim = action_dim
+#
+#         # Build MLP layers
+#         layers = []
+#         prev_dim = state_dim
+#
+#         for hidden_dim in hidden_dims:
+#             layers.append(nn.Linear(prev_dim, hidden_dim))
+#             layers.append(nn.ReLU())
+#             layers.append(nn.Dropout(dropout_rate))
+#             prev_dim = hidden_dim
+#
+#         # Output layer (Q-values for each action)
+#         layers.append(nn.Linear(prev_dim, action_dim))
+#
+#         self.network = nn.Sequential(*layers)
+#
+#         # Initialize weights
+#         self._init_weights()
+#
+#     def _init_weights(self):
+#         """Initialize network weights using Xavier initialization."""
+#         for module in self.modules():
+#             if isinstance(module, nn.Linear):
+#                 nn.init.xavier_uniform_(module.weight)
+#                 if module.bias is not None:
+#                     nn.init.constant_(module.bias, 0.0)
+#
+#     def forward(self, state: torch.Tensor) -> torch.Tensor:
+#         """Forward pass through the network.
+#
+#         Args:
+#             state: State tensor of shape (batch_size, state_dim)
+#
+#         Returns:
+#             Q-values for each action of shape (batch_size, action_dim)
+#         """
+#         return self.network(state)
+
+
+# ============================================================================
+# DUELING DQN 
+# ============================================================================
 class DQNNetwork(nn.Module):
-    """Deep Q-Network for estimating Q-values of local search operators."""
+    """Dueling Deep Q-Network for estimating Q-values of local search operators.
+
+    Dueling DQN separates the Q-value into two components:
+    - V(s): Value function - "How good is this state in general?"
+    - A(s,a): Advantage function - "How much better is action a compared to others?"
+
+    Q(s,a) = V(s) + (A(s,a) - mean(A(s,a)))
+
+    Benefits for PDPTW local search:
+    - Learns state quality independently from action selection
+    - Better handles states where all actions have similar Q-values
+    - Faster convergence when many actions have similar effects
+    """
 
     def __init__(
         self,
         state_dim: int,
         action_dim: int,
         hidden_dims: list[int] = [128, 128, 64],
-        dropout_rate: float = 0.05  
+        dropout_rate: float = 0.05
     ):
-        """Initialize the DQN network.
+        """Initialize the Dueling DQN network.
 
         Args:
             state_dim: Dimension of state/observation space
@@ -30,20 +109,33 @@ class DQNNetwork(nn.Module):
         self.state_dim = state_dim
         self.action_dim = action_dim
 
-        # Build MLP layers
-        layers = []
+        # Shared feature extraction layers
+        feature_layers = []
         prev_dim = state_dim
 
-        for hidden_dim in hidden_dims:
-            layers.append(nn.Linear(prev_dim, hidden_dim))
-            layers.append(nn.ReLU())
-            layers.append(nn.Dropout(dropout_rate))
+        for hidden_dim in hidden_dims[:-1]:  # All but last layer
+            feature_layers.append(nn.Linear(prev_dim, hidden_dim))
+            feature_layers.append(nn.ReLU())
+            feature_layers.append(nn.Dropout(dropout_rate))
             prev_dim = hidden_dim
 
-        # Output layer (Q-values for each action)
-        layers.append(nn.Linear(prev_dim, action_dim))
+        self.feature_extractor = nn.Sequential(*feature_layers)
 
-        self.network = nn.Sequential(*layers)
+        # Value stream: V(s) - scalar value representing state quality
+        self.value_stream = nn.Sequential(
+            nn.Linear(prev_dim, hidden_dims[-1]),
+            nn.ReLU(),
+            nn.Dropout(dropout_rate),
+            nn.Linear(hidden_dims[-1], 1)
+        )
+
+        # Advantage stream: A(s,a) - relative advantage of each action
+        self.advantage_stream = nn.Sequential(
+            nn.Linear(prev_dim, hidden_dims[-1]),
+            nn.ReLU(),
+            nn.Dropout(dropout_rate),
+            nn.Linear(hidden_dims[-1], action_dim)
+        )
 
         # Initialize weights
         self._init_weights()
@@ -65,7 +157,19 @@ class DQNNetwork(nn.Module):
         Returns:
             Q-values for each action of shape (batch_size, action_dim)
         """
-        return self.network(state)
+        # Extract shared features
+        features = self.feature_extractor(state)
+
+        # Compute value and advantage
+        value = self.value_stream(features)  # (batch_size, 1)
+        advantage = self.advantage_stream(features)  # (batch_size, action_dim)
+
+        # Combine using dueling architecture formula
+        # Q(s,a) = V(s) + (A(s,a) - mean(A(s,a)))
+        # Subtracting the mean ensures identifiability (unique V and A)
+        q_values = value + (advantage - advantage.mean(dim=1, keepdim=True))
+
+        return q_values
 
 
 class DQNAgent:
@@ -203,19 +307,91 @@ class DQNAgent:
 
         return q_values.cpu().numpy().flatten()
 
-    def update(self, batch: dict) -> float:
+    # ========================================================================
+    # ORIGINAL UPDATE (1-step, no prioritized replay) 
+    # ========================================================================
+    # def update(self, batch: dict) -> float:
+    #     """Update the Q-network using a batch of transitions.
+    #
+    #     Args:
+    #         batch: Dictionary containing:
+    #             - states: np.ndarray of shape (batch_size, state_dim)
+    #             - actions: np.ndarray of shape (batch_size,)
+    #             - rewards: np.ndarray of shape (batch_size,)
+    #             - next_states: np.ndarray of shape (batch_size, state_dim)
+    #             - dones: np.ndarray of shape (batch_size,)
+    #
+    #     Returns:
+    #         Loss value
+    #     """
+    #     # Normalize states
+    #     normalized_states = np.array([self.normalize_state(s, update_stats=False) for s in batch['states']])
+    #     normalized_next_states = np.array([self.normalize_state(s, update_stats=False) for s in batch['next_states']])
+    #
+    #     # Convert to tensors
+    #     states = torch.FloatTensor(normalized_states).to(self.device)
+    #     actions = torch.LongTensor(batch['actions']).to(self.device)
+    #     rewards = torch.FloatTensor(batch['rewards']).to(self.device)
+    #     next_states = torch.FloatTensor(normalized_next_states).to(self.device)
+    #     dones = torch.FloatTensor(batch['dones']).to(self.device)
+    #
+    #     # Current Q-values
+    #     current_q_values = self.q_network(states).gather(1, actions.unsqueeze(1)).squeeze(1)
+    #
+    #     with torch.no_grad():
+    #         # --- OPTION 1: Double DQN (DDQN) ---
+    #         next_actions = self.q_network(next_states).argmax(dim=1)  # Select with Q-network
+    #         next_q_values = self.target_network(next_states).gather(1, next_actions.unsqueeze(1)).squeeze(1)  # Evaluate with target
+    #
+    #         # --- OPTION 2: Standard DQN ---
+    #         # Uncomment this line and comment out the two DDQN lines above:
+    #         # next_q_values = self.target_network(next_states).max(dim=1)[0]
+    #
+    #         target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
+    #
+    #     # Compute loss (Huber loss for stability)
+    #     loss = F.smooth_l1_loss(current_q_values, target_q_values)
+    #
+    #     # Optimize
+    #     self.optimizer.zero_grad()
+    #     loss.backward()
+    #     # Gradient clipping for stability
+    #     torch.nn.utils.clip_grad_norm_(self.q_network.parameters(), max_norm=10.0)
+    #     self.optimizer.step()
+    #
+    #     # Update target network periodically
+    #     self.update_count += 1
+    #     if self.update_count % self.target_update_interval == 0:
+    #         self.target_network.load_state_dict(self.q_network.state_dict())
+    #
+    #     # Track loss
+    #     loss_value = loss.item()
+    #     self.training_losses.append(loss_value)
+    #
+    #     return loss_value
+
+    # ========================================================================
+    # CURRENT UPDATE (n-step + optional prioritized replay support)
+    # ========================================================================
+    def update(self, batch: dict, weights: Optional[np.ndarray] = None) -> tuple[float, Optional[np.ndarray]]:
         """Update the Q-network using a batch of transitions.
+
+        Supports n-step returns and prioritized experience replay.
 
         Args:
             batch: Dictionary containing:
                 - states: np.ndarray of shape (batch_size, state_dim)
                 - actions: np.ndarray of shape (batch_size,)
-                - rewards: np.ndarray of shape (batch_size,)
+                - rewards: np.ndarray of shape (batch_size,) - n-step returns
                 - next_states: np.ndarray of shape (batch_size, state_dim)
                 - dones: np.ndarray of shape (batch_size,)
+                - n_steps: np.ndarray of shape (batch_size,) - number of steps for each transition
+            weights: Optional importance sampling weights for prioritized replay
 
         Returns:
-            Loss value
+            Tuple of (loss_value, td_errors):
+                - loss_value: Scalar loss value
+                - td_errors: TD errors for priority updates (None if not using prioritized replay)
         """
         # Normalize states
         normalized_states = np.array([self.normalize_state(s, update_stats=False) for s in batch['states']])
@@ -227,23 +403,33 @@ class DQNAgent:
         rewards = torch.FloatTensor(batch['rewards']).to(self.device)
         next_states = torch.FloatTensor(normalized_next_states).to(self.device)
         dones = torch.FloatTensor(batch['dones']).to(self.device)
+        n_steps = torch.LongTensor(batch['n_steps']).to(self.device)
+
+        # Importance sampling weights (for prioritized replay)
+        if weights is not None:
+            weights_tensor = torch.FloatTensor(weights).to(self.device)
+        else:
+            weights_tensor = torch.ones(len(batch['states'])).to(self.device)
 
         # Current Q-values
         current_q_values = self.q_network(states).gather(1, actions.unsqueeze(1)).squeeze(1)
 
         with torch.no_grad():
-            # --- OPTION 1: Double DQN (DDQN) ---
-            next_actions = self.q_network(next_states).argmax(dim=1)  # Select with Q-network
-            next_q_values = self.target_network(next_states).gather(1, next_actions.unsqueeze(1)).squeeze(1)  # Evaluate with target
+            # Double DQN: Select actions with Q-network, evaluate with target network
+            next_actions = self.q_network(next_states).argmax(dim=1)
+            next_q_values = self.target_network(next_states).gather(1, next_actions.unsqueeze(1)).squeeze(1)
 
-            # --- OPTION 2: Standard DQN ---
-            # Uncomment this line and comment out the two DDQN lines above:
-            # next_q_values = self.target_network(next_states).max(dim=1)[0]
+            # n-step TD target: r + γ^n * Q(s', a')
+            # Use gamma^n_steps instead of gamma^1
+            gamma_n = self.gamma ** n_steps.float()
+            target_q_values = rewards + (1 - dones) * gamma_n * next_q_values
 
-            target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
+        # TD errors for prioritized replay
+        td_errors = (current_q_values - target_q_values).abs().detach().cpu().numpy()
 
-        # Compute loss (Huber loss for stability)
-        loss = F.smooth_l1_loss(current_q_values, target_q_values)
+        # Weighted Huber loss (for prioritized replay)
+        element_wise_loss = F.smooth_l1_loss(current_q_values, target_q_values, reduction='none')
+        loss = (weights_tensor * element_wise_loss).mean()
 
         # Optimize
         self.optimizer.zero_grad()
@@ -261,7 +447,7 @@ class DQNAgent:
         loss_value = loss.item()
         self.training_losses.append(loss_value)
 
-        return loss_value
+        return loss_value, td_errors
 
     def decay_epsilon(self):
         """Decay exploration rate."""

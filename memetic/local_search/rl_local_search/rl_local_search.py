@@ -39,8 +39,8 @@ class RLLocalSearch(BaseLocalSearch):
         epsilon_end: float = 0.1,
         epsilon_decay: float = 0.995,
         target_update_interval: int = 100,
-        alpha: float = 1.0, 
-        beta: float = 1.0,   
+        alpha: float = 1.0,
+        beta: float = 1.0,
         acceptance_strategy: str = "greedy",
         reward_strategy: str = "initial_improvement",
         type: str = "OneShot",  # "OneShot", "Roulette", or "Ranking"
@@ -48,6 +48,10 @@ class RLLocalSearch(BaseLocalSearch):
         max_no_improvement: Optional[int] = None,
         replay_buffer_capacity: int = 100000,
         batch_size: int = 64,
+        n_step: int = 3,  
+        use_prioritized_replay: bool = True,  
+        per_alpha: float = 0.6,  
+        per_beta_start: float = 0.4,  
         device: str = "cuda",
         verbose: bool = False
     ):
@@ -69,6 +73,10 @@ class RLLocalSearch(BaseLocalSearch):
             max_no_improvement: Early stopping after N steps without improvement (None to disable)
             replay_buffer_capacity: Size of replay buffer
             batch_size: Batch size for training
+            n_step: Number of steps for n-step returns (1 = standard TD, 3-5 recommended)
+            use_prioritized_replay: Whether to use prioritized experience replay
+            per_alpha: Prioritization strength (0 = uniform, 1 = full prioritization)
+            per_beta_start: Initial importance sampling weight
             device: Device for training ("cuda" or "cpu")
             verbose: Whether to print training progress
         """
@@ -80,6 +88,8 @@ class RLLocalSearch(BaseLocalSearch):
         self.type = type
         self.max_iterations = max_iterations
         self.batch_size = batch_size
+        self.n_step = n_step
+        self.use_prioritized_replay = use_prioritized_replay
         self.verbose = verbose
 
         # Validate configuration
@@ -113,8 +123,30 @@ class RLLocalSearch(BaseLocalSearch):
             device=device
         )
 
-        # Replay buffer
-        self.replay_buffer = ReplayBuffer(capacity=replay_buffer_capacity)
+        # Replay buffer 
+        if use_prioritized_replay:
+            from memetic.local_search.rl_local_search.replay_buffer import PrioritizedReplayBuffer
+            self.replay_buffer = PrioritizedReplayBuffer(
+                capacity=replay_buffer_capacity,
+                n_step=n_step,
+                gamma=gamma,
+                alpha=per_alpha,
+                beta_start=per_beta_start,
+                beta_frames=100000 
+            )
+            if self.verbose:
+                print(f"Using Prioritized Replay Buffer (alpha={per_alpha}, beta_start={per_beta_start})")
+        else:
+            self.replay_buffer = ReplayBuffer(
+                capacity=replay_buffer_capacity,
+                n_step=n_step,
+                gamma=gamma
+            )
+            if self.verbose:
+                print(f"Using Standard Replay Buffer")
+
+        if self.verbose:
+            print(f"n-step returns: n={n_step}")
 
         # Training mode flag
         self.training_mode = False
@@ -192,6 +224,13 @@ class RLLocalSearch(BaseLocalSearch):
 
         self.training_mode = True
         start_time = time.time()
+
+        # Update beta_frames for prioritized replay if using it
+        if self.use_prioritized_replay:
+            # Anneal beta from beta_start to 1.0 over the entire training
+            self.replay_buffer.beta_frames = num_episodes * self.max_iterations
+            if self.verbose:
+                print(f"PER beta will anneal from {self.replay_buffer.beta_start} to 1.0 over {self.replay_buffer.beta_frames} frames")
 
         # Initialize TensorBoard writer
         writer = None
@@ -304,8 +343,15 @@ class RLLocalSearch(BaseLocalSearch):
                 # Update policy (after warmup and if enough samples)
                 if episode >= warmup_episodes and len(self.replay_buffer) >= self.batch_size:
                     if step % update_interval == 0:
-                        batch = self.replay_buffer.sample(self.batch_size)
-                        loss = self.agent.update(batch)
+                        # Sample batch (with priorities if using PER)
+                        if self.use_prioritized_replay:
+                            batch, indices, weights = self.replay_buffer.sample(self.batch_size)
+                            loss, td_errors = self.agent.update(batch, weights)
+                            # Update priorities based on TD errors
+                            self.replay_buffer.update_priorities(indices, td_errors)
+                        else:
+                            batch = self.replay_buffer.sample(self.batch_size)
+                            loss, _ = self.agent.update(batch)
                         step_losses.append(loss)
 
                 # Move to next state
