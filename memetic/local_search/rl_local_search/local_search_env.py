@@ -50,7 +50,7 @@ class LocalSearchEnv(gym.Env):
         # Action space: discrete selection of operators (no no-op)
         self.action_space = spaces.Discrete(len(operators))
 
-        # Initialize operator metrics (needed for dimension inference)
+        # Initialize operator metrics 
         self.operator_metrics = [{} for _ in self.operators]
 
         # Episode state
@@ -93,10 +93,10 @@ class LocalSearchEnv(gym.Env):
         self.reward_mean = 0.0
         self.reward_std = 1.0
         self.reward_samples = 0
-        self.max_reward_samples = 100000  # Stop updating after this many samples
+        self.max_reward_samples = 100000 
 
         # Late acceptance parameters
-        self.late_acceptance_length = 20  # History buffer size L
+        self.late_acceptance_length = 20
         self.fitness_history = []
         self.operator_history = []
 
@@ -220,7 +220,7 @@ class LocalSearchEnv(gym.Env):
             self.fitness_history.pop(0)
 
         # Check termination
-        terminated = False  # local search doesn't have a terminal state
+        terminated = False  
 
         # Early termination if no improvement for too long
         if self.max_no_improvement is not None and self.no_improvement_count >= self.max_no_improvement:
@@ -478,7 +478,7 @@ class LocalSearchEnv(gym.Env):
         num_vehicles = problem.num_vehicles
         avg_distance = np.mean(problem.distance_matrix[problem.distance_matrix > 0])
 
-        # Time window tightness: average ratio of time window span to total time horizon
+        # Time window tightness
         time_window_spans = problem.time_windows[:, 1] - problem.time_windows[:, 0]
         max_time_horizon = np.max(problem.time_windows[:, 1])
         avg_tw_tightness = np.mean(time_window_spans) / max_time_horizon if max_time_horizon > 0 else 0
@@ -490,7 +490,7 @@ class LocalSearchEnv(gym.Env):
         feasible = solution.is_feasible
 
         # Route statistics
-        route_lengths = [len(r) - 2 for r in solution.routes if len(r) > 2]  # excluding depot
+        route_lengths = [len(r) - 2 for r in solution.routes if len(r) > 2]
         avg_route_length = np.mean(route_lengths) if route_lengths else 0
         max_route_length = np.max(route_lengths) if route_lengths else 0
         min_route_length = np.min(route_lengths) if route_lengths else 0

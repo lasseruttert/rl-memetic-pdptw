@@ -125,7 +125,6 @@ class PopulationCentroid:
         return stats
 
 
-# Sparse alternative für sehr große Instanzen
 class SparseCentroid:
     """
     Sparse representation using only the utilized edges.
@@ -179,7 +178,7 @@ class SparseCentroid:
         diversity = 0.0
         for edge in edges:
             frequency = self.edge_counts.get(edge, 0) / self.population_size
-            diversity += (1.0 - frequency)  # Seltene Kanten = höherer Score
+            diversity += (1.0 - frequency)
         
         return diversity / len(edges)
     

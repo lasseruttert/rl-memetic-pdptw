@@ -27,7 +27,7 @@ class GreedyInsertion(BaseInsertion):
         Args:
             problem (PDPTWProblem): a PDPTW problem instance
             solution (PDPTWSolution): a PDPTW solution instance in which requests should be inserted
-            unserved_requests (list[tuple[int, int]], optional): List of unserved requests to insert. If None, will be determined from the solution. Defaults to None.
+            unserved_requests (list[tuple[int, int]], optional): List of unserved requests to insert. If None, all unserved requests will be considered. Defaults to None.
 
         Returns:
             PDPTWSolution: the solution with inserted requests, if possible

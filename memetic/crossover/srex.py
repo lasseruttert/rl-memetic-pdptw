@@ -88,13 +88,13 @@ class SREXCrossover(BaseCrossover):
         offspring_solutions = []
         for s_a, s_b in selected_pairs:
             offspring = self._srex_sub(problem, parent1, parent2, s_a, s_b)
-            offspring_solutions.extend(offspring)  # Can return 0, 1, or 2 solutions
+            offspring_solutions.extend(offspring)  
         
         # Step 5: Return all offspring (or parent if none feasible)
         return offspring_solutions if offspring_solutions else [parent1.clone()]
         
     def _route_equals(self, route1, route2):
-        """Compare routes by content, not object identity."""
+        """Compare routes by content"""
         return len(route1) == len(route2) and all(a == b for a, b in zip(route1, route2))
 
     def _srex_sub(self, problem: PDPTWProblem, parent1: PDPTWSolution, parent2: PDPTWSolution, 

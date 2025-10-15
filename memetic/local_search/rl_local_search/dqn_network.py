@@ -140,7 +140,7 @@ class DQNAgent:
             self.state_std = np.ones(self.state_dim, dtype=np.float32)
 
         if update_stats and self.normalization_samples < 100000:
-            # Update running statistics (online mean/std)
+            # Update running statistics
             self.normalization_samples += 1
             alpha = 1.0 / self.normalization_samples
             delta = state - self.state_mean

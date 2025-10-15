@@ -39,8 +39,8 @@ class RLLocalSearch(BaseLocalSearch):
         epsilon_end: float = 0.1,
         epsilon_decay: float = 0.995,
         target_update_interval: int = 100,
-        alpha: float = 1.0,  # Fitness weight (rewards are normalized by distance_baseline)
-        beta: float = 1.0,   # Feasibility weight (normalized to [0, 1] range)
+        alpha: float = 1.0, 
+        beta: float = 1.0,   
         acceptance_strategy: str = "greedy",
         reward_strategy: str = "initial_improvement",
         type: str = "OneShot",  # "OneShot", "Roulette", or "Ranking"
@@ -144,7 +144,6 @@ class RLLocalSearch(BaseLocalSearch):
             if torch.cuda.is_available():
                 torch.cuda.manual_seed(seed)
                 torch.cuda.manual_seed_all(seed)
-            # Make PyTorch deterministic (may reduce performance)
             torch.backends.cudnn.deterministic = True
             torch.backends.cudnn.benchmark = False
         except ImportError:
@@ -238,11 +237,11 @@ class RLLocalSearch(BaseLocalSearch):
             # Generate new instance periodically
             if episode % new_instance_interval == 0:
                 instance = problem_generator()
-                current_solution = initial_solution_generator(instance)  # Always generate new solution with new instance!
+                current_solution = initial_solution_generator(instance)  
                 if self.verbose:
                     print(f"Episode {episode}: New instance generated ({instance.num_requests} requests)")
 
-            # Generate new solution periodically (only if no new instance)
+            # Generate new solution periodically 
             elif episode % new_solution_interval == 0:
                 current_solution = initial_solution_generator(instance)
 
@@ -252,7 +251,7 @@ class RLLocalSearch(BaseLocalSearch):
             episode_reward = 0.0
             episode_length = 0
             step_losses = []
-            episode_actions = []  # Track operator selections
+            episode_actions = [] 
 
             # Metric tracking
             num_accepted = 0
@@ -262,9 +261,9 @@ class RLLocalSearch(BaseLocalSearch):
 
             # Per-operator tracking (Metric 3)
             operator_uses = [0] * len(self.operators)
-            operator_successes = [0] * len(self.operators)  # improved fitness
-            operator_accepted = [0] * len(self.operators)  # move was accepted
-            operator_improvements = [[] for _ in range(len(self.operators))]  # fitness changes
+            operator_successes = [0] * len(self.operators)
+            operator_accepted = [0] * len(self.operators)  
+            operator_improvements = [[] for _ in range(len(self.operators))] 
 
             # Episode loop
             for step in range(self.max_iterations):
@@ -297,7 +296,7 @@ class RLLocalSearch(BaseLocalSearch):
                 operator_uses[action] += 1
                 fitness_change = step_info['fitness_improvement']
                 operator_improvements[action].append(fitness_change)
-                if fitness_change > 0:  # Improvement (fitness decreased)
+                if fitness_change > 0:  
                     operator_successes[action] += 1
                 if step_info['accepted']:
                     operator_accepted[action] += 1
@@ -503,9 +502,6 @@ class RLLocalSearch(BaseLocalSearch):
                 break
 
             # Select action using learned policy
-            # - OneShot: Single operator per iteration
-            # - Roulette: Try operators in Q-value weighted random order until one improves
-            # - Ranking: Try operators in strict Q-value order (best first) until one improves
             if self.type == "OneShot":
                 action = self.agent.get_action(state, epsilon=epsilon, update_stats=False)
 
@@ -525,7 +521,7 @@ class RLLocalSearch(BaseLocalSearch):
                 q_values = self.agent.get_q_values(state, update_stats=False)
 
                 # Sample sequence based on Q-values (weighted, without replacement)
-                exp_q = np.exp(q_values - np.max(q_values))  # numerical stability
+                exp_q = np.exp(q_values - np.max(q_values))
                 probs = exp_q / np.sum(exp_q)
                 action_sequence = np.random.choice(len(self.operators), size=len(self.operators),
                                                   replace=False, p=probs)
