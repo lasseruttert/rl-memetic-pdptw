@@ -6,74 +6,6 @@ import torch.nn.functional as F
 import numpy as np
 from typing import Optional
 
-
-# ============================================================================
-# STANDARD DQN 
-# ============================================================================
-# class DQNNetwork(nn.Module):
-#     """Deep Q-Network for estimating Q-values of local search operators."""
-#
-#     def __init__(
-#         self,
-#         state_dim: int,
-#         action_dim: int,
-#         hidden_dims: list[int] = [128, 128, 64],
-#         dropout_rate: float = 0.05
-#     ):
-#         """Initialize the DQN network.
-#
-#         Args:
-#             state_dim: Dimension of state/observation space
-#             action_dim: Number of possible actions (operators)
-#             hidden_dims: List of hidden layer dimensions
-#             dropout_rate: Dropout rate for regularization
-#         """
-#         super().__init__()
-#
-#         self.state_dim = state_dim
-#         self.action_dim = action_dim
-#
-#         # Build MLP layers
-#         layers = []
-#         prev_dim = state_dim
-#
-#         for hidden_dim in hidden_dims:
-#             layers.append(nn.Linear(prev_dim, hidden_dim))
-#             layers.append(nn.ReLU())
-#             layers.append(nn.Dropout(dropout_rate))
-#             prev_dim = hidden_dim
-#
-#         # Output layer (Q-values for each action)
-#         layers.append(nn.Linear(prev_dim, action_dim))
-#
-#         self.network = nn.Sequential(*layers)
-#
-#         # Initialize weights
-#         self._init_weights()
-#
-#     def _init_weights(self):
-#         """Initialize network weights using Xavier initialization."""
-#         for module in self.modules():
-#             if isinstance(module, nn.Linear):
-#                 nn.init.xavier_uniform_(module.weight)
-#                 if module.bias is not None:
-#                     nn.init.constant_(module.bias, 0.0)
-#
-#     def forward(self, state: torch.Tensor) -> torch.Tensor:
-#         """Forward pass through the network.
-#
-#         Args:
-#             state: State tensor of shape (batch_size, state_dim)
-#
-#         Returns:
-#             Q-values for each action of shape (batch_size, action_dim)
-#         """
-#         return self.network(state)
-
-
-# ============================================================================
-# DUELING DQN 
-# ============================================================================
 class DQNNetwork(nn.Module):
     """Dueling Deep Q-Network for estimating Q-values of local search operators.
 
@@ -94,7 +26,11 @@ class DQNNetwork(nn.Module):
         state_dim: int,
         action_dim: int,
         hidden_dims: list[int] = [128, 128, 64],
-        dropout_rate: float = 0.05
+        dropout_rate: float = 0.05,
+        use_operator_attention: bool = False,
+        solution_feature_dim: Optional[int] = None,
+        operator_feature_dim_per_op: Optional[int] = None,
+        num_operators: Optional[int] = None
     ):
         """Initialize the Dueling DQN network.
 
@@ -103,39 +39,120 @@ class DQNNetwork(nn.Module):
             action_dim: Number of possible actions (operators)
             hidden_dims: List of hidden layer dimensions
             dropout_rate: Dropout rate for regularization
+            use_operator_attention: Whether to use operator attention mechanism
+            solution_feature_dim: Dimension of solution features (required if use_operator_attention=True)
+            operator_feature_dim_per_op: Features per operator (required if use_operator_attention=True)
+            num_operators: Number of operators (required if use_operator_attention=True)
         """
         super().__init__()
 
         self.state_dim = state_dim
         self.action_dim = action_dim
+        self.use_operator_attention = use_operator_attention
+        self.solution_feature_dim = solution_feature_dim
+        self.operator_feature_dim_per_op = operator_feature_dim_per_op
+        self.num_operators = num_operators
 
-        # Shared feature extraction layers
-        feature_layers = []
-        prev_dim = state_dim
+        # Validate attention parameters
+        if use_operator_attention:
+            if solution_feature_dim is None or operator_feature_dim_per_op is None or num_operators is None:
+                raise ValueError("When use_operator_attention=True, must provide solution_feature_dim, "
+                                 "operator_feature_dim_per_op, and num_operators")
 
-        for hidden_dim in hidden_dims[:-1]:  # All but last layer
-            feature_layers.append(nn.Linear(prev_dim, hidden_dim))
-            feature_layers.append(nn.ReLU())
-            feature_layers.append(nn.Dropout(dropout_rate))
-            prev_dim = hidden_dim
+        # Build architecture based on attention flag
+        if not use_operator_attention:
+            # ORIGINAL BRANCH: Standard Dueling DQN
+            # Shared feature extraction layers
+            feature_layers = []
+            prev_dim = state_dim
 
-        self.feature_extractor = nn.Sequential(*feature_layers)
+            for hidden_dim in hidden_dims[:-1]:  # All but last layer
+                feature_layers.append(nn.Linear(prev_dim, hidden_dim))
+                feature_layers.append(nn.ReLU())
+                feature_layers.append(nn.Dropout(dropout_rate))
+                prev_dim = hidden_dim
 
-        # Value stream: V(s) - scalar value representing state quality
-        self.value_stream = nn.Sequential(
-            nn.Linear(prev_dim, hidden_dims[-1]),
-            nn.ReLU(),
-            nn.Dropout(dropout_rate),
-            nn.Linear(hidden_dims[-1], 1)
-        )
+            self.feature_extractor = nn.Sequential(*feature_layers)
 
-        # Advantage stream: A(s,a) - relative advantage of each action
-        self.advantage_stream = nn.Sequential(
-            nn.Linear(prev_dim, hidden_dims[-1]),
-            nn.ReLU(),
-            nn.Dropout(dropout_rate),
-            nn.Linear(hidden_dims[-1], action_dim)
-        )
+            # Value stream: V(s) - scalar value representing state quality
+            self.value_stream = nn.Sequential(
+                nn.Linear(prev_dim, hidden_dims[-1]),
+                nn.ReLU(),
+                nn.Dropout(dropout_rate),
+                nn.Linear(hidden_dims[-1], 1)
+            )
+
+            # Advantage stream: A(s,a) - relative advantage of each action
+            self.advantage_stream = nn.Sequential(
+                nn.Linear(prev_dim, hidden_dims[-1]),
+                nn.ReLU(),
+                nn.Dropout(dropout_rate),
+                nn.Linear(hidden_dims[-1], action_dim)
+            )
+
+        else:
+            # ATTENTION BRANCH: Operator Attention Architecture
+            # Model dimension for attention
+            d_model = hidden_dims[0]
+
+            # Solution feature encoder
+            self.solution_encoder = nn.Sequential(
+                nn.Linear(solution_feature_dim, d_model),
+                nn.ReLU(),
+                nn.Dropout(dropout_rate),
+                nn.Linear(d_model, d_model),
+                nn.ReLU(),
+                nn.Dropout(dropout_rate)
+            )
+
+            # Operator feature encoder (shared across all operators)
+            self.operator_encoder = nn.Sequential(
+                nn.Linear(operator_feature_dim_per_op, d_model),
+                nn.ReLU(),
+                nn.Dropout(dropout_rate)
+            )
+
+            # Cross-attention: Solution (query) attends to Operators (key/value)
+            self.cross_attention = nn.MultiheadAttention(
+                embed_dim=d_model,
+                num_heads=4,
+                dropout=dropout_rate,
+                batch_first=True
+            )
+
+            # Combined feature processing
+            combined_dim = d_model * 2  # solution_embed + attended_operators
+            feature_layers = []
+            prev_dim = combined_dim
+
+            for hidden_dim in hidden_dims[1:-1]:  # Skip first (used as d_model), all but last
+                feature_layers.append(nn.Linear(prev_dim, hidden_dim))
+                feature_layers.append(nn.ReLU())
+                feature_layers.append(nn.Dropout(dropout_rate))
+                prev_dim = hidden_dim
+
+            if feature_layers:
+                self.combined_processor = nn.Sequential(*feature_layers)
+            else:
+                # If no intermediate layers, use identity
+                self.combined_processor = nn.Identity()
+                prev_dim = combined_dim
+
+            # Value stream: V(s)
+            self.value_stream = nn.Sequential(
+                nn.Linear(prev_dim, hidden_dims[-1]),
+                nn.ReLU(),
+                nn.Dropout(dropout_rate),
+                nn.Linear(hidden_dims[-1], 1)
+            )
+
+            # Advantage stream: A(s,a)
+            self.advantage_stream = nn.Sequential(
+                nn.Linear(prev_dim, hidden_dims[-1]),
+                nn.ReLU(),
+                nn.Dropout(dropout_rate),
+                nn.Linear(hidden_dims[-1], action_dim)
+            )
 
         # Initialize weights
         self._init_weights()
@@ -157,19 +174,127 @@ class DQNNetwork(nn.Module):
         Returns:
             Q-values for each action of shape (batch_size, action_dim)
         """
-        # Extract shared features
-        features = self.feature_extractor(state)
+        if not self.use_operator_attention:
+            # ORIGINAL FORWARD: Standard Dueling DQN
+            # Extract shared features
+            features = self.feature_extractor(state)
 
-        # Compute value and advantage
-        value = self.value_stream(features)  # (batch_size, 1)
-        advantage = self.advantage_stream(features)  # (batch_size, action_dim)
+            # Compute value and advantage
+            value = self.value_stream(features)  # (batch_size, 1)
+            advantage = self.advantage_stream(features)  # (batch_size, action_dim)
 
-        # Combine using dueling architecture formula
-        # Q(s,a) = V(s) + (A(s,a) - mean(A(s,a)))
-        # Subtracting the mean ensures identifiability (unique V and A)
-        q_values = value + (advantage - advantage.mean(dim=1, keepdim=True))
+            # Combine using dueling architecture formula
+            # Q(s,a) = V(s) + (A(s,a) - mean(A(s,a)))
+            # Subtracting the mean ensures identifiability (unique V and A)
+            q_values = value + (advantage - advantage.mean(dim=1, keepdim=True))
 
-        return q_values
+            return q_values
+
+        else:
+            # ATTENTION FORWARD: Operator Attention
+            batch_size = state.shape[0]
+
+            # Split state into solution features and operator features
+            solution_features = state[:, :self.solution_feature_dim]  # (batch_size, solution_dim)
+            operator_features_flat = state[:, self.solution_feature_dim:]  # (batch_size, num_ops * op_dim)
+
+            # Reshape operator features: (batch_size, num_ops, op_dim_per_op)
+            operator_features = operator_features_flat.reshape(
+                batch_size, self.num_operators, self.operator_feature_dim_per_op
+            )
+
+            # Encode solution features
+            solution_embed = self.solution_encoder(solution_features)  # (batch_size, d_model)
+
+            # Encode operator features (apply encoder to each operator)
+            # Input: (batch_size, num_ops, op_dim_per_op)
+            # Reshape for encoder: (batch_size * num_ops, op_dim_per_op)
+            operator_features_reshaped = operator_features.reshape(-1, self.operator_feature_dim_per_op)
+            operator_embed_reshaped = self.operator_encoder(operator_features_reshaped)  # (batch * num_ops, d_model)
+            # Reshape back: (batch_size, num_ops, d_model)
+            operator_embed = operator_embed_reshaped.reshape(batch_size, self.num_operators, -1)
+
+            # Cross-attention: Solution (query) attends to Operators (key/value)
+            # Query: (batch_size, 1, d_model) - unsqueeze for attention
+            solution_query = solution_embed.unsqueeze(1)  # (batch_size, 1, d_model)
+            # Key/Value: (batch_size, num_ops, d_model)
+            attended_output, attention_weights = self.cross_attention(
+                query=solution_query,
+                key=operator_embed,
+                value=operator_embed
+            )  # attended_output: (batch_size, 1, d_model)
+
+            # Squeeze attended output
+            attended_output = attended_output.squeeze(1)  # (batch_size, d_model)
+
+            # Combine solution embedding and attended operator features
+            combined_features = torch.cat([solution_embed, attended_output], dim=1)  # (batch_size, d_model * 2)
+
+            # Process combined features
+            features = self.combined_processor(combined_features)
+
+            # Compute value and advantage
+            value = self.value_stream(features)  # (batch_size, 1)
+            advantage = self.advantage_stream(features)  # (batch_size, action_dim)
+
+            # Combine using dueling architecture formula
+            q_values = value + (advantage - advantage.mean(dim=1, keepdim=True))
+
+            return q_values
+
+
+def detect_attention_from_checkpoint(path: str) -> bool:
+    """Detect whether a saved model uses operator attention architecture.
+
+    This function inspects the saved state_dict keys to determine if the model
+    was trained with or without operator attention mechanism.
+
+    Args:
+        path: Path to the saved checkpoint (.pt file)
+
+    Returns:
+        True if model uses attention, False otherwise
+
+    Raises:
+        FileNotFoundError: If checkpoint file doesn't exist
+        RuntimeError: If checkpoint format is invalid
+    """
+    import os
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Checkpoint not found: {path}")
+
+    try:
+        # Load only the keys for efficiency
+        checkpoint = torch.load(path, map_location='cpu', weights_only=False)
+
+        if 'q_network_state_dict' not in checkpoint:
+            raise RuntimeError(f"Invalid checkpoint format: missing 'q_network_state_dict' in {path}")
+
+        state_dict = checkpoint['q_network_state_dict']
+        keys = set(state_dict.keys())
+
+        # Check for attention-specific layers
+        has_solution_encoder = any('solution_encoder' in k for k in keys)
+        has_cross_attention = any('cross_attention' in k for k in keys)
+
+        # Check for non-attention layers
+        has_feature_extractor = any('feature_extractor' in k for k in keys)
+
+        if has_solution_encoder and has_cross_attention:
+            return True  # Attention model
+        elif has_feature_extractor:
+            return False  # Non-attention model
+        else:
+            raise RuntimeError(
+                f"Could not determine architecture from checkpoint {path}. "
+                f"Found keys: {list(keys)[:5]}..."
+            )
+
+    except Exception as e:
+        if isinstance(e, (FileNotFoundError, RuntimeError)):
+            raise
+        raise RuntimeError(f"Error loading checkpoint {path}: {e}")
 
 
 class DQNAgent:
@@ -186,7 +311,11 @@ class DQNAgent:
         epsilon_end: float = 0.1,
         epsilon_decay: float = 0.995,
         target_update_interval: int = 100,
-        device: str = "cuda" if torch.cuda.is_available() else "cpu"
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
+        use_operator_attention: bool = False,
+        solution_feature_dim: Optional[int] = None,
+        operator_feature_dim_per_op: Optional[int] = None,
+        num_operators: Optional[int] = None
     ):
         """Initialize the DQN agent.
 
@@ -201,6 +330,10 @@ class DQNAgent:
             epsilon_decay: Epsilon decay rate
             target_update_interval: Steps between target network updates
             device: Device to use for training
+            use_operator_attention: Whether to use operator attention mechanism
+            solution_feature_dim: Dimension of solution features (for attention)
+            operator_feature_dim_per_op: Features per operator (for attention)
+            num_operators: Number of operators (for attention)
         """
         self.state_dim = state_dim
         self.action_dim = action_dim
@@ -212,8 +345,26 @@ class DQNAgent:
         self.device = torch.device(device)
 
         # Q-network and target network
-        self.q_network = DQNNetwork(state_dim, action_dim, hidden_dims).to(self.device)
-        self.target_network = DQNNetwork(state_dim, action_dim, hidden_dims).to(self.device)
+        self.q_network = DQNNetwork(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            hidden_dims=hidden_dims,
+            use_operator_attention=use_operator_attention,
+            solution_feature_dim=solution_feature_dim,
+            operator_feature_dim_per_op=operator_feature_dim_per_op,
+            num_operators=num_operators
+        ).to(self.device)
+
+        self.target_network = DQNNetwork(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            hidden_dims=hidden_dims,
+            use_operator_attention=use_operator_attention,
+            solution_feature_dim=solution_feature_dim,
+            operator_feature_dim_per_op=operator_feature_dim_per_op,
+            num_operators=num_operators
+        ).to(self.device)
+
         self.target_network.load_state_dict(self.q_network.state_dict())
         self.target_network.eval()
 
@@ -307,9 +458,7 @@ class DQNAgent:
 
         return q_values.cpu().numpy().flatten()
 
-    # ========================================================================
     # ORIGINAL UPDATE (1-step, no prioritized replay) 
-    # ========================================================================
     # def update(self, batch: dict) -> float:
     #     """Update the Q-network using a batch of transitions.
     #
@@ -370,9 +519,7 @@ class DQNAgent:
     #
     #     return loss_value
 
-    # ========================================================================
     # CURRENT UPDATE (n-step + optional prioritized replay support)
-    # ========================================================================
     def update(self, batch: dict, weights: Optional[np.ndarray] = None) -> tuple[float, Optional[np.ndarray]]:
         """Update the Q-network using a batch of transitions.
 
@@ -405,7 +552,7 @@ class DQNAgent:
         dones = torch.FloatTensor(batch['dones']).to(self.device)
         n_steps = torch.LongTensor(batch['n_steps']).to(self.device)
 
-        # Importance sampling weights (for prioritized replay)
+        # Importance sampling weights
         if weights is not None:
             weights_tensor = torch.FloatTensor(weights).to(self.device)
         else:
@@ -420,14 +567,13 @@ class DQNAgent:
             next_q_values = self.target_network(next_states).gather(1, next_actions.unsqueeze(1)).squeeze(1)
 
             # n-step TD target: r + γ^n * Q(s', a')
-            # Use gamma^n_steps instead of gamma^1
             gamma_n = self.gamma ** n_steps.float()
             target_q_values = rewards + (1 - dones) * gamma_n * next_q_values
 
         # TD errors for prioritized replay
         td_errors = (current_q_values - target_q_values).abs().detach().cpu().numpy()
 
-        # Weighted Huber loss (for prioritized replay)
+        # Weighted loss 
         element_wise_loss = F.smooth_l1_loss(current_q_values, target_q_values, reduction='none')
         loss = (weights_tensor * element_wise_loss).mean()
 

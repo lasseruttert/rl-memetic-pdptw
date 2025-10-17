@@ -48,10 +48,11 @@ class RLLocalSearch(BaseLocalSearch):
         max_no_improvement: Optional[int] = None,
         replay_buffer_capacity: int = 100000,
         batch_size: int = 64,
-        n_step: int = 3,  
-        use_prioritized_replay: bool = True,  
-        per_alpha: float = 0.6,  
-        per_beta_start: float = 0.4,  
+        n_step: int = 3,
+        use_prioritized_replay: bool = True,
+        per_alpha: float = 0.6,
+        per_beta_start: float = 0.4,
+        use_operator_attention: bool = False,
         device: str = "cuda",
         verbose: bool = False
     ):
@@ -77,6 +78,7 @@ class RLLocalSearch(BaseLocalSearch):
             use_prioritized_replay: Whether to use prioritized experience replay
             per_alpha: Prioritization strength (0 = uniform, 1 = full prioritization)
             per_beta_start: Initial importance sampling weight
+            use_operator_attention: Whether to use operator attention mechanism for operator selection
             device: Device for training ("cuda" or "cpu")
             verbose: Whether to print training progress
         """
@@ -90,6 +92,7 @@ class RLLocalSearch(BaseLocalSearch):
         self.batch_size = batch_size
         self.n_step = n_step
         self.use_prioritized_replay = use_prioritized_replay
+        self.use_operator_attention = use_operator_attention
         self.verbose = verbose
 
         # Validate configuration
@@ -110,6 +113,10 @@ class RLLocalSearch(BaseLocalSearch):
         state_dim = self.env.observation_space.shape[0]
         action_dim = len(operators)
 
+        # Extract feature dimensions from environment for attention mechanism
+        solution_feature_dim = self.env.solution_feature_dim
+        operator_feature_dim_per_op = self.env.operator_feature_dim_per_op
+
         self.agent = DQNAgent(
             state_dim=state_dim,
             action_dim=action_dim,
@@ -120,7 +127,11 @@ class RLLocalSearch(BaseLocalSearch):
             epsilon_end=epsilon_end,
             epsilon_decay=epsilon_decay,
             target_update_interval=target_update_interval,
-            device=device
+            device=device,
+            use_operator_attention=use_operator_attention,
+            solution_feature_dim=solution_feature_dim,
+            operator_feature_dim_per_op=operator_feature_dim_per_op,
+            num_operators=action_dim
         )
 
         # Replay buffer 
@@ -147,6 +158,13 @@ class RLLocalSearch(BaseLocalSearch):
 
         if self.verbose:
             print(f"n-step returns: n={n_step}")
+            if use_operator_attention:
+                print(f"Operator Attention: ENABLED")
+                print(f"  - Solution features: {solution_feature_dim}")
+                print(f"  - Operator features per operator: {operator_feature_dim_per_op}")
+                print(f"  - Number of operators: {action_dim}")
+            else:
+                print(f"Operator Attention: DISABLED (standard concatenation)")
 
         # Training mode flag
         self.training_mode = False

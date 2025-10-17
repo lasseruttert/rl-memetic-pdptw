@@ -14,6 +14,7 @@ from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from utils.instance_manager import InstanceManager
 from memetic.local_search.rl_local_search.rl_local_search import RLLocalSearch
+from memetic.local_search.rl_local_search.dqn_network import detect_attention_from_checkpoint
 from memetic.local_search.adaptive_local_search import AdaptiveLocalSearch
 from memetic.local_search.naive_local_search import NaiveLocalSearch
 from memetic.local_search.random_local_search import RandomLocalSearch
@@ -118,8 +119,10 @@ def main():
                         help="Problem size")
     parser.add_argument("--num_episodes", type=int, default=1000,
                         help="Number of training episodes")
-    parser.add_argument("--seed", type=int, default=422,
+    parser.add_argument("--seed", type=int, default=100,
                         help="Random seed for reproducibility (default: 42)")
+    parser.add_argument("--use_operator_attention", action="store_true",
+                        help="Enable operator attention mechanism for operator selection")
     args = parser.parse_args()
 
     # Set random seed if provided
@@ -133,8 +136,10 @@ def main():
     ACCEPTANCE_STRATEGY = args.acceptance_strategy
     REWARD_STRATEGY = args.reward_strategy
     SEED = args.seed
+    USE_OPERATOR_ATTENTION = args.use_operator_attention
     seed_suffix = f"_seed{SEED}" if SEED is not None else ""
-    RUN_NAME = f"rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{seed_suffix}_{int(time.time())}"
+    attention_suffix = "_attention" if USE_OPERATOR_ATTENTION else ""
+    RUN_NAME = f"rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}{seed_suffix}_{int(time.time())}"
 
     # Define operators to learn from
     # operators = [
@@ -179,10 +184,11 @@ def main():
         max_no_improvement=50,
         replay_buffer_capacity=100000,
         batch_size=64,
-        n_step=3, 
-        use_prioritized_replay=True,  
-        per_alpha=0.6,  
-        per_beta_start=0.4,  
+        n_step=3,
+        use_prioritized_replay=True,
+        per_alpha=0.6,
+        per_beta_start=0.4,
+        use_operator_attention=USE_OPERATOR_ATTENTION,
         device="cuda",
         verbose=True
     )
@@ -190,28 +196,29 @@ def main():
     # # Create problem and solution generators
     problem_generator = create_problem_generator(size=PROBLEM_SIZE, categories=CATEGORIES)
 
-    # Train the RL agent
-    print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
-    print(f"Categories: {CATEGORIES}")
-    print(f"Operators: {len(operators)}")
+    # # Train the RL agent
+    # print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
+    # print(f"Categories: {CATEGORIES}")
+    # print(f"Operators: {len(operators)}")
+    # print(f"Operator Attention: {'ENABLED' if USE_OPERATOR_ATTENTION else 'DISABLED'}")
 
-    training_history = rl_local_search.train(
-        problem_generator=problem_generator,
-        initial_solution_generator=create_solution_generator,
-        num_episodes=args.num_episodes,
-        new_instance_interval=5,
-        new_solution_interval=1,
-        update_interval=1,
-        warmup_episodes=10,
-        save_interval=1000,
-        save_path=f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}",
-        tensorboard_dir=f"runs/{RUN_NAME}",
-        seed=SEED, 
-    )
+    # training_history = rl_local_search.train(
+    #     problem_generator=problem_generator,
+    #     initial_solution_generator=create_solution_generator,
+    #     num_episodes=args.num_episodes,
+    #     new_instance_interval=5,
+    #     new_solution_interval=1,
+    #     update_interval=1,
+    #     warmup_episodes=10,
+    #     save_interval=1000,
+    #     save_path=f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}",
+    #     tensorboard_dir=f"runs/{RUN_NAME}",
+    #     seed=SEED, 
+    # )
 
-    print("\nTraining completed!")
-    print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
-    print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
+    # print("\nTraining completed!")
+    # print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
+    # print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
     
     adaptive_local_search = AdaptiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200)
 
@@ -223,9 +230,15 @@ def main():
 
     # You can provide up to 6 different RL model paths to evaluate here.
     RL_MODEL_PATHS = [
-        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final1.pt",
-        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final.pt",
+        # f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_422.pt",
+        # f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_42.pt",
+        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_100.pt",
+        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_final.pt",
     ]
+
+    # Configure seeds for testing 
+    TEST_SEEDS = [42, 422, 100, 200, 300]  
+    NUM_TESTS_PER_SEED = 50  # Number of tests per seed
 
     # Build RLLocalSearch instances for each provided path and try to load them.
     rl_models = []
@@ -233,7 +246,17 @@ def main():
     for path in RL_MODEL_PATHS:
         if not path:
             continue
-        # OneShot model (same architecture as training)
+
+        # Auto-detect architecture from checkpoint
+        try:
+            model_uses_attention = detect_attention_from_checkpoint(path)
+            arch_str = "with attention" if model_uses_attention else "without attention"
+            print(f"Detected model architecture ({arch_str}): {path}")
+        except Exception as e:
+            print(f"Warning: could not detect architecture for {path}: {e}")
+            continue
+
+        # OneShot model (same architecture as saved model)
         model_oneshot = RLLocalSearch(
             operators=operators,
             hidden_dims=[128, 128, 64],
@@ -251,8 +274,9 @@ def main():
             max_no_improvement=50,
             replay_buffer_capacity=100000,
             batch_size=64,
-            n_step=3,  
-            use_prioritized_replay=False,  
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=model_uses_attention,
             device="cuda",
             verbose=False
         )
@@ -274,8 +298,9 @@ def main():
             max_no_improvement=50,
             replay_buffer_capacity=100000,
             batch_size=64,
-            n_step=3,  
-            use_prioritized_replay=False,  
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=model_uses_attention,
             device="cuda",
             verbose=False
         )
@@ -297,8 +322,9 @@ def main():
             max_no_improvement=50,
             replay_buffer_capacity=100000,
             batch_size=64,
-            n_step=3, 
-            use_prioritized_replay=False, 
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=model_uses_attention,
             device="cuda",
             verbose=False
         )
@@ -322,120 +348,188 @@ def main():
         return
 
     # Compare RL local search models vs Naive local search and Random local search
-    NUM_TESTS = 100
-    rl_results = [[] for _ in range(len(rl_models))]  # per-model collected tuples (initial, best, time)
-    adaptive_results = []
-    naive_results = []
-    naive_with_best_results = []
-    random_results = []
+    # Results structure: per seed -> per model -> list of (initial, best, time) tuples
+    all_seeds_results = {}
 
     print("\n--- Comparing RL models vs Naive/Random Local Search ---")
-    for i in range(NUM_TESTS):
-        print(f"\nTest {i+1}/{NUM_TESTS}")
-        # Base seed for this test (ensures all methods see same randomness)
-        base_seed = (SEED + i) if SEED is not None else None
-        set_seed(base_seed)
-        test_problem = problem_generator()
-        initial_solution = create_solution_generator(test_problem)
+    print(f"Testing across {len(TEST_SEEDS)} seeds with {NUM_TESTS_PER_SEED} tests per seed")
+    print(f"Seeds: {TEST_SEEDS}")
 
-        # Evaluate initial solution
-        initial_fitness = fitness(test_problem, initial_solution)
-        print(f"Initial fitness: {initial_fitness:.2f}")
+    for seed_idx, test_seed in enumerate(TEST_SEEDS):
+        print(f"\n{'='*80}")
+        print(f"SEED {seed_idx+1}/{len(TEST_SEEDS)}: {test_seed}")
+        print(f"{'='*80}")
 
+        rl_results = [[] for _ in range(len(rl_models))]  # per-model collected tuples (initial, best, time)
+        adaptive_results = []
+        naive_results = []
+        naive_with_best_results = []
+        random_results = []
 
-        # Run each RL model
-        for midx, model in enumerate(rl_models):
-            if base_seed is not None:
+        for i in range(NUM_TESTS_PER_SEED):
+            print(f"\nTest {i+1}/{NUM_TESTS_PER_SEED}")
+            # Base seed for this test (ensures all methods see same randomness)
+            base_seed = test_seed + i
+            set_seed(base_seed)
+            test_problem = problem_generator()
+            initial_solution = create_solution_generator(test_problem)
+
+            # Evaluate initial solution
+            initial_fitness = fitness(test_problem, initial_solution)
+            print(f"Initial fitness: {initial_fitness:.2f}")
+
+            # Run each RL model
+            for midx, model in enumerate(rl_models):
                 set_seed(base_seed)  # Reset to same seed for fair comparison
-            rl_solution = initial_solution.clone()
+                rl_solution = initial_solution.clone()
+                t0 = time.time()
+                try:
+                    rl_best_solution, rl_best_fitness = model.search(
+                        problem=test_problem,
+                        solution=rl_solution,
+                        epsilon=0.0
+                    )
+                except Exception as e:
+                    print(f"Model {model_names[midx]} failed on test {i+1}: {e}")
+                    rl_best_fitness = float('inf')
+                rl_time = time.time() - t0
+                print(f"{model_names[midx]}: best fitness: {rl_best_fitness:.2f} (time: {rl_time:.2f}s)")
+                rl_results[midx].append((initial_fitness, rl_best_fitness, rl_time))
+
+            # Adaptive local search
+            set_seed(base_seed)
+            adaptive_solution = initial_solution.clone()
             t0 = time.time()
-            try:
-                rl_best_solution, rl_best_fitness = model.search(
-                    problem=test_problem,
-                    solution=rl_solution,
-                    epsilon=0.0
-                )
-            except Exception as e:
-                print(f"Model {model_names[midx]} failed on test {i+1}: {e}")
-                rl_best_fitness = float('inf')
-            rl_time = time.time() - t0
-            print(f"{model_names[midx]}: best fitness: {rl_best_fitness:.2f} (time: {rl_time:.2f}s)")
-            rl_results[midx].append((initial_fitness, rl_best_fitness, rl_time))
+            adaptive_best_solution, adaptive_best_fitness = adaptive_local_search.search(
+                problem=test_problem,
+                solution=adaptive_solution
+            )
+            adaptive_time = time.time() - t0
+            print(f"Adaptive: best fitness: {adaptive_best_fitness:.2f} (time: {adaptive_time:.2f}s)")
+            adaptive_results.append((initial_fitness, adaptive_best_fitness, adaptive_time))
 
-        # Adaptive local search
-        if base_seed is not None:
+            # Naive local search
             set_seed(base_seed)
-        adaptive_solution = initial_solution.clone()
-        t0 = time.time()
-        adaptive_best_solution, adaptive_best_fitness = adaptive_local_search.search(
-            problem=test_problem,
-            solution=adaptive_solution
-        )
-        adaptive_time = time.time() - t0
-        print(f"Adaptive: best fitness: {adaptive_best_fitness:.2f} (time: {adaptive_time:.2f}s)")
-        adaptive_results.append((initial_fitness, adaptive_best_fitness, adaptive_time))
+            naive_solution = initial_solution.clone()
+            t0 = time.time()
+            naive_best_solution, naive_best_fitness = naive_local_search.search(
+                problem=test_problem,
+                solution=naive_solution
+            )
+            naive_time = time.time() - t0
+            print(f"Naive: best fitness: {naive_best_fitness:.2f} (time: {naive_time:.2f}s)")
+            naive_results.append((initial_fitness, naive_best_fitness, naive_time))
 
-        # Naive local search
-        if base_seed is not None:
+            # Naive local search with best improvement
             set_seed(base_seed)
-        naive_solution = initial_solution.clone()
-        t0 = time.time()
-        naive_best_solution, naive_best_fitness = naive_local_search.search(
-            problem=test_problem,
-            solution=naive_solution
-        )
-        naive_time = time.time() - t0
-        print(f"Naive: best fitness: {naive_best_fitness:.2f} (time: {naive_time:.2f}s)")
-        naive_results.append((initial_fitness, naive_best_fitness, naive_time))
+            naive_with_best_solution = initial_solution.clone()
+            t0 = time.time()
+            naive_with_best_best_solution, naive_with_best_best_fitness = naive_with_best_local_search.search(
+                problem=test_problem,
+                solution=naive_with_best_solution
+            )
+            naive_with_best_time = time.time() - t0
+            print(f"Naive (best improvement): best fitness: {naive_with_best_best_fitness:.2f} (time: {naive_with_best_time:.2f}s)")
+            naive_with_best_results.append((initial_fitness, naive_with_best_best_fitness, naive_with_best_time))
 
-        # Naive local search with best improvement
-        if base_seed is not None:
+            # Random local search
             set_seed(base_seed)
-        naive_with_best_solution = initial_solution.clone()
-        t0 = time.time()
-        naive_with_best_best_solution, naive_with_best_best_fitness = naive_with_best_local_search.search(
-            problem=test_problem,
-            solution=naive_with_best_solution
-        )
-        naive_with_best_time = time.time() - t0
-        print(f"Naive (best improvement): best fitness: {naive_with_best_best_fitness:.2f} (time: {naive_with_best_time:.2f}s)")
-        naive_with_best_results.append((initial_fitness, naive_with_best_best_fitness, naive_with_best_time))
+            random_solution = initial_solution.clone()
+            t0 = time.time()
+            random_best_solution, random_best_fitness = random_local_search.search(
+                problem=test_problem,
+                solution=random_solution
+            )
+            random_time = time.time() - t0
+            print(f"Random: best fitness: {random_best_fitness:.2f} (time: {random_time:.2f}s)")
+            random_results.append((initial_fitness, random_best_fitness, random_time))
 
-        # Random local search
-        if base_seed is not None:
-            set_seed(base_seed)
-        random_solution = initial_solution.clone()
-        t0 = time.time()
-        random_best_solution, random_best_fitness = random_local_search.search(
-            problem=test_problem,
-            solution=random_solution
-        )
-        random_time = time.time() - t0
-        print(f"Random: best fitness: {random_best_fitness:.2f} (time: {random_time:.2f}s)")
-        random_results.append((initial_fitness, random_best_fitness, random_time))
+        # Store results for this seed
+        all_seeds_results[test_seed] = {
+            'rl_models': rl_results,
+            'adaptive': adaptive_results,
+            'naive': naive_results,
+            'naive_with_best': naive_with_best_results,
+            'random': random_results
+        }
 
-    # Summary per RL model
-    print("\n--- Summary over tests ---")
-    avg_initial = sum(r[0] for r in rl_results[0]) / NUM_TESTS if rl_results[0] else 0.0
-    print(f"Average initial fitness: {avg_initial:.2f}")
+        # Print summary for this seed
+        print(f"\n--- Summary for Seed {test_seed} ---")
+        avg_initial = sum(r[0] for r in rl_results[0]) / NUM_TESTS_PER_SEED if rl_results[0] else 0.0
+        print(f"Average initial fitness: {avg_initial:.2f}")
+        for midx, name in enumerate(model_names):
+            avg_best = sum(r[1] for r in rl_results[midx]) / NUM_TESTS_PER_SEED
+            avg_time = sum(r[2] for r in rl_results[midx]) / NUM_TESTS_PER_SEED
+            print(f"Model {name}: Avg best fitness: {avg_best:.2f} (avg time: {avg_time:.2f}s)")
+
+        avg_adaptive = sum(r[1] for r in adaptive_results) / NUM_TESTS_PER_SEED
+        avg_time_adaptive = sum(r[2] for r in adaptive_results) / NUM_TESTS_PER_SEED
+        avg_naive = sum(r[1] for r in naive_results) / NUM_TESTS_PER_SEED
+        avg_time_naive = sum(r[2] for r in naive_results) / NUM_TESTS_PER_SEED
+        avg_naive_with_best = sum(r[1] for r in naive_with_best_results) / NUM_TESTS_PER_SEED
+        avg_time_naive_with_best = sum(r[2] for r in naive_with_best_results) / NUM_TESTS_PER_SEED
+        avg_random = sum(r[1] for r in random_results) / NUM_TESTS_PER_SEED
+        avg_time_random = sum(r[2] for r in random_results) / NUM_TESTS_PER_SEED
+        print(f"Adaptive: Avg best fitness: {avg_adaptive:.2f} (avg time: {avg_time_adaptive:.2f}s)")
+        print(f"Naive: Avg best fitness: {avg_naive:.2f} (avg time: {avg_time_naive:.2f}s)")
+        print(f"Naive (best improvement): Avg best fitness: {avg_naive_with_best:.2f} (avg time: {avg_time_naive_with_best:.2f}s)")
+        print(f"Random: Avg best fitness: {avg_random:.2f} (avg time: {avg_time_random:.2f}s)")
+
+    # Overall summary across all seeds
+    print(f"\n{'='*80}")
+    print("OVERALL SUMMARY ACROSS ALL SEEDS")
+    print(f"{'='*80}")
+    total_tests = len(TEST_SEEDS) * NUM_TESTS_PER_SEED
+    print(f"Total tests: {total_tests} ({len(TEST_SEEDS)} seeds × {NUM_TESTS_PER_SEED} tests per seed)")
+
+    # Aggregate all results across seeds
+    all_rl_results = [[] for _ in range(len(rl_models))]
+    all_adaptive_results = []
+    all_naive_results = []
+    all_naive_with_best_results = []
+    all_random_results = []
+
+    for seed, results in all_seeds_results.items():
+        for midx in range(len(rl_models)):
+            all_rl_results[midx].extend(results['rl_models'][midx])
+        all_adaptive_results.extend(results['adaptive'])
+        all_naive_results.extend(results['naive'])
+        all_naive_with_best_results.extend(results['naive_with_best'])
+        all_random_results.extend(results['random'])
+
+    # Print overall averages
+    avg_initial = sum(r[0] for r in all_rl_results[0]) / total_tests if all_rl_results[0] else 0.0
+    print(f"\nAverage initial fitness: {avg_initial:.2f}")
+
+    print("\nRL Models:")
     for midx, name in enumerate(model_names):
-        avg_best = sum(r[1] for r in rl_results[midx]) / NUM_TESTS
-        avg_time = sum(r[2] for r in rl_results[midx]) / NUM_TESTS
-        print(f"Model {name}: Avg best fitness: {avg_best:.2f} (avg time: {avg_time:.2f}s)")
+        avg_best = sum(r[1] for r in all_rl_results[midx]) / total_tests
+        avg_time = sum(r[2] for r in all_rl_results[midx]) / total_tests
+        std_best = np.std([r[1] for r in all_rl_results[midx]])
+        print(f"  {name}: Avg best: {avg_best:.2f} ± {std_best:.2f} (avg time: {avg_time:.2f}s)")
 
-    # Summary for Adaptive, Naive, and Random
-    avg_adaptive = sum(r[1] for r in adaptive_results) / NUM_TESTS
-    avg_time_adaptive = sum(r[2] for r in adaptive_results) / NUM_TESTS
-    avg_naive = sum(r[1] for r in naive_results) / NUM_TESTS
-    avg_time_naive = sum(r[2] for r in naive_results) / NUM_TESTS
-    avg_naive_with_best = sum(r[1] for r in naive_with_best_results) / NUM_TESTS
-    avg_time_naive_with_best = sum(r[2] for r in naive_with_best_results) / NUM_TESTS
-    avg_random = sum(r[1] for r in random_results) / NUM_TESTS
-    avg_time_random = sum(r[2] for r in random_results) / NUM_TESTS
-    print(f"Adaptive: Avg best fitness: {avg_adaptive:.2f} (avg time: {avg_time_adaptive:.2f}s)")
-    print(f"Naive: Avg best fitness: {avg_naive:.2f} (avg time: {avg_time_naive:.2f}s)")
-    print(f"Naive (best improvement): Avg best fitness: {avg_naive_with_best:.2f} (avg time: {avg_time_naive_with_best:.2f}s)")
-    print(f"Random: Avg best fitness: {avg_random:.2f} (avg time: {avg_time_random:.2f}s)")
+    print("\nBaseline Methods:")
+    avg_adaptive = sum(r[1] for r in all_adaptive_results) / total_tests
+    avg_time_adaptive = sum(r[2] for r in all_adaptive_results) / total_tests
+    std_adaptive = np.std([r[1] for r in all_adaptive_results])
+    print(f"  Adaptive: Avg best: {avg_adaptive:.2f} ± {std_adaptive:.2f} (avg time: {avg_time_adaptive:.2f}s)")
+
+    avg_naive = sum(r[1] for r in all_naive_results) / total_tests
+    avg_time_naive = sum(r[2] for r in all_naive_results) / total_tests
+    std_naive = np.std([r[1] for r in all_naive_results])
+    print(f"  Naive: Avg best: {avg_naive:.2f} ± {std_naive:.2f} (avg time: {avg_time_naive:.2f}s)")
+
+    avg_naive_with_best = sum(r[1] for r in all_naive_with_best_results) / total_tests
+    avg_time_naive_with_best = sum(r[2] for r in all_naive_with_best_results) / total_tests
+    std_naive_with_best = np.std([r[1] for r in all_naive_with_best_results])
+    print(f"  Naive (best improvement): Avg best: {avg_naive_with_best:.2f} ± {std_naive_with_best:.2f} (avg time: {avg_time_naive_with_best:.2f}s)")
+
+    avg_random = sum(r[1] for r in all_random_results) / total_tests
+    avg_time_random = sum(r[2] for r in all_random_results) / total_tests
+    std_random = np.std([r[1] for r in all_random_results])
+    print(f"  Random: Avg best: {avg_random:.2f} ± {std_random:.2f} (avg time: {avg_time_random:.2f}s)")
+
+    print(f"\n{'='*80}")
 
 
 if __name__ == "__main__":

@@ -69,8 +69,15 @@ class LocalSearchEnv(gym.Env):
         # Infer observation space dimensions dynamically
         dummy_problem = self._create_minimal_problem()
         dummy_solution = self._create_minimal_solution(dummy_problem)
-        solution_feature_dim = len(self._get_solution_features(dummy_problem, dummy_solution))
-        operator_feature_dim = len(self._get_operator_features().flatten())
+        solution_features = self._get_solution_features(dummy_problem, dummy_solution)
+        operator_features = self._get_operator_features()
+
+        # Store feature dimensions for dynamic network architecture
+        self.solution_feature_dim = len(solution_features)
+        self.operator_feature_dim_per_op = operator_features.shape[1]  # Features per operator
+
+        solution_feature_dim = self.solution_feature_dim
+        operator_feature_dim = len(operator_features.flatten())
         obs_dim = solution_feature_dim + operator_feature_dim
 
         # Observation space: feature vector
@@ -88,12 +95,6 @@ class LocalSearchEnv(gym.Env):
         self.initial_temp = 1000.0
         self.temp_decay = 0.995
         self.temperature = self.initial_temp
-
-        # Running reward normalization statistics
-        self.reward_mean = 0.0
-        self.reward_std = 1.0
-        self.reward_samples = 0
-        self.max_reward_samples = 100000 
 
         # Late acceptance parameters
         self.late_acceptance_length = 20
@@ -243,27 +244,6 @@ class LocalSearchEnv(gym.Env):
 
         return observation, reward, terminated, truncated, info
 
-    def _update_reward_stats(self, raw_reward: float) -> None:
-        """Update running reward statistics using online algorithm.
-
-        Args:
-            raw_reward: Raw reward value to incorporate into statistics
-        """
-        if self.reward_samples >= self.max_reward_samples:
-            return  # Stop updating after max samples
-
-        self.reward_samples += 1
-
-        # Online mean and std update (Welford's algorithm)
-        delta = raw_reward - self.reward_mean
-        self.reward_mean += delta / self.reward_samples
-        delta2 = raw_reward - self.reward_mean
-
-        if self.reward_samples > 1:
-            # Update variance
-            variance = ((self.reward_samples - 2) * (self.reward_std ** 2) + delta * delta2) / (self.reward_samples - 1)
-            self.reward_std = np.sqrt(max(variance, 1e-8))
-
     def _calculate_reward(
         self,
         old_solution: PDPTWSolution,
@@ -285,6 +265,7 @@ class LocalSearchEnv(gym.Env):
                 reward = 0.0
             else:
                 improvement_pct = (self.initial_fitness - new_fitness) / self.initial_fitness if self.initial_fitness > 0 else 0.0
+                improvement_pct = np.clip(improvement_pct, -1.0, 1.0)
                 reward = self.alpha * improvement_pct
                 
         elif self.reward_strategy == "old_improvement":
@@ -292,6 +273,7 @@ class LocalSearchEnv(gym.Env):
                 reward = 0.0
             else:
                 improvement_pct = (old_fitness - new_fitness) / old_fitness if old_fitness > 0 else 0.0
+                improvement_pct = np.clip(improvement_pct, -1.0, 1.0)
                 reward = self.alpha * improvement_pct
                 
         elif self.reward_strategy == "hybrid_improvement":
@@ -299,7 +281,9 @@ class LocalSearchEnv(gym.Env):
                 reward = 0.0
             else:
                 initial_improvement = (self.initial_fitness - new_fitness) / self.initial_fitness
+                initial_improvement = np.clip(initial_improvement, -1.0, 1.0)
                 old_improvement = (old_fitness - new_fitness) / old_fitness
+                old_improvement = np.clip(old_improvement, -1.0, 1.0)
                 reward = self.alpha * (0.5 * initial_improvement + 0.5 * old_improvement)
                 
         elif self.reward_strategy == "distance_baseline":
@@ -327,55 +311,6 @@ class LocalSearchEnv(gym.Env):
         elif self.reward_strategy == "tanh":
             fitness_improvement = (old_fitness - new_fitness) / 1
             reward = np.tanh(self.alpha * fitness_improvement)
-
-        elif self.reward_strategy == "distance_baseline_normalized":
-            # Two-stage: baseline normalization + z-score (for mixed instance sizes)
-            baseline = self.problem.distance_baseline
-            raw_improvement = (old_fitness - new_fitness) / baseline
-
-            self._update_reward_stats(raw_improvement)
-
-            if self.reward_samples > 1:
-                reward = np.clip((raw_improvement - self.reward_mean) / (self.reward_std + 1e-8), -1.0, 1.0)
-            else:
-                reward = raw_improvement
-
-        elif self.reward_strategy == "pure_normalized":
-            # Pure z-score normalization (for single instance size training)
-            raw_improvement = old_fitness - new_fitness
-
-            self._update_reward_stats(raw_improvement)
-
-            if self.reward_samples > 1:
-                reward = np.clip((raw_improvement - self.reward_mean) / (self.reward_std + 1e-8), -1.0, 1.0)
-            else:
-                reward = raw_improvement 
-
-        elif self.reward_strategy == "distance_baseline_tanh":
-            baseline = self.problem.distance_baseline
-            fitness_improvement = (old_fitness - new_fitness) / baseline
-            reward = np.tanh(self.alpha * fitness_improvement)
-
-        elif self.reward_strategy == "distance_baseline_asymmetric_tanh":
-            # Distance baseline + asymmetric tanh (penalize degradations more)
-            baseline = self.problem.distance_baseline
-            fitness_improvement = (old_fitness - new_fitness) / baseline
-
-            # Apply asymmetric scaling
-            if fitness_improvement > 0:  # Improvement
-                reward = np.tanh(self.alpha * fitness_improvement)
-            else:  # Degradation - penalize 2x more
-                reward = np.tanh(self.alpha * fitness_improvement * 2.0)
-                
-        elif self.reward_strategy == "another_one":
-            if old_fitness <= 0 or self.initial_fitness <= 0:
-                reward = 0.0
-            else:
-                old_improvement = (old_fitness - new_fitness) / old_fitness
-                old_improvement = np.clip(old_improvement, -1.0, 1.0)
-                initial_improvement = (self.initial_fitness - new_fitness) / self.initial_fitness
-                initial_improvement = np.clip(initial_improvement, -1.0, 1.0)
-                reward = self.alpha * max(old_improvement, initial_improvement)
                 
         elif self.reward_strategy == "component":
             old_total_distance = old_solution.total_distance
@@ -439,18 +374,13 @@ class LocalSearchEnv(gym.Env):
                 return np.random.rand() < acceptance_prob
 
         elif self.acceptance_strategy == "late_acceptance":
-            # Accept if better than fitness from L steps ago
             if len(self.fitness_history) < self.late_acceptance_length:
-                # Greedy until buffer fills
                 return new_fitness <= old_fitness
-            # Compare to oldest fitness in history (L steps ago)
             return new_fitness <= self.fitness_history[0]
 
         elif self.acceptance_strategy == "rising_epsilon_greedy":
-            # Always accept improvements
             if new_fitness < old_fitness:
                 return True
-            # Epsilon rises from start to end over max_steps (max_iterations)
             progress = min(self.step_count / self.max_steps, 1.0)
             epsilon = self.rising_epsilon_start + (self.rising_epsilon_end - self.rising_epsilon_start) * progress
             return np.random.rand() < epsilon
@@ -608,25 +538,3 @@ class LocalSearchEnv(gym.Env):
             Tuple of (best_solution, best_fitness)
         """
         return self.best_solution, self.best_fitness
-
-    def get_reward_stats(self) -> dict:
-        """Get current reward normalization statistics.
-
-        Returns:
-            Dictionary with mean, std, and sample count
-        """
-        return {
-            'reward_mean': self.reward_mean,
-            'reward_std': self.reward_std,
-            'reward_samples': self.reward_samples
-        }
-
-    def set_reward_stats(self, stats: dict) -> None:
-        """Set reward normalization statistics (for loading saved state).
-
-        Args:
-            stats: Dictionary with 'reward_mean', 'reward_std', 'reward_samples'
-        """
-        self.reward_mean = stats.get('reward_mean', 0.0)
-        self.reward_std = stats.get('reward_std', 1.0)
-        self.reward_samples = stats.get('reward_samples', 0)
