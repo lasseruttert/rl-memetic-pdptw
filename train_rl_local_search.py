@@ -69,6 +69,102 @@ def create_solution_generator(problem: PDPTWProblem) -> PDPTWSolution:
     return solution
 
 
+def get_validation_instance_names(size: int, num_instances: int) -> list[str]:
+    """Get fixed list of validation instance names for reproducible evaluation.
+
+    Args:
+        size: Problem size (100, 200, 400, 600, 1000)
+        num_instances: Number of validation instances to return
+
+    Returns:
+        List of instance names from different categories
+    """
+    # Fixed validation instances per category (diverse selection)
+    validation_instances = {
+        'lc1': ['lc101', 'lc102', 'lc103', 'lc104', 'lc105'],
+        'lc2': ['lc201', 'lc202', 'lc203', 'lc204', 'lc205'],
+        'lr1': ['lr101', 'lr102', 'lr103', 'lr104', 'lr105'],
+        'lr2': ['lr201', 'lr202', 'lr203', 'lr204', 'lr205'],
+        'lrc1': ['lrc101', 'lrc102', 'lrc103', 'lrc104', 'lrc105'],
+        'lrc2': ['lrc201', 'lrc202', 'lrc203', 'lrc204', 'lrc205'],
+    }
+
+    # Collect instances in round-robin fashion for diversity
+    selected = []
+    categories = list(validation_instances.keys())
+    category_idx = 0
+    instance_idx = 0
+
+    while len(selected) < num_instances:
+        category = categories[category_idx]
+        instances = validation_instances[category]
+
+        if instance_idx < len(instances):
+            selected.append(instances[instance_idx])
+
+        category_idx = (category_idx + 1) % len(categories)
+        if category_idx == 0:
+            instance_idx += 1
+
+    return selected[:num_instances]
+
+
+def create_validation_set(
+    instance_manager: InstanceManager,
+    solution_generator: callable,
+    size: int,
+    mode: str = "fixed_benchmark",
+    num_instances: int = 10,
+    seed: int = 42,
+    problem_generator: callable = None
+):
+    """Create validation set for evaluating RL local search.
+
+    Args:
+        instance_manager: InstanceManager for loading problems
+        solution_generator: Function that generates initial solutions
+        size: Problem size (100, 200, 400, 600, 1000)
+        mode: "fixed_benchmark" (recommended) or "random_sampled"
+        num_instances: Number of validation instances
+        seed: Random seed for reproducibility
+        problem_generator: Required if mode="random_sampled"
+
+    Returns:
+        List of (problem, initial_solution) tuples
+    """
+    validation_set = []
+
+    if mode == "fixed_benchmark":
+        # Use fixed benchmark instances (best for reproducibility)
+        instance_names = get_validation_instance_names(size, num_instances)
+
+        for name in instance_names:
+            try:
+                problem = instance_manager.load(name, size)
+                # Use fixed seed for consistent initial solutions
+                set_seed(seed + hash(name) % 1000)
+                solution = solution_generator(problem)
+                validation_set.append((problem, solution))
+            except Exception as e:
+                print(f"Warning: Could not load validation instance {name}: {e}")
+
+    elif mode == "random_sampled":
+        # Random sampling with fixed seed
+        if problem_generator is None:
+            raise ValueError("problem_generator required for random_sampled mode")
+
+        set_seed(seed)
+        for i in range(num_instances):
+            problem = problem_generator()
+            solution = solution_generator(problem)
+            validation_set.append((problem, solution))
+
+    else:
+        raise ValueError(f"Unknown validation mode: {mode}")
+
+    return validation_set
+
+
 def set_seed(seed: int):
     """Set random seeds for reproducibility.
 
@@ -123,6 +219,17 @@ def main():
                         help="Random seed for reproducibility (default: 42)")
     parser.add_argument("--use_operator_attention", action="store_true",
                         help="Enable operator attention mechanism for operator selection")
+    parser.add_argument("--validation_mode", type=str, default="fixed_benchmark",
+                        choices=["fixed_benchmark", "random_sampled"],
+                        help="Validation set mode: fixed_benchmark (reproducible) or random_sampled (faster)")
+    parser.add_argument("--num_validation_instances", type=int, default=10,
+                        help="Number of validation instances (default: 10)")
+    parser.add_argument("--validation_interval", type=int, default=100,
+                        help="Evaluate on validation set every N episodes (default: 100)")
+    parser.add_argument("--validation_seeds", type=int, nargs='+', default=[42, 111, 222, 333, 444],
+                        help="List of base seeds for validation runs (default: [42, 111, 222, 333, 444])")
+    parser.add_argument("--validation_runs_per_seed", type=int, default=5,
+                        help="Number of runs per seed for each validation instance (default: 5)")
     args = parser.parse_args()
 
     # Set random seed if provided
@@ -196,29 +303,54 @@ def main():
     # # Create problem and solution generators
     problem_generator = create_problem_generator(size=PROBLEM_SIZE, categories=CATEGORIES)
 
-    # # Train the RL agent
-    # print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
-    # print(f"Categories: {CATEGORIES}")
-    # print(f"Operators: {len(operators)}")
-    # print(f"Operator Attention: {'ENABLED' if USE_OPERATOR_ATTENTION else 'DISABLED'}")
+    # Create validation set
+    instance_manager = InstanceManager()
+    validation_set = create_validation_set(
+        instance_manager=instance_manager,
+        solution_generator=create_solution_generator,
+        size=PROBLEM_SIZE,
+        mode=args.validation_mode,
+        num_instances=args.num_validation_instances,
+        seed=SEED if SEED is not None else 42,
+        problem_generator=problem_generator
+    )
 
-    # training_history = rl_local_search.train(
-    #     problem_generator=problem_generator,
-    #     initial_solution_generator=create_solution_generator,
-    #     num_episodes=args.num_episodes,
-    #     new_instance_interval=5,
-    #     new_solution_interval=1,
-    #     update_interval=1,
-    #     warmup_episodes=10,
-    #     save_interval=1000,
-    #     save_path=f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}",
-    #     tensorboard_dir=f"runs/{RUN_NAME}",
-    #     seed=SEED, 
-    # )
+    total_validation_runs = len(args.validation_seeds) * args.validation_runs_per_seed
+    print(f"\nValidation Set:")
+    print(f"  Mode: {args.validation_mode}")
+    print(f"  Instances: {len(validation_set)}")
+    print(f"  Seeds: {args.validation_seeds}")
+    print(f"  Runs per seed: {args.validation_runs_per_seed}")
+    print(f"  Total runs per instance: {total_validation_runs}")
+    print(f"  Interval: {args.validation_interval} episodes\n")
 
-    # print("\nTraining completed!")
-    # print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
-    # print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
+    # Train the RL agent
+    print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
+    print(f"Categories: {CATEGORIES}")
+    print(f"Operators: {len(operators)}")
+    print(f"Operator Attention: {'ENABLED' if USE_OPERATOR_ATTENTION else 'DISABLED'}")
+
+    training_history = rl_local_search.train(
+        problem_generator=problem_generator,
+        initial_solution_generator=create_solution_generator,
+        num_episodes=args.num_episodes,
+        new_instance_interval=5,
+        new_solution_interval=1,
+        update_interval=1,
+        warmup_episodes=10,
+        save_interval=1000,
+        save_path=f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}",
+        tensorboard_dir=f"runs/{RUN_NAME}",
+        seed=SEED,
+        validation_set=validation_set,
+        validation_interval=args.validation_interval,
+        validation_seeds=args.validation_seeds,
+        validation_runs_per_seed=args.validation_runs_per_seed
+    )
+
+    print("\nTraining completed!")
+    print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
+    print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
     
     adaptive_local_search = AdaptiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200)
 
@@ -230,9 +362,9 @@ def main():
 
     # You can provide up to 6 different RL model paths to evaluate here.
     RL_MODEL_PATHS = [
-        # f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_422.pt",
+        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_422.pt",
         # f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_42.pt",
-        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_100.pt",
+        # f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_100.pt",
         f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_final.pt",
     ]
 

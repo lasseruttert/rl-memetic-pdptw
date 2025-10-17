@@ -200,6 +200,83 @@ class RLLocalSearch(BaseLocalSearch):
             if self.verbose:
                 print("Warning: PyTorch not available for seeding")
 
+    def _evaluate_validation(
+        self,
+        validation_set: List[Tuple[PDPTWProblem, PDPTWSolution]],
+        validation_seeds: List[int] = [42, 100, 200, 300],
+        runs_per_seed: int = 3
+    ) -> Dict[str, float]:
+        """Evaluate policy on validation set with multiple seeds and runs.
+
+        Args:
+            validation_set: List of (problem, initial_solution) tuples
+            validation_seeds: List of base seeds for different seed families
+            runs_per_seed: Number of runs per base seed (uses seed+0, seed+1, ...)
+
+        Returns:
+            Dictionary with validation metrics:
+                - avg_fitness: Average best fitness across all instances, seeds, and runs
+                - avg_improvement: Average % improvement vs initial fitness
+                - std_fitness_across_instances: Std-dev between instances (generalization)
+                - avg_std_within_instances: Average std-dev within instances (policy stability)
+                - best_fitness: Best fitness across all evaluations
+                - total_runs: Total number of runs performed
+        """
+        all_fitnesses = []  # All fitnesses across instances, seeds, and runs
+        all_improvements = []
+        instance_avg_fitnesses = []  # Average fitness per instance
+        instance_std_fitnesses = []  # Std-dev within each instance
+
+        total_runs_per_instance = len(validation_seeds) * runs_per_seed
+
+        for inst_idx, (problem, initial_solution) in enumerate(validation_set):
+            initial_fitness = fitness(problem, initial_solution)
+            instance_fitnesses = []
+            instance_improvements = []
+
+            # Loop over seed families
+            for base_seed in validation_seeds:
+                # Loop over runs per seed
+                for run in range(runs_per_seed):
+                    # Actual seed: base_seed + run offset
+                    actual_seed = base_seed + run
+
+                    # Set seed for operator stochasticity
+                    random.seed(actual_seed)
+                    np.random.seed(actual_seed)
+
+                    # Run search with greedy policy (epsilon=0.0)
+                    best_solution, best_fitness = self.search(
+                        problem=problem,
+                        solution=initial_solution.clone(),
+                        epsilon=0.0  # Greedy evaluation
+                    )
+
+                    improvement_pct = (initial_fitness - best_fitness) / initial_fitness if initial_fitness > 0 else 0.0
+
+                    instance_fitnesses.append(best_fitness)
+                    instance_improvements.append(improvement_pct)
+                    all_fitnesses.append(best_fitness)
+                    all_improvements.append(improvement_pct)
+
+            # Compute per-instance statistics
+            instance_avg_fitnesses.append(np.mean(instance_fitnesses))
+            if total_runs_per_instance > 1:
+                instance_std_fitnesses.append(np.std(instance_fitnesses))
+            else:
+                instance_std_fitnesses.append(0.0)
+
+        metrics = {
+            'avg_fitness': np.mean(all_fitnesses),
+            'avg_improvement': np.mean(all_improvements),
+            'std_fitness_across_instances': np.std(instance_avg_fitnesses),
+            'avg_std_within_instances': np.mean(instance_std_fitnesses),
+            'best_fitness': np.min(all_fitnesses),
+            'total_runs': len(all_fitnesses)
+        }
+
+        return metrics
+
     def train(
         self,
         problem_generator: Callable[[], PDPTWProblem],
@@ -213,7 +290,11 @@ class RLLocalSearch(BaseLocalSearch):
         save_path: Optional[str] = None,
         tensorboard_dir: Optional[str] = None,
         seed: Optional[int] = None,
-        log_interval: int = 10
+        log_interval: int = 10,
+        validation_set: Optional[List[Tuple[PDPTWProblem, PDPTWSolution]]] = None,
+        validation_interval: int = 100,
+        validation_seeds: List[int] = [42, 100, 200],
+        validation_runs_per_seed: int = 3
     ) -> Dict:
         """Train the RL policy for operator selection.
 
@@ -230,6 +311,12 @@ class RLLocalSearch(BaseLocalSearch):
             tensorboard_dir: Directory for TensorBoard logs (None to disable)
             seed: Random seed for reproducibility (None for random)
             log_interval: Log detailed metrics every N episodes (default: 10)
+            validation_set: Optional list of (problem, initial_solution) tuples for validation
+            validation_interval: Evaluate on validation set every N episodes (default: 100)
+            validation_seeds: List of base seeds for validation runs (default: [42, 100, 200])
+                Each seed creates a different random state family for robust evaluation
+            validation_runs_per_seed: Number of runs per seed for each instance (default: 3)
+                Total runs per instance = len(validation_seeds) × validation_runs_per_seed
 
         Returns:
             Dictionary containing training history
@@ -490,6 +577,34 @@ class RLLocalSearch(BaseLocalSearch):
                       f"Loss: {avg_loss:.4f} | "
                       f"Time: {episode_time:.2f}s | "
                       f"Total: {elapsed:.2f}s")
+
+            # Validation evaluation
+            if validation_set and episode % validation_interval == 0 and episode > 0:
+                if self.verbose:
+                    print(f"\n--- Running Validation (Episode {episode}) ---")
+
+                val_start_time = time.time()
+                val_metrics = self._evaluate_validation(validation_set, validation_seeds, validation_runs_per_seed)
+                val_time = time.time() - val_start_time
+
+                total_runs_per_instance = len(validation_seeds) * validation_runs_per_seed
+                if self.verbose:
+                    print(f"Validation Results ({len(validation_seeds)} seeds × {validation_runs_per_seed} runs = {total_runs_per_instance} total runs per instance):")
+                    print(f"  Avg Fitness: {val_metrics['avg_fitness']:.2f}")
+                    print(f"  Avg Improvement: {val_metrics['avg_improvement']*100:.2f}%")
+                    print(f"  Std Across Instances: {val_metrics['std_fitness_across_instances']:.2f}")
+                    print(f"  Avg Std Within Instances: {val_metrics['avg_std_within_instances']:.2f} (policy stability)")
+                    print(f"  Best Fitness: {val_metrics['best_fitness']:.2f}")
+                    print(f"  Time: {val_time:.2f}s")
+                    print()
+
+                # Log validation metrics to TensorBoard
+                if writer:
+                    writer.add_scalar('Validation/AvgFitness', val_metrics['avg_fitness'], episode)
+                    writer.add_scalar('Validation/AvgImprovement', val_metrics['avg_improvement'], episode)
+                    writer.add_scalar('Validation/StdAcrossInstances', val_metrics['std_fitness_across_instances'], episode)
+                    writer.add_scalar('Validation/AvgStdWithinInstances', val_metrics['avg_std_within_instances'], episode)
+                    writer.add_scalar('Validation/BestFitness', val_metrics['best_fitness'], episode)
 
             # Save checkpoint
             if save_path and episode % save_interval == 0 and episode > 0:
