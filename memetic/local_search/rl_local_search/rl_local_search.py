@@ -222,10 +222,10 @@ class RLLocalSearch(BaseLocalSearch):
                 - best_fitness: Best fitness across all evaluations
                 - total_runs: Total number of runs performed
         """
-        all_fitnesses = []  # All fitnesses across instances, seeds, and runs
+        all_fitnesses = []  
         all_improvements = []
-        instance_avg_fitnesses = []  # Average fitness per instance
-        instance_std_fitnesses = []  # Std-dev within each instance
+        instance_avg_fitnesses = [] 
+        instance_std_fitnesses = []  
 
         total_runs_per_instance = len(validation_seeds) * runs_per_seed
 
@@ -238,18 +238,19 @@ class RLLocalSearch(BaseLocalSearch):
             for base_seed in validation_seeds:
                 # Loop over runs per seed
                 for run in range(runs_per_seed):
-                    # Actual seed: base_seed + run offset
-                    actual_seed = base_seed + run
+                    actual_seed = base_seed
 
                     # Set seed for operator stochasticity
                     random.seed(actual_seed)
                     np.random.seed(actual_seed)
 
-                    # Run search with greedy policy (epsilon=0.0)
+                    # Run search with greedy policy (epsilon=0.0) and deterministic operators
                     best_solution, best_fitness = self.search(
                         problem=problem,
                         solution=initial_solution.clone(),
-                        epsilon=0.0  # Greedy evaluation
+                        epsilon=0.0,  # Greedy evaluation
+                        deterministic_rng=True,  # Deterministic operator applications
+                        base_seed=actual_seed
                     )
 
                     improvement_pct = (initial_fitness - best_fitness) / initial_fitness if initial_fitness > 0 else 0.0
@@ -643,7 +644,9 @@ class RLLocalSearch(BaseLocalSearch):
         problem: PDPTWProblem,
         solution: PDPTWSolution,
         max_iterations: Optional[int] = None,
-        epsilon: float = 0.0
+        epsilon: float = 0.0,
+        deterministic_rng: bool = False,
+        base_seed: int = 0
     ) -> Tuple[PDPTWSolution, float]:
         """Perform local search using trained RL policy (inference mode).
 
@@ -654,6 +657,8 @@ class RLLocalSearch(BaseLocalSearch):
             solution: Initial solution to improve
             max_iterations: Maximum number of iterations (None to use init value)
             epsilon: Exploration rate (0.0 = fully greedy)
+            deterministic_rng: If True, use deterministic seeding for reproducible operator applications
+            base_seed: Base seed for deterministic RNG (only used if deterministic_rng=True)
 
         Returns:
             Tuple of (best_solution, best_fitness)
@@ -684,6 +689,12 @@ class RLLocalSearch(BaseLocalSearch):
             if self.type == "OneShot":
                 action = self.agent.get_action(state, epsilon=epsilon, update_stats=False)
 
+                # Deterministic seeding
+                if deterministic_rng:
+                    op_seed = base_seed + iteration * 1000
+                    random.seed(op_seed)
+                    np.random.seed(op_seed)
+
                 # Apply operator
                 next_state, reward, terminated, truncated, step_info = self.env.step(action)
 
@@ -706,7 +717,13 @@ class RLLocalSearch(BaseLocalSearch):
                                                   replace=False, p=probs)
 
                 # Try operators in sequence until one improves (greedy acceptance handles rejection)
-                for action in action_sequence:
+                for seq_idx, action in enumerate(action_sequence):
+                    # Deterministic seeding: each operator application gets unique seed
+                    if deterministic_rng:
+                        op_seed = base_seed + iteration * 1000 
+                        random.seed(op_seed)
+                        np.random.seed(op_seed)
+
                     # Apply operator (environment handles state management)
                     next_state, reward, terminated, truncated, step_info = self.env.step(action)
                     state = next_state
@@ -728,7 +745,13 @@ class RLLocalSearch(BaseLocalSearch):
                 action_sequence = np.argsort(-q_values)
 
                 # Try operators in ranked order until one improves (greedy acceptance handles rejection)
-                for action in action_sequence:
+                for seq_idx, action in enumerate(action_sequence):
+                    # Deterministic seeding: each operator application gets unique seed
+                    if deterministic_rng:
+                        op_seed = base_seed + iteration * 1000 
+                        random.seed(op_seed)
+                        np.random.seed(op_seed)
+
                     # Apply operator (environment handles state management)
                     next_state, reward, terminated, truncated, step_info = self.env.step(action)
                     state = next_state

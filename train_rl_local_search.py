@@ -519,7 +519,9 @@ def main():
                     rl_best_solution, rl_best_fitness = model.search(
                         problem=test_problem,
                         solution=rl_solution,
-                        epsilon=0.0
+                        epsilon=0.0,
+                        deterministic_rng=True,
+                        base_seed=base_seed
                     )
                 except Exception as e:
                     print(f"Model {model_names[midx]} failed on test {i+1}: {e}")
@@ -534,7 +536,9 @@ def main():
             t0 = time.time()
             adaptive_best_solution, adaptive_best_fitness = adaptive_local_search.search(
                 problem=test_problem,
-                solution=adaptive_solution
+                solution=adaptive_solution,
+                deterministic_rng=True,
+                base_seed=base_seed
             )
             adaptive_time = time.time() - t0
             print(f"Adaptive: best fitness: {adaptive_best_fitness:.2f} (time: {adaptive_time:.2f}s)")
@@ -546,7 +550,9 @@ def main():
             t0 = time.time()
             naive_best_solution, naive_best_fitness = naive_local_search.search(
                 problem=test_problem,
-                solution=naive_solution
+                solution=naive_solution,
+                deterministic_rng=True,
+                base_seed=base_seed
             )
             naive_time = time.time() - t0
             print(f"Naive: best fitness: {naive_best_fitness:.2f} (time: {naive_time:.2f}s)")
@@ -558,7 +564,9 @@ def main():
             t0 = time.time()
             naive_with_best_best_solution, naive_with_best_best_fitness = naive_with_best_local_search.search(
                 problem=test_problem,
-                solution=naive_with_best_solution
+                solution=naive_with_best_solution,
+                deterministic_rng=True,
+                base_seed=base_seed
             )
             naive_with_best_time = time.time() - t0
             print(f"Naive (best improvement): best fitness: {naive_with_best_best_fitness:.2f} (time: {naive_with_best_time:.2f}s)")
@@ -570,7 +578,9 @@ def main():
             t0 = time.time()
             random_best_solution, random_best_fitness = random_local_search.search(
                 problem=test_problem,
-                solution=random_solution
+                solution=random_solution,
+                deterministic_rng=True,
+                base_seed=base_seed
             )
             random_time = time.time() - t0
             print(f"Random: best fitness: {random_best_fitness:.2f} (time: {random_time:.2f}s)")

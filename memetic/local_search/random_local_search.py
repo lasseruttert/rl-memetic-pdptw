@@ -5,6 +5,7 @@ from memetic.local_search.base_local_search import BaseLocalSearch
 
 from memetic.fitness.fitness import fitness
 import random
+import numpy as np
 
 from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.solution_operators.route_elimination import RouteEliminationOperator
@@ -45,12 +46,14 @@ class RandomLocalSearch(BaseLocalSearch):
         self.max_no_improvement = max_no_improvement
         self.max_iterations = max_iterations
     
-    def search(self, problem: PDPTWProblem, solution: PDPTWSolution) -> tuple[PDPTWSolution, float]:
+    def search(self, problem: PDPTWProblem, solution: PDPTWSolution, deterministic_rng: bool = False, base_seed: int = 0) -> tuple[PDPTWSolution, float]:
         """Start the local search process.
 
         Args:
             problem (PDPTWProblem): a problem instance
             solution (PDPTWSolution): a solution instance
+            deterministic_rng (bool): If True, use deterministic seeding for reproducible operator applications
+            base_seed (int): Base seed for deterministic RNG (only used if deterministic_rng=True)
 
         Returns:
             tuple[PDPTWSolution, float]: the best solution found and its fitness
@@ -59,10 +62,25 @@ class RandomLocalSearch(BaseLocalSearch):
         iteration = 0
         best_solution = solution
         best_fitness = fitness(problem, best_solution)
-        
+
         while no_improvement_count < self.max_no_improvement and iteration < self.max_iterations:
             improved = False
+
+            # Deterministic seeding
+            if deterministic_rng:
+                op_seed = base_seed + iteration * 1000
+                random.seed(op_seed)
+                np.random.seed(op_seed)
+
             operator = random.choice(self.operators)
+            operator_idx = self.operators.index(operator)
+
+            # Re-seed with operator index for consistent operator application
+            if deterministic_rng:
+                op_seed = base_seed + iteration * 1000 + operator_idx
+                random.seed(op_seed)
+                np.random.seed(op_seed)
+
             new_solution = operator.apply(problem, best_solution)
             operator.applications += 1
             new_fitness = fitness(problem, new_solution)
