@@ -228,8 +228,8 @@ def main():
                         help="Evaluate on validation set every N episodes (default: 100)")
     parser.add_argument("--validation_seeds", type=int, nargs='+', default=[42, 111, 222, 333, 444],
                         help="List of base seeds for validation runs (default: [42, 111, 222, 333, 444])")
-    parser.add_argument("--validation_runs_per_seed", type=int, default=5,
-                        help="Number of runs per seed for each validation instance (default: 5)")
+    parser.add_argument("--validation_runs_per_seed", type=int, default=1,
+                        help="Number of runs per seed for each validation instance (default: 1)")
     args = parser.parse_args()
 
     # Set random seed if provided
@@ -362,8 +362,8 @@ def main():
 
     # You can provide up to 6 different RL model paths to evaluate here.
     RL_MODEL_PATHS = [
-        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_422.pt",
-        # f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_42.pt",
+        # f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_422.pt",
+        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_42.pt",
         # f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_100.pt",
         f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_final.pt",
     ]

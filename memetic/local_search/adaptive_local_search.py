@@ -71,7 +71,7 @@ class AdaptiveLocalSearch(BaseLocalSearch):
 
             # Deterministic seeding
             if deterministic_rng:
-                op_seed = base_seed + iteration * 1000 
+                op_seed = base_seed + iteration * 1000 + operator_idx
                 random.seed(op_seed)
                 np.random.seed(op_seed)
 

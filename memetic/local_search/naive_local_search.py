@@ -75,7 +75,7 @@ class NaiveLocalSearch(BaseLocalSearch):
             for op_idx, operator in enumerate(self.operators):
                 # Deterministic seeding
                 if deterministic_rng:
-                    op_seed = base_seed + iteration * 1000 
+                    op_seed = base_seed + iteration * 1000 + op_idx
                     random.seed(op_seed)
                     np.random.seed(op_seed)
 

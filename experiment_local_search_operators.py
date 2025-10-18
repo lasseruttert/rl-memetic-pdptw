@@ -12,6 +12,7 @@ from memetic.solution_operators.flip import FlipOperator
 from memetic.solution_operators.swap_within import SwapWithinOperator
 from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
+from memetic.solution_operators.shift import ShiftOperator
 from memetic.solution_operators.two_opt import TwoOptOperator
 from memetic.solution_operators.two_opt_star import TwoOptStarOperator
 from memetic.solution_operators.cls_m1 import CLSM1Operator
@@ -46,7 +47,15 @@ if __name__ == "__main__":
         TransferOperator(),
         TransferOperator(single_route=True),
         TransferOperator(max_attempts=5,single_route=True),
-        
+
+        ShiftOperator(type="random", segment_length=3, max_shift_distance=3, max_attempts=5),
+        ShiftOperator(type="random", segment_length=2, max_shift_distance=4, max_attempts=5),
+        ShiftOperator(type="random", segment_length=4, max_shift_distance=2, max_attempts=3),
+        ShiftOperator(type="random", segment_length=3, max_shift_distance=5, max_attempts=3),
+        ShiftOperator(type="best", segment_length=2, max_shift_distance=3),
+        ShiftOperator(type="best", segment_length=3, max_shift_distance=2),
+        ShiftOperator(type="random", segment_length=3, max_shift_distance=3, max_attempts=5, single_route=True),
+
         TwoOptOperator(),
         
         CLSM1Operator(),
@@ -72,27 +81,34 @@ if __name__ == "__main__":
     for operator in operators:
         print(f"{operator.__class__.__name__}: applied {operator.applications} times, improved {operator.improvements} times")
         
-# ? ReinsertOperator: applied 25666 times, improved 2082 times
-# ? ReinsertOperator: applied 25666 times, improved 4879 times
-# ? ReinsertOperator: applied 25666 times, improved 981 times
-# ? ReinsertOperator: applied 25666 times, improved 2088 times
-# ? ReinsertOperator: applied 25666 times, improved 2188 times
-# ? RouteEliminationOperator: applied 25666 times, improved 3179 times
-# ? FlipOperator: applied 25666 times, improved 0 times
-# ? FlipOperator: applied 25666 times, improved 0 times
-# ? FlipOperator: applied 25666 times, improved 66 times
-# ? SwapWithinOperator: applied 25666 times, improved 88 times
-# ? SwapWithinOperator: applied 25666 times, improved 84 times
-# ? SwapWithinOperator: applied 25666 times, improved 202 times
-# ? SwapWithinOperator: applied 25666 times, improved 297 times
-# ? SwapWithinOperator: applied 25666 times, improved 550 times
-# ? SwapBetweenOperator: applied 25666 times, improved 201 times
-# ? SwapBetweenOperator: applied 25666 times, improved 1057 times
-# ? TransferOperator: applied 25666 times, improved 254 times
-# ? TransferOperator: applied 25666 times, improved 150 times
-# ? TransferOperator: applied 25666 times, improved 139 times
-# ? TwoOptOperator: applied 25666 times, improved 845 times
-# ? CLSM1Operator: applied 25666 times, improved 318 times
-# ? CLSM2Operator: applied 25666 times, improved 2174 times
-# ? CLSM3Operator: applied 25666 times, improved 836 times
-# ? CLSM4Operator: applied 25666 times, improved 1298 times
+# ? ReinsertOperator: applied 26148 times, improved 2158 times
+# ? ReinsertOperator: applied 26148 times, improved 5016 times
+# ? ReinsertOperator: applied 26148 times, improved 1006 times
+# ? ReinsertOperator: applied 26148 times, improved 2137 times
+# ? ReinsertOperator: applied 26148 times, improved 2155 times
+# ? RouteEliminationOperator: applied 26148 times, improved 3284 times
+# ? FlipOperator: applied 26148 times, improved 0 times
+# ? FlipOperator: applied 26148 times, improved 0 times
+# ? FlipOperator: applied 26148 times, improved 61 times
+# ? SwapWithinOperator: applied 26148 times, improved 102 times
+# ? SwapWithinOperator: applied 26148 times, improved 88 times
+# ? SwapWithinOperator: applied 26148 times, improved 202 times
+# ? SwapWithinOperator: applied 26148 times, improved 277 times
+# ? SwapWithinOperator: applied 26148 times, improved 541 times
+# ? SwapBetweenOperator: applied 26148 times, improved 221 times
+# ? SwapBetweenOperator: applied 26148 times, improved 1041 times
+# ? TransferOperator: applied 26148 times, improved 270 times
+# ? TransferOperator: applied 26148 times, improved 165 times
+# ? TransferOperator: applied 26148 times, improved 145 times
+# ? ShiftOperator: applied 26148 times, improved 196 times
+# ? ShiftOperator: applied 26148 times, improved 138 times
+# ? ShiftOperator: applied 26148 times, improved 209 times
+# ? ShiftOperator: applied 26148 times, improved 219 times
+# ? ShiftOperator: applied 26148 times, improved 147 times
+# ? ShiftOperator: applied 26148 times, improved 234 times
+# ? ShiftOperator: applied 26148 times, improved 58 times
+# ? TwoOptOperator: applied 26148 times, improved 731 times
+# ? CLSM1Operator: applied 26148 times, improved 357 times
+# ? CLSM2Operator: applied 26148 times, improved 2143 times
+# ? CLSM3Operator: applied 26148 times, improved 861 times
+# ? CLSM4Operator: applied 26148 times, improved 1404 times

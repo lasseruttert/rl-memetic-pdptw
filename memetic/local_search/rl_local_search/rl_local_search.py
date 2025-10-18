@@ -218,27 +218,31 @@ class RLLocalSearch(BaseLocalSearch):
                 - avg_fitness: Average best fitness across all instances, seeds, and runs
                 - avg_improvement: Average % improvement vs initial fitness
                 - std_fitness_across_instances: Std-dev between instances (generalization)
-                - avg_std_within_instances: Average std-dev within instances (policy stability)
+                - avg_std_within_seeds: Average std-dev of runs with SAME seed (should be ~0 if deterministic)
+                - avg_std_across_seeds: Average std-dev of averages across DIFFERENT seeds (policy variance)
                 - best_fitness: Best fitness across all evaluations
                 - total_runs: Total number of runs performed
         """
-        all_fitnesses = []  
+        all_fitnesses = []
         all_improvements = []
-        instance_avg_fitnesses = [] 
-        instance_std_fitnesses = []  
+        instance_avg_fitnesses = []
+        instance_std_within_seeds = []  # Variance within same seed (determinism check)
+        instance_std_across_seeds = []  # Variance across different seeds (policy stability)
 
         total_runs_per_instance = len(validation_seeds) * runs_per_seed
 
         for inst_idx, (problem, initial_solution) in enumerate(validation_set):
             initial_fitness = fitness(problem, initial_solution)
             instance_fitnesses = []
-            instance_improvements = []
+
+            # Track results per seed for variance decomposition
+            results_per_seed = {base_seed: [] for base_seed in validation_seeds}
 
             # Loop over seed families
             for base_seed in validation_seeds:
                 # Loop over runs per seed
                 for run in range(runs_per_seed):
-                    actual_seed = base_seed
+                    actual_seed = base_seed 
 
                     # Set seed for operator stochasticity
                     random.seed(actual_seed)
@@ -256,22 +260,36 @@ class RLLocalSearch(BaseLocalSearch):
                     improvement_pct = (initial_fitness - best_fitness) / initial_fitness if initial_fitness > 0 else 0.0
 
                     instance_fitnesses.append(best_fitness)
-                    instance_improvements.append(improvement_pct)
                     all_fitnesses.append(best_fitness)
                     all_improvements.append(improvement_pct)
+                    results_per_seed[base_seed].append(best_fitness)
 
             # Compute per-instance statistics
             instance_avg_fitnesses.append(np.mean(instance_fitnesses))
-            if total_runs_per_instance > 1:
-                instance_std_fitnesses.append(np.std(instance_fitnesses))
+
+            # Variance WITHIN seeds (same seed, multiple runs) - should be ~0 if deterministic
+            within_seed_stds = []
+            for base_seed in validation_seeds:
+                seed_results = results_per_seed[base_seed]
+                if len(seed_results) > 1:
+                    within_seed_stds.append(np.std(seed_results))
+                else:
+                    within_seed_stds.append(0.0)
+            instance_std_within_seeds.append(np.mean(within_seed_stds))
+
+            # Variance ACROSS seeds (different seeds) - expected to be >0
+            seed_averages = [np.mean(results_per_seed[base_seed]) for base_seed in validation_seeds]
+            if len(seed_averages) > 1:
+                instance_std_across_seeds.append(np.std(seed_averages))
             else:
-                instance_std_fitnesses.append(0.0)
+                instance_std_across_seeds.append(0.0)
 
         metrics = {
             'avg_fitness': np.mean(all_fitnesses),
             'avg_improvement': np.mean(all_improvements),
             'std_fitness_across_instances': np.std(instance_avg_fitnesses),
-            'avg_std_within_instances': np.mean(instance_std_fitnesses),
+            'avg_std_within_seeds': np.mean(instance_std_within_seeds),
+            'avg_std_across_seeds': np.mean(instance_std_across_seeds),
             'best_fitness': np.min(all_fitnesses),
             'total_runs': len(all_fitnesses)
         }
@@ -593,8 +611,9 @@ class RLLocalSearch(BaseLocalSearch):
                     print(f"Validation Results ({len(validation_seeds)} seeds × {validation_runs_per_seed} runs = {total_runs_per_instance} total runs per instance):")
                     print(f"  Avg Fitness: {val_metrics['avg_fitness']:.2f}")
                     print(f"  Avg Improvement: {val_metrics['avg_improvement']*100:.2f}%")
-                    print(f"  Std Across Instances: {val_metrics['std_fitness_across_instances']:.2f}")
-                    print(f"  Avg Std Within Instances: {val_metrics['avg_std_within_instances']:.2f} (policy stability)")
+                    print(f"  Std Across Instances: {val_metrics['std_fitness_across_instances']:.2f} (generalization)")
+                    print(f"  Avg Std Within Seeds: {val_metrics['avg_std_within_seeds']:.2f} (determinism check - should be ~0)")
+                    print(f"  Avg Std Across Seeds: {val_metrics['avg_std_across_seeds']:.2f} (policy stability)")
                     print(f"  Best Fitness: {val_metrics['best_fitness']:.2f}")
                     print(f"  Time: {val_time:.2f}s")
                     print()
@@ -604,7 +623,8 @@ class RLLocalSearch(BaseLocalSearch):
                     writer.add_scalar('Validation/AvgFitness', val_metrics['avg_fitness'], episode)
                     writer.add_scalar('Validation/AvgImprovement', val_metrics['avg_improvement'], episode)
                     writer.add_scalar('Validation/StdAcrossInstances', val_metrics['std_fitness_across_instances'], episode)
-                    writer.add_scalar('Validation/AvgStdWithinInstances', val_metrics['avg_std_within_instances'], episode)
+                    writer.add_scalar('Validation/AvgStdWithinSeeds', val_metrics['avg_std_within_seeds'], episode)
+                    writer.add_scalar('Validation/AvgStdAcrossSeeds', val_metrics['avg_std_across_seeds'], episode)
                     writer.add_scalar('Validation/BestFitness', val_metrics['best_fitness'], episode)
 
             # Save checkpoint
@@ -691,7 +711,7 @@ class RLLocalSearch(BaseLocalSearch):
 
                 # Deterministic seeding
                 if deterministic_rng:
-                    op_seed = base_seed + iteration * 1000
+                    op_seed = base_seed + iteration * 1000 + action
                     random.seed(op_seed)
                     np.random.seed(op_seed)
 
@@ -720,7 +740,7 @@ class RLLocalSearch(BaseLocalSearch):
                 for seq_idx, action in enumerate(action_sequence):
                     # Deterministic seeding: each operator application gets unique seed
                     if deterministic_rng:
-                        op_seed = base_seed + iteration * 1000 
+                        op_seed = base_seed + iteration * 1000  + action
                         random.seed(op_seed)
                         np.random.seed(op_seed)
 
@@ -748,7 +768,7 @@ class RLLocalSearch(BaseLocalSearch):
                 for seq_idx, action in enumerate(action_sequence):
                     # Deterministic seeding: each operator application gets unique seed
                     if deterministic_rng:
-                        op_seed = base_seed + iteration * 1000 
+                        op_seed = base_seed + iteration * 1000 + action
                         random.seed(op_seed)
                         np.random.seed(op_seed)
 
