@@ -14,6 +14,7 @@ from memetic.fitness.fitness import fitness
 from memetic.local_search.rl_local_search.local_search_env import LocalSearchEnv
 from memetic.local_search.rl_local_search.dqn_network import DQNAgent
 from memetic.local_search.rl_local_search.replay_buffer import ReplayBuffer
+from memetic.local_search.rl_local_search.ppo_agent import PPOAgent
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -25,20 +26,42 @@ except ImportError:
 class RLLocalSearch(BaseLocalSearch):
     """RL-based local search that learns to select operators adaptively.
 
-    Uses Deep Q-Learning (DQN) to learn which operators to apply based on
-    problem and solution features, enabling context-sensitive operator selection.
+    Supports two RL algorithms:
+    - DQN (Deep Q-Learning): Off-policy value-based learning
+    - PPO (Proximal Policy Optimization): On-policy policy gradient learning
+
+    Both learn which operators to apply based on problem and solution features,
+    enabling context-sensitive operator selection.
     """
 
     def __init__(
         self,
         operators: List[BaseOperator],
+        rl_algorithm: str = "dqn",  # "dqn" or "ppo"
         hidden_dims: List[int] = [128, 128, 64],
         learning_rate: float = 1e-3,
         gamma: float = 0.99,
+        # DQN-specific parameters
         epsilon_start: float = 1.0,
         epsilon_end: float = 0.1,
         epsilon_decay: float = 0.995,
         target_update_interval: int = 100,
+        replay_buffer_capacity: int = 100000,
+        batch_size: int = 64,
+        n_step: int = 3,
+        use_prioritized_replay: bool = True,
+        per_alpha: float = 0.6,
+        per_beta_start: float = 0.4,
+        # PPO-specific parameters
+        ppo_clip_epsilon: float = 0.2,
+        ppo_entropy_coef: float = 0.01,
+        ppo_value_coef: float = 0.5,
+        ppo_gae_lambda: float = 0.95,
+        ppo_max_grad_norm: float = 0.5,
+        ppo_num_epochs: int = 2,
+        ppo_num_minibatches: int = 2,
+        ppo_normalize_advantages: bool = True,
+        # Common parameters
         alpha: float = 1.0,
         beta: float = 1.0,
         acceptance_strategy: str = "greedy",
@@ -46,12 +69,6 @@ class RLLocalSearch(BaseLocalSearch):
         type: str = "OneShot",  # "OneShot", "Roulette", or "Ranking"
         max_iterations: int = 100,
         max_no_improvement: Optional[int] = None,
-        replay_buffer_capacity: int = 100000,
-        batch_size: int = 64,
-        n_step: int = 3,
-        use_prioritized_replay: bool = True,
-        per_alpha: float = 0.6,
-        per_beta_start: float = 0.4,
         use_operator_attention: bool = False,
         device: str = "cuda",
         verbose: bool = False
@@ -60,40 +77,66 @@ class RLLocalSearch(BaseLocalSearch):
 
         Args:
             operators: List of local search operators to choose from
-            hidden_dims: Hidden layer dimensions for Q-network
-            learning_rate: Learning rate for DQN optimizer
+            rl_algorithm: RL algorithm to use ("dqn" or "ppo")
+            hidden_dims: Hidden layer dimensions for networks
+            learning_rate: Learning rate for optimizer
             gamma: Discount factor for future rewards
-            epsilon_start: Initial exploration rate
-            epsilon_end: Final exploration rate
-            epsilon_decay: Epsilon decay rate per episode
-            target_update_interval: Steps between target network updates
-            alpha: Weight for fitness improvement in reward (normalized by distance_baseline)
-            beta: Weight for feasibility improvement in reward (normalized to [0,1])
-            acceptance_strategy: "greedy" or "always"
-            max_iterations: Maximum iterations for both training episodes and inference
-            max_no_improvement: Early stopping after N steps without improvement (None to disable)
-            replay_buffer_capacity: Size of replay buffer
-            batch_size: Batch size for training
-            n_step: Number of steps for n-step returns (1 = standard TD, 3-5 recommended)
-            use_prioritized_replay: Whether to use prioritized experience replay
-            per_alpha: Prioritization strength (0 = uniform, 1 = full prioritization)
-            per_beta_start: Initial importance sampling weight
-            use_operator_attention: Whether to use operator attention mechanism for operator selection
-            device: Device for training ("cuda" or "cpu")
-            verbose: Whether to print training progress
+
+            DQN-specific parameters:
+                epsilon_start: Initial exploration rate
+                epsilon_end: Final exploration rate
+                epsilon_decay: Epsilon decay rate per episode
+                target_update_interval: Steps between target network updates
+                replay_buffer_capacity: Size of replay buffer
+                batch_size: Batch size for training
+                n_step: Number of steps for n-step returns (1 = standard TD, 3-5 recommended)
+                use_prioritized_replay: Whether to use prioritized experience replay
+                per_alpha: Prioritization strength (0 = uniform, 1 = full prioritization)
+                per_beta_start: Initial importance sampling weight
+
+            PPO-specific parameters:
+                ppo_clip_epsilon: Clipping parameter for PPO objective (default: 0.2)
+                ppo_entropy_coef: Coefficient for entropy bonus (default: 0.01)
+                ppo_value_coef: Coefficient for value loss (default: 0.5)
+                ppo_gae_lambda: Lambda for Generalized Advantage Estimation (default: 0.95)
+                ppo_max_grad_norm: Maximum gradient norm for clipping (default: 0.5)
+                ppo_num_epochs: Number of update epochs per trajectory (default: 2)
+                ppo_num_minibatches: Number of minibatches per epoch (default: 2)
+                ppo_normalize_advantages: Whether to normalize advantages (default: True)
+                NOTE: batch_size for PPO should be much larger (e.g., 2048) than DQN (64)
+
+            Common parameters:
+                alpha: Weight for fitness improvement in reward
+                beta: Weight for feasibility improvement in reward
+                acceptance_strategy: "greedy" or "always"
+                reward_strategy: Strategy for calculating rewards
+                type: Search type ("OneShot", "Roulette", or "Ranking")
+                max_iterations: Maximum iterations for both training episodes and inference
+                max_no_improvement: Early stopping after N steps without improvement (None to disable)
+                use_operator_attention: Whether to use operator attention mechanism
+                device: Device for training ("cuda" or "cpu")
+                verbose: Whether to print training progress
         """
         super().__init__()
 
+        # Validate rl_algorithm
+        if rl_algorithm not in ["dqn", "ppo"]:
+            raise ValueError(f"Invalid rl_algorithm: {rl_algorithm}. Must be 'dqn' or 'ppo'")
+
+        self.rl_algorithm = rl_algorithm
         self.operators = operators
         self.acceptance_strategy = acceptance_strategy
         self.reward_strategy = reward_strategy
         self.type = type
         self.max_iterations = max_iterations
         self.batch_size = batch_size
-        self.n_step = n_step
-        self.use_prioritized_replay = use_prioritized_replay
         self.use_operator_attention = use_operator_attention
         self.verbose = verbose
+
+        # Algorithm-specific parameters
+        if rl_algorithm == "dqn":
+            self.n_step = n_step
+            self.use_prioritized_replay = use_prioritized_replay
 
         # Validate configuration
         if self.type in ["Ranking", "Roulette"] and self.acceptance_strategy != "greedy":
@@ -109,7 +152,7 @@ class RLLocalSearch(BaseLocalSearch):
             max_no_improvement=max_no_improvement
         )
 
-        # DQN Agent
+        # Agent initialization (DQN or PPO)
         state_dim = self.env.observation_space.shape[0]
         action_dim = len(operators)
 
@@ -117,47 +160,84 @@ class RLLocalSearch(BaseLocalSearch):
         solution_feature_dim = self.env.solution_feature_dim
         operator_feature_dim_per_op = self.env.operator_feature_dim_per_op
 
-        self.agent = DQNAgent(
-            state_dim=state_dim,
-            action_dim=action_dim,
-            hidden_dims=hidden_dims,
-            learning_rate=learning_rate,
-            gamma=gamma,
-            epsilon_start=epsilon_start,
-            epsilon_end=epsilon_end,
-            epsilon_decay=epsilon_decay,
-            target_update_interval=target_update_interval,
-            device=device,
-            use_operator_attention=use_operator_attention,
-            solution_feature_dim=solution_feature_dim,
-            operator_feature_dim_per_op=operator_feature_dim_per_op,
-            num_operators=action_dim
-        )
-
-        # Replay buffer 
-        if use_prioritized_replay:
-            from memetic.local_search.rl_local_search.replay_buffer import PrioritizedReplayBuffer
-            self.replay_buffer = PrioritizedReplayBuffer(
-                capacity=replay_buffer_capacity,
-                n_step=n_step,
+        if rl_algorithm == "dqn":
+            # DQN Agent
+            self.agent = DQNAgent(
+                state_dim=state_dim,
+                action_dim=action_dim,
+                hidden_dims=hidden_dims,
+                learning_rate=learning_rate,
                 gamma=gamma,
-                alpha=per_alpha,
-                beta_start=per_beta_start,
-                beta_frames=100000 
+                epsilon_start=epsilon_start,
+                epsilon_end=epsilon_end,
+                epsilon_decay=epsilon_decay,
+                target_update_interval=target_update_interval,
+                device=device,
+                use_operator_attention=use_operator_attention,
+                solution_feature_dim=solution_feature_dim,
+                operator_feature_dim_per_op=operator_feature_dim_per_op,
+                num_operators=action_dim
             )
+
+            # Replay buffer for DQN
+            if use_prioritized_replay:
+                from memetic.local_search.rl_local_search.replay_buffer import PrioritizedReplayBuffer
+                self.replay_buffer = PrioritizedReplayBuffer(
+                    capacity=replay_buffer_capacity,
+                    n_step=n_step,
+                    gamma=gamma,
+                    alpha=per_alpha,
+                    beta_start=per_beta_start,
+                    beta_frames=100000
+                )
+                if self.verbose:
+                    print(f"Using Prioritized Replay Buffer (alpha={per_alpha}, beta_start={per_beta_start})")
+            else:
+                self.replay_buffer = ReplayBuffer(
+                    capacity=replay_buffer_capacity,
+                    n_step=n_step,
+                    gamma=gamma
+                )
+                if self.verbose:
+                    print(f"Using Standard Replay Buffer")
+
             if self.verbose:
-                print(f"Using Prioritized Replay Buffer (alpha={per_alpha}, beta_start={per_beta_start})")
-        else:
-            self.replay_buffer = ReplayBuffer(
-                capacity=replay_buffer_capacity,
-                n_step=n_step,
-                gamma=gamma
+                print(f"Algorithm: DQN")
+                print(f"n-step returns: n={n_step}")
+
+        elif rl_algorithm == "ppo":
+            # PPO Agent
+            self.agent = PPOAgent(
+                state_dim=state_dim,
+                action_dim=action_dim,
+                hidden_dims=hidden_dims,
+                learning_rate=learning_rate,
+                gamma=gamma,
+                gae_lambda=ppo_gae_lambda,
+                clip_epsilon=ppo_clip_epsilon,
+                entropy_coef=ppo_entropy_coef,
+                value_coef=ppo_value_coef,
+                max_grad_norm=ppo_max_grad_norm,
+                num_epochs=ppo_num_epochs,
+                batch_size=batch_size,
+                num_minibatches=ppo_num_minibatches,
+                normalize_advantages=ppo_normalize_advantages,
+                device=device,
+                use_operator_attention=use_operator_attention,
+                solution_feature_dim=solution_feature_dim,
+                operator_feature_dim_per_op=operator_feature_dim_per_op,
+                num_operators=action_dim
             )
+
+            # No replay buffer for PPO (on-policy)
+            self.replay_buffer = None
+
             if self.verbose:
-                print(f"Using Standard Replay Buffer")
+                print(f"Algorithm: PPO")
+                print(f"Clip epsilon: {ppo_clip_epsilon}, Entropy coef: {ppo_entropy_coef}")
+                print(f"GAE lambda: {ppo_gae_lambda}, Num epochs: {ppo_num_epochs}")
 
         if self.verbose:
-            print(f"n-step returns: n={n_step}")
             if use_operator_attention:
                 print(f"Operator Attention: ENABLED")
                 print(f"  - Solution features: {solution_feature_dim}")
@@ -349,8 +429,8 @@ class RLLocalSearch(BaseLocalSearch):
         self.training_mode = True
         start_time = time.time()
 
-        # Update beta_frames for prioritized replay if using it
-        if self.use_prioritized_replay:
+        # Update beta_frames for prioritized replay if using DQN
+        if self.rl_algorithm == "dqn" and self.use_prioritized_replay:
             # Anneal beta from beta_start to 1.0 over the entire training
             self.replay_buffer.beta_frames = num_episodes * self.max_iterations
             if self.verbose:
@@ -365,11 +445,9 @@ class RLLocalSearch(BaseLocalSearch):
 
             # Log hyperparameters
             hparams = {
+                'rl_algorithm': self.rl_algorithm,
                 'learning_rate': self.agent.optimizer.param_groups[0]['lr'],
                 'gamma': self.agent.gamma,
-                'epsilon_start': self.agent.epsilon,
-                'epsilon_end': self.agent.epsilon_end,
-                'epsilon_decay': self.agent.epsilon_decay,
                 'batch_size': self.batch_size,
                 'num_episodes': num_episodes,
                 'max_iterations': self.max_iterations,
@@ -380,6 +458,27 @@ class RLLocalSearch(BaseLocalSearch):
                 'new_solution_interval': new_solution_interval,
                 'seed': seed if seed is not None else 'random',
             }
+
+            # Add algorithm-specific hyperparameters
+            if self.rl_algorithm == "dqn":
+                hparams.update({
+                    'epsilon_start': self.agent.epsilon,
+                    'epsilon_end': self.agent.epsilon_end,
+                    'epsilon_decay': self.agent.epsilon_decay,
+                    'target_update_interval': self.agent.target_update_interval,
+                    'n_step': self.n_step,
+                    'use_prioritized_replay': self.use_prioritized_replay,
+                })
+            elif self.rl_algorithm == "ppo":
+                hparams.update({
+                    'clip_epsilon': self.agent.clip_epsilon,
+                    'entropy_coef': self.agent.entropy_coef,
+                    'value_coef': self.agent.value_coef,
+                    'gae_lambda': self.agent.gae_lambda,
+                    'num_epochs': self.agent.num_epochs,
+                    'num_minibatches': self.agent.num_minibatches,
+                })
+
             writer.add_text('Hyperparameters', str(hparams), 0)
 
         elif tensorboard_dir and not TENSORBOARD_AVAILABLE:
@@ -393,6 +492,12 @@ class RLLocalSearch(BaseLocalSearch):
             print(f"Starting RL Local Search training for {num_episodes} episodes...")
             print(f"State dim: {self.agent.state_dim}, Action dim: {self.agent.action_dim}")
             print(f"Operators: {[op.name if hasattr(op, 'name') else type(op).__name__ for op in self.operators]}")
+
+        # PPO-specific: Track accumulated steps across episodes
+        if self.rl_algorithm == "ppo":
+            ppo_accumulated_steps = 0
+            if self.verbose:
+                print(f"PPO will update every {self.batch_size} steps (accumulating across episodes)")
 
         for episode in range(num_episodes):
             episode_start_time = time.time()
@@ -428,64 +533,130 @@ class RLLocalSearch(BaseLocalSearch):
             operator_accepted = [0] * len(self.operators)  
             operator_improvements = [[] for _ in range(len(self.operators))] 
 
-            # Episode loop
-            for step in range(self.max_iterations):
-                # Select action (epsilon-greedy)
-                action = self.agent.get_action(state)
-                episode_actions.append(action)
+            # Episode loop - conditional logic for DQN vs PPO
+            if self.rl_algorithm == "dqn":
+                # DQN: Step-by-step updates with replay buffer
+                for step in range(self.max_iterations):
+                    # Select action (epsilon-greedy)
+                    action = self.agent.get_action(state)
+                    episode_actions.append(action)
 
-                # Take step in environment
-                next_state, reward, terminated, truncated, step_info = self.env.step(action)
+                    # Take step in environment
+                    next_state, reward, terminated, truncated, step_info = self.env.step(action)
 
-                # Store transition
-                done = terminated or truncated
-                self.replay_buffer.add(state, action, reward, next_state, done)
+                    # Store transition in replay buffer
+                    done = terminated or truncated
+                    self.replay_buffer.add(state, action, reward, next_state, done)
 
-                # Update statistics
-                episode_reward += reward
-                episode_length += 1
+                    # Update statistics
+                    episode_reward += reward
+                    episode_length += 1
 
-                # Track metrics
-                # Metric 2: Acceptance tracking
-                if step_info['accepted']:
-                    num_accepted += 1
-                    accepted_improvements.append(step_info['fitness_improvement'])
-                else:
-                    num_rejected += 1
-                    rejected_degradations.append(step_info['fitness_improvement'])
+                    # Track metrics
+                    if step_info['accepted']:
+                        num_accepted += 1
+                        accepted_improvements.append(step_info['fitness_improvement'])
+                    else:
+                        num_rejected += 1
+                        rejected_degradations.append(step_info['fitness_improvement'])
 
+                    # Operator effectiveness tracking
+                    operator_uses[action] += 1
+                    fitness_change = step_info['fitness_improvement']
+                    operator_improvements[action].append(fitness_change)
+                    if fitness_change > 0:
+                        operator_successes[action] += 1
+                    if step_info['accepted']:
+                        operator_accepted[action] += 1
 
-                # Metric 3: Operator effectiveness
-                operator_uses[action] += 1
-                fitness_change = step_info['fitness_improvement']
-                operator_improvements[action].append(fitness_change)
-                if fitness_change > 0:  
-                    operator_successes[action] += 1
-                if step_info['accepted']:
-                    operator_accepted[action] += 1
+                    # Update policy (after warmup and if enough samples)
+                    if episode >= warmup_episodes and len(self.replay_buffer) >= self.batch_size:
+                        if step % update_interval == 0:
+                            # Sample batch (with priorities if using PER)
+                            if self.use_prioritized_replay:
+                                batch, indices, weights = self.replay_buffer.sample(self.batch_size)
+                                loss, td_errors = self.agent.update(batch, weights)
+                                self.replay_buffer.update_priorities(indices, td_errors)
+                            else:
+                                batch = self.replay_buffer.sample(self.batch_size)
+                                loss, _ = self.agent.update(batch)
+                            step_losses.append(loss)
 
-                # Update policy (after warmup and if enough samples)
-                if episode >= warmup_episodes and len(self.replay_buffer) >= self.batch_size:
-                    if step % update_interval == 0:
-                        # Sample batch (with priorities if using PER)
-                        if self.use_prioritized_replay:
-                            batch, indices, weights = self.replay_buffer.sample(self.batch_size)
-                            loss, td_errors = self.agent.update(batch, weights)
-                            # Update priorities based on TD errors
-                            self.replay_buffer.update_priorities(indices, td_errors)
-                        else:
-                            batch = self.replay_buffer.sample(self.batch_size)
-                            loss, _ = self.agent.update(batch)
-                        step_losses.append(loss)
+                    # Move to next state
+                    state = next_state
 
-                # Move to next state
-                state = next_state
+                    if terminated or truncated:
+                        break
 
-                if terminated or truncated:
-                    break
+                # Decay epsilon for DQN
+                self.agent.decay_epsilon()
 
-            # Decay epsilon
-            self.agent.decay_epsilon()
+            elif self.rl_algorithm == "ppo":
+                # PPO: Collect full trajectory, then update
+                for step in range(self.max_iterations):
+                    # Select action using policy
+                    action, log_prob, value = self.agent.get_action(state)
+                    episode_actions.append(action)
+
+                    # Take step in environment
+                    next_state, reward, terminated, truncated, step_info = self.env.step(action)
+
+                    # Store transition in trajectory
+                    done = terminated or truncated
+                    self.agent.store_transition(state, action, reward, log_prob, value, done)
+
+                    # Update statistics
+                    episode_reward += reward
+                    episode_length += 1
+
+                    # Track metrics
+                    if step_info['accepted']:
+                        num_accepted += 1
+                        accepted_improvements.append(step_info['fitness_improvement'])
+                    else:
+                        num_rejected += 1
+                        rejected_degradations.append(step_info['fitness_improvement'])
+
+                    # Operator effectiveness tracking
+                    operator_uses[action] += 1
+                    fitness_change = step_info['fitness_improvement']
+                    operator_improvements[action].append(fitness_change)
+                    if fitness_change > 0:
+                        operator_successes[action] += 1
+                    if step_info['accepted']:
+                        operator_accepted[action] += 1
+
+                    # Move to next state
+                    state = next_state
+
+                    if terminated or truncated:
+                        break
+
+                # Accumulate steps for PPO
+                ppo_accumulated_steps += episode_length
+
+                # Update PPO policy when enough steps accumulated (if past warmup)
+                if episode >= warmup_episodes and ppo_accumulated_steps >= self.batch_size:
+                    ppo_stats = self.agent.update(next_state=state)
+                    if ppo_stats:  # May be empty if not enough data
+                        step_losses.append(ppo_stats['policy_loss'])
+                        # Store PPO-specific stats for later logging
+                        if not hasattr(self, 'ppo_episode_stats'):
+                            self.ppo_episode_stats = {
+                                'policy_loss': [],
+                                'value_loss': [],
+                                'entropy': [],
+                                'clip_fraction': [],
+                                'approx_kl': [],
+                                'explained_variance': []
+                            }
+                        for key in self.ppo_episode_stats:
+                            self.ppo_episode_stats[key].append(ppo_stats[key])
+
+                        # Reset accumulated steps after update
+                        if self.verbose and episode % 10 == 0:
+                            print(f"  PPO update: {ppo_accumulated_steps} steps accumulated")
+                        ppo_accumulated_steps = 0
 
             # Get best solution from episode
             best_solution, best_fitness = self.env.get_best_solution()
@@ -494,7 +665,8 @@ class RLLocalSearch(BaseLocalSearch):
             self.training_history['episode_rewards'].append(episode_reward)
             self.training_history['episode_lengths'].append(episode_length)
             self.training_history['episode_best_fitness'].append(best_fitness)
-            self.training_history['epsilon_values'].append(self.agent.epsilon)
+            if self.rl_algorithm == "dqn":
+                self.training_history['epsilon_values'].append(self.agent.epsilon)
 
             avg_loss = np.mean(step_losses) if step_losses else 0.0
             if step_losses:
@@ -506,9 +678,22 @@ class RLLocalSearch(BaseLocalSearch):
                 writer.add_scalar('Episode/Reward', episode_reward, episode)
                 writer.add_scalar('Episode/BestFitness', best_fitness, episode)
                 writer.add_scalar('Episode/Length', episode_length, episode)
-                writer.add_scalar('Training/Epsilon', self.agent.epsilon, episode)
-                if step_losses:
-                    writer.add_scalar('Training/Loss', avg_loss, episode)
+
+                # Algorithm-specific metrics
+                if self.rl_algorithm == "dqn":
+                    writer.add_scalar('Training/Epsilon', self.agent.epsilon, episode)
+                    if step_losses:
+                        writer.add_scalar('Training/Loss', avg_loss, episode)
+
+                elif self.rl_algorithm == "ppo":
+                    # PPO-specific metrics
+                    if hasattr(self, 'ppo_episode_stats') and self.ppo_episode_stats['policy_loss']:
+                        writer.add_scalar('Training/PolicyLoss', self.ppo_episode_stats['policy_loss'][-1], episode)
+                        writer.add_scalar('Training/ValueLoss', self.ppo_episode_stats['value_loss'][-1], episode)
+                        writer.add_scalar('Training/Entropy', self.ppo_episode_stats['entropy'][-1], episode)
+                        writer.add_scalar('Training/ClipFraction', self.ppo_episode_stats['clip_fraction'][-1], episode)
+                        writer.add_scalar('Training/ApproxKL', self.ppo_episode_stats['approx_kl'][-1], episode)
+                        writer.add_scalar('Training/ExplainedVariance', self.ppo_episode_stats['explained_variance'][-1], episode)
 
                 # Log detailed metrics every log_interval episodes
                 if episode % log_interval == 0 or episode == num_episodes - 1:
@@ -588,14 +773,24 @@ class RLLocalSearch(BaseLocalSearch):
                 episode_time = time.time() - episode_start_time
                 avg_reward = np.mean(self.training_history['episode_rewards'][-10:])
                 avg_fitness = np.mean(self.training_history['episode_best_fitness'][-10:])
-                print(f"Episode {episode}/{num_episodes} | "
-                      f"Reward: {episode_reward:.2f} (avg: {avg_reward:.2f}) | "
-                      f"Fitness: {best_fitness:.2f} (avg: {avg_fitness:.2f}) | "
-                      f"Steps: {episode_length} | "
-                      f"eps: {self.agent.epsilon:.3f} | "
-                      f"Loss: {avg_loss:.4f} | "
-                      f"Time: {episode_time:.2f}s | "
-                      f"Total: {elapsed:.2f}s")
+
+                # Build log message
+                log_msg = (f"Episode {episode}/{num_episodes} | "
+                          f"Reward: {episode_reward:.2f} (avg: {avg_reward:.2f}) | "
+                          f"Fitness: {best_fitness:.2f} (avg: {avg_fitness:.2f}) | "
+                          f"Steps: {episode_length} | ")
+
+                # Add algorithm-specific metrics
+                if self.rl_algorithm == "dqn":
+                    log_msg += f"eps: {self.agent.epsilon:.3f} | "
+                elif self.rl_algorithm == "ppo" and hasattr(self, 'ppo_episode_stats') and self.ppo_episode_stats['entropy']:
+                    log_msg += f"entropy: {self.ppo_episode_stats['entropy'][-1]:.3f} | "
+
+                log_msg += (f"Loss: {avg_loss:.4f} | "
+                           f"Time: {episode_time:.2f}s | "
+                           f"Total: {elapsed:.2f}s")
+
+                print(log_msg)
 
             # Validation evaluation
             if validation_set and episode % validation_interval == 0 and episode > 0:
@@ -634,6 +829,14 @@ class RLLocalSearch(BaseLocalSearch):
                 if self.verbose:
                     print(f"Saved checkpoint to {checkpoint_path}")
 
+        # Final PPO update if there are remaining accumulated steps
+        if self.rl_algorithm == "ppo" and ppo_accumulated_steps > 0:
+            if self.verbose:
+                print(f"\nFinal PPO update with {ppo_accumulated_steps} remaining steps...")
+            ppo_stats = self.agent.update(next_state=state)
+            if ppo_stats and self.verbose:
+                print(f"  Policy loss: {ppo_stats['policy_loss']:.4f}")
+
         # Final save
         if save_path:
             final_path = f"{save_path}_final.pt"
@@ -648,8 +851,11 @@ class RLLocalSearch(BaseLocalSearch):
             print(f"\nTraining Summary:")
             print(f"Total episodes: {num_episodes}")
             print(f"Total time: {total_time:.2f}s ({total_time/num_episodes:.2f}s per episode)")
-            print(f"Final epsilon: {self.agent.epsilon:.3f}")
-            print(f"Replay buffer size: {len(self.replay_buffer)}")
+            if self.rl_algorithm == "dqn":
+                print(f"Final epsilon: {self.agent.epsilon:.3f}")
+                print(f"Replay buffer size: {len(self.replay_buffer)}")
+            elif self.rl_algorithm == "ppo":
+                print(f"Total updates: {self.agent.update_count}")
 
         # Close TensorBoard writer
         if writer:
@@ -707,7 +913,13 @@ class RLLocalSearch(BaseLocalSearch):
 
             # Select action using learned policy
             if self.type == "OneShot":
-                action = self.agent.get_action(state, epsilon=epsilon, update_stats=False)
+                # Get action (handle both DQN and PPO return types)
+                if self.rl_algorithm == "dqn":
+                    action = self.agent.get_action(state, epsilon=epsilon, update_stats=False)
+                elif self.rl_algorithm == "ppo":
+                    # For PPO, use deterministic=True for evaluation (argmax of policy)
+                    # epsilon parameter is ignored for PPO
+                    action, _, _ = self.agent.get_action(state, update_stats=False, deterministic=True)
 
                 # Deterministic seeding
                 if deterministic_rng:

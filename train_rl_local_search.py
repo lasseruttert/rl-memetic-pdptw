@@ -7,6 +7,43 @@ import random
 import time
 import numpy as np
 
+
+class TeeLogger:
+    """Logger that writes to both console and file simultaneously."""
+
+    def __init__(self, filename, mode='w'):
+        """Initialize TeeLogger.
+
+        Args:
+            filename: Path to log file
+            mode: File open mode ('w' for overwrite, 'a' for append)
+        """
+        self.terminal = sys.stdout
+        self.log = open(filename, mode, encoding='utf-8')
+
+    def write(self, message):
+        """Write message to both terminal and log file."""
+        self.terminal.write(message)
+        self.log.write(message)
+        self.log.flush()  # Ensure immediate write to file
+
+    def flush(self):
+        """Flush both terminal and log file."""
+        self.terminal.flush()
+        self.log.flush()
+
+    def close(self):
+        """Close log file."""
+        self.log.close()
+
+    def __enter__(self):
+        """Context manager entry."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit."""
+        self.close()
+
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -15,6 +52,7 @@ from utils.pdptw_solution import PDPTWSolution
 from utils.instance_manager import InstanceManager
 from memetic.local_search.rl_local_search.rl_local_search import RLLocalSearch
 from memetic.local_search.rl_local_search.dqn_network import detect_attention_from_checkpoint
+from memetic.local_search.rl_local_search.ppo_network import detect_ppo_from_checkpoint
 from memetic.local_search.adaptive_local_search import AdaptiveLocalSearch
 from memetic.local_search.naive_local_search import NaiveLocalSearch
 from memetic.local_search.random_local_search import RandomLocalSearch
@@ -30,11 +68,61 @@ from memetic.solution_operators.flip import FlipOperator
 from memetic.solution_operators.swap_within import SwapWithinOperator
 from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
+from memetic.solution_operators.shift import ShiftOperator
 from memetic.solution_operators.cls_m1 import CLSM1Operator
 from memetic.solution_operators.cls_m2 import CLSM2Operator
 from memetic.solution_operators.cls_m3 import CLSM3Operator
 from memetic.solution_operators.cls_m4 import CLSM4Operator
 from memetic.solution_operators.two_opt import TwoOptOperator
+
+
+def create_operators():
+    """Create a fresh set of operators with independent state.
+
+    Returns:
+        List of operator instances
+    """
+    return [
+        ReinsertOperator(),
+        # ReinsertOperator(max_attempts=5,clustered=True),
+        # ReinsertOperator(force_same_vehicle=True),
+        # ReinsertOperator(allow_same_vehicle=False),
+        # ReinsertOperator(allow_same_vehicle=False, allow_new_vehicles=False),
+        
+        RouteEliminationOperator(),
+        
+        # FlipOperator(),
+        # FlipOperator(max_attempts=5),
+        FlipOperator(single_route=True),
+        
+        SwapWithinOperator(),
+        # SwapWithinOperator(max_attempts=5),
+        # SwapWithinOperator(single_route=True),
+        # SwapWithinOperator(single_route=True, type="best"),
+        # SwapWithinOperator(single_route=False, type="best"),
+
+        SwapBetweenOperator(),
+        # SwapBetweenOperator(type="best"),
+        
+        TransferOperator(),
+        # TransferOperator(single_route=True),
+        # TransferOperator(max_attempts=5,single_route=True),
+
+        # ShiftOperator(type="random", segment_length=3, max_shift_distance=3, max_attempts=5),
+        # ShiftOperator(type="random", segment_length=2, max_shift_distance=4, max_attempts=5),
+        # ShiftOperator(type="random", segment_length=4, max_shift_distance=2, max_attempts=3),
+        ShiftOperator(type="random", segment_length=3, max_shift_distance=5, max_attempts=3),
+        # ShiftOperator(type="best", segment_length=2, max_shift_distance=3),
+        # ShiftOperator(type="best", segment_length=3, max_shift_distance=2),
+        # ShiftOperator(type="random", segment_length=3, max_shift_distance=3, max_attempts=5, single_route=True),
+
+        TwoOptOperator(),
+        
+        # CLSM1Operator(),
+        # CLSM2Operator(),
+        # CLSM3Operator(),
+        # CLSM4Operator()
+    ]
 
 
 def create_problem_generator(size: int = 100, categories: list[str] = None):
@@ -192,6 +280,9 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Train RL-based local search with configurable strategies")
+    parser.add_argument("--rl_algorithm", type=str, default="dqn",
+                        choices=["dqn", "ppo"],
+                        help="RL algorithm to use: dqn or ppo (default: dqn)")
     parser.add_argument("--acceptance_strategy", type=str, default="greedy",
                         choices=["greedy", "always", "epsilon_greedy",
                                  "simulated_annealing", "late_acceptance", "rising_epsilon_greedy"],
@@ -224,12 +315,25 @@ def main():
                         help="Validation set mode: fixed_benchmark (reproducible) or random_sampled (faster)")
     parser.add_argument("--num_validation_instances", type=int, default=10,
                         help="Number of validation instances (default: 10)")
-    parser.add_argument("--validation_interval", type=int, default=100,
-                        help="Evaluate on validation set every N episodes (default: 100)")
+    parser.add_argument("--validation_interval", type=int, default=50,
+                        help="Evaluate on validation set every N episodes (default: 50)")
     parser.add_argument("--validation_seeds", type=int, nargs='+', default=[42, 111, 222, 333, 444],
                         help="List of base seeds for validation runs (default: [42, 111, 222, 333, 444])")
     parser.add_argument("--validation_runs_per_seed", type=int, default=1,
                         help="Number of runs per seed for each validation instance (default: 1)")
+
+    # PPO-specific arguments
+    parser.add_argument("--ppo_batch_size", type=int, default=2048,
+                        help="PPO batch size - steps to accumulate before update (default: 2048)")
+    parser.add_argument("--ppo_clip_epsilon", type=float, default=0.2,
+                        help="PPO clipping parameter (default: 0.2)")
+    parser.add_argument("--ppo_entropy_coef", type=float, default=0.01,
+                        help="PPO entropy coefficient (default: 0.01)")
+    parser.add_argument("--ppo_num_epochs", type=int, default=2,
+                        help="PPO number of update epochs per trajectory (default: 2)")
+    parser.add_argument("--ppo_num_minibatches", type=int, default=2,
+                        help="PPO number of minibatches per epoch (default: 2)")
+
     args = parser.parse_args()
 
     # Set random seed if provided
@@ -240,61 +344,61 @@ def main():
     # Configuration
     PROBLEM_SIZE = args.problem_size
     CATEGORIES = ['lc1', 'lc2', 'lr1', 'lr2']
+    RL_ALGORITHM = args.rl_algorithm
     ACCEPTANCE_STRATEGY = args.acceptance_strategy
     REWARD_STRATEGY = args.reward_strategy
     SEED = args.seed
     USE_OPERATOR_ATTENTION = args.use_operator_attention
     seed_suffix = f"_seed{SEED}" if SEED is not None else ""
     attention_suffix = "_attention" if USE_OPERATOR_ATTENTION else ""
-    RUN_NAME = f"rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}{seed_suffix}_{int(time.time())}"
+    RUN_NAME = f"rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}{seed_suffix}_{int(time.time())}"
 
-    # Define operators to learn from
-    # operators = [
-    #     ReinsertOperator(max_attempts=1, clustered=False),
-    #     ReinsertOperator(max_attempts=3, clustered=True),
-    #     ReinsertOperator(allow_same_vehicle=False),
-    #     RouteEliminationOperator(),
-    #     SwapWithinOperator(),
-    #     SwapBetweenOperator(),
-    #     TransferOperator(single_route=True),
-    #     CLSM1Operator(),
-    #     CLSM2Operator(),
-    # ]
-    
-    operators = [
-        SwapWithinOperator(),
-        # SwapWithinOperator(single_route=True),
-        SwapBetweenOperator(),
-        TransferOperator(),
-        # TransferOperator(single_route=True),
-        FlipOperator(),
-        # FlipOperator(single_route=True),
-        # TwoOptOperator(),
-        ReinsertOperator(),
-    ]
+    # Setup logging to file
+    log_dir = "logs"
+    os.makedirs(log_dir, exist_ok=True)
+    log_filename = os.path.join(log_dir, f"training_{RUN_NAME}.log")
 
-    # Initialize RL local search:
+    # Redirect stdout and stderr to both console and log file
+    tee_logger = TeeLogger(log_filename)
+    sys.stdout = tee_logger
+    sys.stderr = tee_logger
+
+    print(f"Logging to: {log_filename}")
+    print("=" * 80)
+
+    # Initialize RL local search with fresh operators
+    # Use different batch sizes for DQN (64) vs PPO (2048)
+    batch_size = 64 if RL_ALGORITHM == "dqn" else args.ppo_batch_size
+
     rl_local_search = RLLocalSearch(
-        operators=operators,
+        operators=create_operators(),
+        rl_algorithm=RL_ALGORITHM,
         hidden_dims=[128, 128, 64],
         learning_rate=1e-4,
         gamma=0.90,
+        # DQN-specific parameters
         epsilon_start=1.0,
         epsilon_end=0.05,
         epsilon_decay=0.9975,
         target_update_interval=100,
+        replay_buffer_capacity=100000,
+        batch_size=batch_size,
+        n_step=3,
+        use_prioritized_replay=True,
+        per_alpha=0.6,
+        per_beta_start=0.4,
+        # PPO-specific parameters
+        ppo_clip_epsilon=args.ppo_clip_epsilon,
+        ppo_entropy_coef=args.ppo_entropy_coef,
+        ppo_num_epochs=args.ppo_num_epochs,
+        ppo_num_minibatches=args.ppo_num_minibatches,
+        # Common parameters
         alpha=10.0,
         beta=0.0,
         acceptance_strategy=ACCEPTANCE_STRATEGY,
         reward_strategy=REWARD_STRATEGY,
         max_iterations=200,
         max_no_improvement=50,
-        replay_buffer_capacity=100000,
-        batch_size=64,
-        n_step=3,
-        use_prioritized_replay=True,
-        per_alpha=0.6,
-        per_beta_start=0.4,
         use_operator_attention=USE_OPERATOR_ATTENTION,
         device="cuda",
         verbose=True
@@ -326,8 +430,8 @@ def main():
 
     # Train the RL agent
     print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
+    print(f"Algorithm: {RL_ALGORITHM.upper()}")
     print(f"Categories: {CATEGORIES}")
-    print(f"Operators: {len(operators)}")
     print(f"Operator Attention: {'ENABLED' if USE_OPERATOR_ATTENTION else 'DISABLED'}")
 
     training_history = rl_local_search.train(
@@ -339,7 +443,7 @@ def main():
         update_interval=1,
         warmup_episodes=10,
         save_interval=1000,
-        save_path=f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}",
+        save_path=f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_o",
         tensorboard_dir=f"runs/{RUN_NAME}",
         seed=SEED,
         validation_set=validation_set,
@@ -351,21 +455,22 @@ def main():
     print("\nTraining completed!")
     print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
     print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
-    
-    adaptive_local_search = AdaptiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200)
 
-    naive_local_search = NaiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200, first_improvement=True)
-    
-    naive_with_best_local_search = NaiveLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200, first_improvement=False)
+    # Create baseline methods with independent operator instances
+    adaptive_local_search = AdaptiveLocalSearch(operators=create_operators(), max_no_improvement=50, max_iterations=200)
 
-    random_local_search = RandomLocalSearch(operators=operators, max_no_improvement=50, max_iterations=200)
+    naive_local_search = NaiveLocalSearch(operators=create_operators(), max_no_improvement=50, max_iterations=200, first_improvement=True, random_operator_order=True)
+
+    naive_with_best_local_search = NaiveLocalSearch(operators=create_operators(), max_no_improvement=50, max_iterations=200, first_improvement=False)
+
+    random_local_search = RandomLocalSearch(operators=create_operators(), max_no_improvement=50, max_iterations=200)
 
     # You can provide up to 6 different RL model paths to evaluate here.
     RL_MODEL_PATHS = [
-        # f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_422.pt",
-        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_42.pt",
-        # f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_100.pt",
-        f"models/rl_local_search_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_final.pt",
+        # f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_422.pt",
+        # f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_42.pt",
+        # f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_100.pt",
+        f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_o_final.pt",
     ]
 
     # Configure seeds for testing 
@@ -381,8 +486,19 @@ def main():
 
         # Auto-detect architecture from checkpoint
         try:
-            model_uses_attention = detect_attention_from_checkpoint(path)
-            arch_str = "with attention" if model_uses_attention else "without attention"
+            # Detect algorithm type (DQN or PPO)
+            model_is_ppo = detect_ppo_from_checkpoint(path)
+            model_algorithm = "ppo" if model_is_ppo else "dqn"
+
+            # Detect attention mechanism (only for DQN models)
+            if not model_is_ppo:
+                model_uses_attention = detect_attention_from_checkpoint(path)
+            else:
+                # For PPO, we need to check the network architecture
+                # For now, assume same as training configuration
+                model_uses_attention = USE_OPERATOR_ATTENTION
+
+            arch_str = f"{model_algorithm.upper()}, {'with' if model_uses_attention else 'without'} attention"
             print(f"Detected model architecture ({arch_str}): {path}")
         except Exception as e:
             print(f"Warning: could not detect architecture for {path}: {e}")
@@ -390,7 +506,8 @@ def main():
 
         # OneShot model (same architecture as saved model)
         model_oneshot = RLLocalSearch(
-            operators=operators,
+            operators=create_operators(),
+            rl_algorithm=model_algorithm,
             hidden_dims=[128, 128, 64],
             learning_rate=1e-4,
             gamma=0.99,
@@ -412,9 +529,10 @@ def main():
             device="cuda",
             verbose=False
         )
-        # Roulette model (probabilistic sampling based on Q-values)
+        # Roulette model (probabilistic sampling based on Q-values/policy logits)
         model_roulette = RLLocalSearch(
-            operators=operators,
+            operators=create_operators(),
+            rl_algorithm=model_algorithm,
             hidden_dims=[128, 128, 64],
             learning_rate=1e-4,
             gamma=0.99,
@@ -436,9 +554,10 @@ def main():
             device="cuda",
             verbose=False
         )
-        # Ranking model (strict Q-value order, best first)
+        # Ranking model (strict Q-value/policy order, best first)
         model_ranking = RLLocalSearch(
-            operators=operators,
+            operators=create_operators(),
+            rl_algorithm=model_algorithm,
             hidden_dims=[128, 128, 64],
             learning_rate=1e-4,
             gamma=0.99,
@@ -675,4 +794,19 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\nTraining interrupted by user (Ctrl+C)")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\n\nTraining failed with exception: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+    finally:
+        # Restore original stdout/stderr and close log file
+        if hasattr(sys.stdout, 'close'):
+            sys.stdout.close()
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
