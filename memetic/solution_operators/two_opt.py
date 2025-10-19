@@ -7,6 +7,7 @@ class TwoOptOperator(BaseOperator):
     
     def __init__(self):
         super().__init__()
+        self.name = "TwoOpt"
     
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()

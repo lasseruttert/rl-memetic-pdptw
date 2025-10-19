@@ -27,6 +27,7 @@ class ShiftOperator(BaseOperator):
         self.type = type
         self.segment_length = segment_length
         self.max_shift_distance = max_shift_distance
+        self.name = f"Shift-{self.type}-{'Single' if self.single_route else 'All'}-Max{self.max_attempts}-Seg{self.segment_length}-Dist{self.max_shift_distance}"
 
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()
@@ -89,8 +90,9 @@ class ShiftOperator(BaseOperator):
                                 route[insert_pos:])
 
                 # Check precedence constraints and depot preservation
-                if (self._is_feasible_precedence(problem, new_route) and
-                    new_route[0] == depot and new_route[-1] == depot):
+                # if (self._is_feasible_precedence(problem, new_route) and
+                #     new_route[0] == depot and new_route[-1] == depot):
+                if new_route[0] == depot and new_route[-1] == depot:
                     route[:] = new_route
                     attempts += 1
 

@@ -17,6 +17,7 @@ class TwoOptStarOperator(BaseOperator): # TODO: fix, creates invalid solutions
         super().__init__()
         self.first_improvement = first_improvement
         self.max_iterations = max_iterations
+        self.name = f"TwoOptStar-{'First' if self.first_improvement else 'Best'}-Max{self.max_iterations}"
     
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()

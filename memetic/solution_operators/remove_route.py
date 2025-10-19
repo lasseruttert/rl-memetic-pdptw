@@ -5,6 +5,7 @@ from memetic.solution_operators.base_operator import BaseOperator
 class RemoveRouteOperator(BaseOperator):
     def __init__(self):
         super().__init__()
+        self.name = "RemoveRoute"
         
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()

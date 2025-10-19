@@ -7,6 +7,7 @@ class RemoveRequestOperator(BaseOperator):
     def __init__(self, max_attempts: int = 1):
         super().__init__()
         self.max_attempts = max_attempts
+        self.name = f"RemoveRequest-Max{self.max_attempts}"
         
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()

@@ -8,6 +8,7 @@ class SwapBetweenOperator(BaseOperator):
     def __init__(self, type: str = "random"):
         super().__init__()
         self.type = type
+        self.name = f"SwapBetween-{self.type}"
 
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()

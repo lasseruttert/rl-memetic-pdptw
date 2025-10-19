@@ -16,6 +16,7 @@ class CLSM1Operator(BaseOperator):
             self.insertion_heuristic = GreedyInsertion()
         if insertion_heuristic == 'regret2':
             self.insertion_heuristic = Regret2Insertion()
+        self.name = f'CLS-M1-{insertion_heuristic}'
             
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         unserved_requests = solution.get_unserved_requests(problem)

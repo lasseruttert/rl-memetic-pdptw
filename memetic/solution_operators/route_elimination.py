@@ -13,6 +13,7 @@ class RouteEliminationOperator(BaseOperator):
             self.insertion_heuristic = GreedyInsertion(allow_new_vehicles=False)
         if insertion_heuristic == 'regret2':
             self.insertion_heuristic = Regret2Insertion()
+        self.name = f'RouteElimination-{insertion_heuristic}'
         
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()

@@ -8,6 +8,7 @@ class FlipOperator(BaseOperator):
         super().__init__()
         self.max_attempts = max_attempts
         self.single_route = single_route
+        self.name = f"Flip-{'Single' if single_route else 'All'}-{'Max'+str(max_attempts) if max_attempts is not None else 'Unlimited'}"
 
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()
