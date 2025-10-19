@@ -17,8 +17,8 @@ ext_modules = [
         extra_compile_args=['/O2'] if os.name == 'nt' else ['-O3', '-march=native'],
     ),
     Pybind11Extension(
-        "memetic.local_search.solution_core",  # Vollständiger Modulpfad
-        ["memetic/local_search/solution_core.cpp"],
+        "utils.solution_core",  # Vollständiger Modulpfad
+        ["utils/solution_core.cpp"],
         include_dirs=[pybind11.get_include()],
         extra_compile_args=['/O2'] if os.name == 'nt' else ['-O3', '-march=native'],
     ),

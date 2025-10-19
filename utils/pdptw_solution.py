@@ -7,7 +7,7 @@ import re
 
 # Try to import C++ solution module, fall back to Python if not available
 try:
-    from memetic.local_search import solution_core
+    from utils import solution_core
     _USE_CPP_SOLUTION = True
 except ImportError:
     _USE_CPP_SOLUTION = False
@@ -73,7 +73,6 @@ class PDPTWSolution:
         """Calculates and returns the total distance of all routes in the solution."""
         if self._total_distance is None:
             if _USE_CPP_SOLUTION:
-                # Use C++ implementation for maximum performance
                 total_distance, route_lengths = solution_core.calculate_total_distance(
                     self.routes,
                     self.problem.distance_matrix
@@ -91,7 +90,6 @@ class PDPTWSolution:
                         route_lengths[idx] = 0.0
                         continue
 
-                    # Vectorized: extract all distances for this route at once
                     from_nodes = np.array(route[:-1], dtype=np.int32)
                     to_nodes = np.array(route[1:], dtype=np.int32)
                     distances = distance_matrix[from_nodes, to_nodes]
@@ -109,7 +107,7 @@ class PDPTWSolution:
         """Returns a dictionary mapping each route index to its total distance."""
         if self._route_lengths is None:
             self._route_lengths = {}
-            _ = self.total_distance  # This will populate _route_lengths
+            _ = self.total_distance 
         return self._route_lengths
     
     @property
@@ -142,7 +140,6 @@ class PDPTWSolution:
         """Returns a mapping from node indices to their corresponding route index."""
         if self._node_to_route is None:
             if _USE_CPP_SOLUTION:
-                # Use C++ implementation for maximum performance
                 pickup_nodes_list = list(self.problem.pickup_nodes)
                 delivery_nodes_list = list(self.problem.delivery_nodes)
                 self._node_to_route = solution_core.build_node_to_route(
