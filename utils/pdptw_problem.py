@@ -80,7 +80,11 @@ class PDPTWProblem:
         
         self.pickup_to_delivery = {p: d for p, d in self.pickups_deliveries}
         self.delivery_to_pickup = {d: p for p, d in self.pickups_deliveries}
-        
+
+        # Pre-computed sets for fast lookup (O(1) instead of dict + attribute access)
+        self.pickup_nodes = {p for p, d in self.pickups_deliveries}
+        self.delivery_nodes = {d for p, d in self.pickups_deliveries}
+
         self.distance_baseline = sum(self.distance_matrix[0, i] for i in range(1, len(self.distance_matrix))) * 2
         total_demand = sum(node.demand for node in self.nodes if node.demand > 0)
         self.num_vehicles_baseline = max(1, (total_demand + self.vehicle_capacity - 1) // self.vehicle_capacity)
@@ -163,13 +167,11 @@ class PDPTWProblem:
 
     def is_pickup(self, node_index: int) -> bool:
         """Returns True if the node is a pickup node."""
-        node = self.nodes_dict[node_index]
-        return node.pickup_index == 0 and node.delivery_index != 0
-    
+        return node_index in self.pickup_nodes
+
     def is_delivery(self, node_index: int) -> bool:
         """Returns True if the node is a delivery node."""
-        node = self.nodes_dict[node_index]
-        return node.pickup_index != 0 and node.delivery_index == 0
+        return node_index in self.delivery_nodes
     
     def get_pair(self, node_index: int) -> int:
         """Returns the request pair for a given pickup or delivery node."""

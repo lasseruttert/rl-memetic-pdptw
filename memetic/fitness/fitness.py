@@ -1,25 +1,63 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 
-def fitness(problem: PDPTWProblem, solution: PDPTWSolution) -> float: 
+# Try to import C++ fitness module, fall back to Python if not available
+try:
+    from memetic.fitness import fitness_core
+    _USE_CPP = True
+except ImportError:
+    _USE_CPP = False
+
+def fitness(problem: PDPTWProblem, solution: PDPTWSolution, use_cpp: bool = True) -> float:
     """Calculates the fitness of a solution, based on number of vehicles used and total distance of the routes. Feasible solutions are preferred over infeasible ones, based on a penalty system.
 
     Args:
         problem (PDPTWProblem): a PDPTW problem instance
         solution (PDPTWSolution): a PDPTW solution instance, which is evaluated on the given problem
+        use_cpp (bool): if True and C++ module is available, use C++ implementation; otherwise use Python
 
     Returns:
         float: the fitness value, lower is better
     """
-    fitness = solution.total_distance 
-    fitness += _penalty(problem, solution)
-    
-    percent_vehicles_used = solution.num_vehicles_used / problem.num_vehicles 
+    if _USE_CPP and use_cpp:
+        return _fitness_cpp(problem, solution)
+    else:
+        return _fitness_python(problem, solution)
+
+def _fitness_cpp(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
+    """C++ implementation of fitness calculation."""
+    all_node_indices = [node.index for node in problem.nodes]
+
+    fitness_value, is_feasible = fitness_core.calculate_fitness(
+        solution.routes,
+        solution.total_distance,
+        solution.num_vehicles_used,
+        problem.num_vehicles,
+        problem.distance_matrix,
+        problem.time_windows,
+        problem.service_times,
+        problem.demands,
+        problem.vehicle_capacity,
+        problem.delivery_to_pickup,
+        problem.pickup_to_delivery,
+        all_node_indices,
+        problem.distance_baseline
+    )
+
+    solution._is_feasible = is_feasible
+    return fitness_value
+
+def _fitness_python(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
+    """Python implementation of fitness calculation."""
+    fitness = solution.total_distance
+    fitness += _penalty_python(problem, solution)
+
+    percent_vehicles_used = solution.num_vehicles_used / problem.num_vehicles
     fitness *= (1 + percent_vehicles_used)
-        
+
     return fitness
 
-def _penalty(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
+def _penalty_python(problem: PDPTWProblem, solution: PDPTWSolution) -> float:
     """ Calculates the penalty of a solution based on the number of violations of constraints. If no violations are found, the solution is marked as feasible.
 
     Args:

@@ -4,6 +4,13 @@ from typing import Optional
 from utils.pdptw_problem import PDPTWProblem
 from copy import deepcopy
 import re
+
+# Try to import C++ solution module, fall back to Python if not available
+try:
+    from memetic.local_search import solution_core
+    _USE_CPP_SOLUTION = True
+except ImportError:
+    _USE_CPP_SOLUTION = False
 @dataclass
 class PDPTWSolution:
     problem: PDPTWProblem
@@ -65,19 +72,36 @@ class PDPTWSolution:
     def total_distance(self) -> float:
         """Calculates and returns the total distance of all routes in the solution."""
         if self._total_distance is None:
-            if self._route_lengths is None:
-                self._route_lengths = {}
-            distance_matrix = self.problem.distance_matrix
-            total_distance = 0.0
-            for route in self.routes:
-                route_distance = 0.0
-                for i in range(len(route) - 1):
-                    from_node = route[i]
-                    to_node = route[i + 1]
-                    total_distance += distance_matrix[from_node, to_node]
-                    route_distance += distance_matrix[from_node, to_node]
-                self._route_lengths[self.routes.index(route)] = route_distance
-            self._total_distance = total_distance
+            if _USE_CPP_SOLUTION:
+                # Use C++ implementation for maximum performance
+                total_distance, route_lengths = solution_core.calculate_total_distance(
+                    self.routes,
+                    self.problem.distance_matrix
+                )
+                self._total_distance = total_distance
+                self._route_lengths = route_lengths
+            else:
+                # Fallback to Python/NumPy implementation
+                distance_matrix = self.problem.distance_matrix
+                total_distance = 0.0
+                route_lengths = {}
+
+                for idx, route in enumerate(self.routes):
+                    if len(route) < 2:
+                        route_lengths[idx] = 0.0
+                        continue
+
+                    # Vectorized: extract all distances for this route at once
+                    from_nodes = np.array(route[:-1], dtype=np.int32)
+                    to_nodes = np.array(route[1:], dtype=np.int32)
+                    distances = distance_matrix[from_nodes, to_nodes]
+                    route_distance = distances.sum()
+
+                    route_lengths[idx] = route_distance
+                    total_distance += route_distance
+
+                self._total_distance = total_distance
+                self._route_lengths = route_lengths
         return self._total_distance
     
     @property
@@ -117,12 +141,25 @@ class PDPTWSolution:
     def node_to_route(self) -> dict[int, int]:
         """Returns a mapping from node indices to their corresponding route index."""
         if self._node_to_route is None:
-            mapping = {}
-            for route_idx, route in enumerate(self.routes):
-                for node in route:
-                    if self.problem.is_pickup(node) or self.problem.is_delivery(node):
-                        mapping[node] = route_idx
-            self._node_to_route = mapping
+            if _USE_CPP_SOLUTION:
+                # Use C++ implementation for maximum performance
+                pickup_nodes_list = list(self.problem.pickup_nodes)
+                delivery_nodes_list = list(self.problem.delivery_nodes)
+                self._node_to_route = solution_core.build_node_to_route(
+                    self.routes,
+                    pickup_nodes_list,
+                    delivery_nodes_list
+                )
+            else:
+                # Fallback to Python implementation
+                mapping = {}
+                pickup_nodes = self.problem.pickup_nodes
+                delivery_nodes = self.problem.delivery_nodes
+                for route_idx, route in enumerate(self.routes):
+                    for node in route:
+                        if node in pickup_nodes or node in delivery_nodes:
+                            mapping[node] = route_idx
+                self._node_to_route = mapping
         return self._node_to_route
     
     @property
