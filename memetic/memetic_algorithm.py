@@ -75,6 +75,7 @@ class MemeticSolver:
 
         evaluation_interval: int = 10,
         verbose: bool = False,
+        track_convergence: bool = False,
         track_history: bool = False
     ):
         """
@@ -329,7 +330,11 @@ class MemeticSolver:
         
         self.evaluation_interval = evaluation_interval
         self.evaluations = {}
+        
         self.verbose = verbose
+        
+        self.track_convergence = track_convergence
+        self.convergence = {}
         self.track_history = track_history
         if self.track_history:
             self.history = {}
@@ -424,14 +429,20 @@ class MemeticSolver:
                     population[i] = child
                     current_fitnesses[i] = fitness
                     current_num_vehicles[i] = child.num_vehicles_used
+                    
+                    if self.track_convergence:
+                        self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
 
                 if compare(fitness, child.num_vehicles_used, best_fitness, best_solution.num_vehicles_used):
                     if self.verbose: print(f"New best solution found with fitness {fitness:.2f} at generation {generation}")
-                    best_solution = child
+                    best_solution = child.clone()
                     best_fitness = fitness
                     
                     no_improvement_count = 0
                     no_improvement_in_generation = False
+                    
+                    if self.track_convergence:
+                        self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
                 
             
             if no_improvement_in_generation:
