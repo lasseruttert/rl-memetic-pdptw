@@ -119,7 +119,7 @@ class MemeticSolver:
         
         # * Initial Solution Generator
         if initial_solution_generator is None:
-            initial_solution_generator = 'greedy'
+            initial_solution_generator = 'random'
         if isinstance(initial_solution_generator, str):
             if initial_solution_generator.lower() == 'random':
                 initial_solution_generator = RandomGenerator()
