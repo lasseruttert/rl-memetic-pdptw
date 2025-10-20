@@ -73,6 +73,8 @@ class MemeticSolver:
 
         init_with_local_search: bool = True,
 
+        reproduction_strategy: str = 'sequential',
+
         evaluation_interval: int = 10,
         verbose: bool = False,
         track_convergence: bool = False,
@@ -97,8 +99,12 @@ class MemeticSolver:
             fitness_function: Function to evaluate the fitness of a solution.
             ensure_diversity_interval (int): Interval (in generations) to ensure diversity in the population.
             use_centroid (bool): Whether to use centroid-based diversity measure.
+            calculate_upper_bound_vehicles (bool): Whether to calculate an upper bound on the number of vehicles needed.
+            init_with_local_search (bool): Whether to improve the initial population with local search.
+            reproduction_strategy (str): Strategy for reproduction. Default is 'sequential'.
             evaluation_interval (int): Interval (in generations) to evaluate the population.
             verbose (bool): Whether to print verbose output.
+            track_convergence (bool): Whether to track convergence metrics over time.
             track_history (bool): Whether to track the history of the algorithm.
         """
         
@@ -127,6 +133,8 @@ class MemeticSolver:
             self.initial_solution_generator = initial_solution_generator
         
         # * Selection Operator
+        if selection_operator is None:
+            selection_operator = 'k_tournament'
         if isinstance(selection_operator, str):
             if selection_operator.lower() == 'k_tournament':
                 selection_operator = KTournamentSelection(k=2)
@@ -327,7 +335,20 @@ class MemeticSolver:
         self.calculate_upper_bound_vehicles = calculate_upper_bound_vehicles
         
         self.init_with_local_search = init_with_local_search
-        
+
+        self.reproduction_strategy = reproduction_strategy.lower()
+        # Set reproducer function pointer based on strategy
+        if self.reproduction_strategy == 'sequential':
+            self.reproducer = self._reproduce_sequential
+        elif self.reproduction_strategy == 'binary':
+            self.reproducer = self._reproduce_binary
+            if self.max_generations is not None:
+                self.max_generations *= self.population_size // 2
+            if self.max_no_improvement is not None:
+                self.max_no_improvement *= self.population_size // 2
+        else:
+            raise ValueError(f"Unknown reproduction strategy: {self.reproduction_strategy}")
+
         self.evaluation_interval = evaluation_interval
         self.evaluations = {}
         
@@ -349,6 +370,12 @@ class MemeticSolver:
         Returns:
             PDPTWSolution: The best solution found.
         """
+        # Reset tracking data
+        self.evaluations = {}
+        self.convergence = {}
+        if self.track_history:
+            self.history = {}
+        
         best_solution = None
         best_fitness = float('inf')
         
@@ -413,41 +440,11 @@ class MemeticSolver:
             if generation % self.ensure_diversity_interval == 0:
                 if self.verbose: print(f"Ensuring diversity at generation {generation}")
                 population, current_fitnesses, current_num_vehicles = self._ensure_diversity(problem, population, current_fitnesses, current_num_vehicles)
-            
-            no_improvement_in_generation = True
-            for i in range(len(population)):
-                parent1 = population[i]
-                parent2 = population[i + 1] if i + 1 < len(population) else population[0]
-                
-                children = self.crossover_operator.crossover(problem, parent1, parent2)
-                if not children: continue
-                child = random.choice(children) if children else None
-                child = self.mutation_operator.mutate(problem, child)
-                child, fitness = self.local_search_operator.search(problem, child)
-                
-                if compare(fitness, child.num_vehicles_used, current_fitnesses[i], current_num_vehicles[i]):
-                    population[i] = child
-                    current_fitnesses[i] = fitness
-                    current_num_vehicles[i] = child.num_vehicles_used
-                    
-                    if self.track_convergence:
-                        self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
 
-                if compare(fitness, child.num_vehicles_used, best_fitness, best_solution.num_vehicles_used):
-                    if self.verbose: print(f"New best solution found with fitness {fitness:.2f} at generation {generation}")
-                    best_solution = child.clone()
-                    best_fitness = fitness
-                    
-                    no_improvement_count = 0
-                    no_improvement_in_generation = False
-                    
-                    if self.track_convergence:
-                        self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
-                
-            
-            if no_improvement_in_generation:
-                if self.verbose: print(f"No improvement in generation {generation}")
-                no_improvement_count += 1
+            # Reproduction step
+            population, current_fitnesses, current_num_vehicles, best_fitness, best_solution, no_improvement_count = self.reproducer(
+                problem, population, current_fitnesses, current_num_vehicles, best_fitness, best_solution, generation, start_time, no_improvement_count
+            )
                 
             generation += 1
 
@@ -456,9 +453,112 @@ class MemeticSolver:
                 done = True
         
         if self.calculate_upper_bound_vehicles: problem.num_vehicles = original_num_vehicles
-        
+
         return best_solution
+
+    def _reproduce_sequential(
+        self,
+        problem: PDPTWProblem,
+        population: list[PDPTWSolution],
+        current_fitnesses: list,
+        current_num_vehicles: list,
+        best_fitness: float,
+        best_solution: PDPTWSolution,
+        generation: int,
+        start_time: float,
+        no_improvement_count: int
+    ) -> tuple[list[PDPTWSolution], list, list, float, PDPTWSolution, int]:
+        """Sequential reproduction: each individual pairs with the next one.
+
+        Returns:
+            tuple: (population, current_fitnesses, current_num_vehicles, best_fitness, best_solution, no_improvement_count)
+        """
+        no_improvement_in_generation = True
+        for i in range(len(population)):
+            parent1 = population[i]
+            parent2 = population[i + 1] if i + 1 < len(population) else population[0]
+
+            children = self.crossover_operator.crossover(problem, parent1, parent2)
+            if not children: continue
+            child = random.choice(children) if children else None
+            child = self.mutation_operator.mutate(problem, child)
+            child, fitness = self.local_search_operator.search(problem, child)
+
+            if compare(fitness, child.num_vehicles_used, current_fitnesses[i], current_num_vehicles[i]):
+                population[i] = child
+                current_fitnesses[i] = fitness
+                current_num_vehicles[i] = child.num_vehicles_used
+
+                if self.track_convergence:
+                    self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
+
+            if compare(fitness, child.num_vehicles_used, best_fitness, best_solution.num_vehicles_used):
+                if self.verbose: print(f"New best solution found with fitness {fitness:.2f} at generation {generation}")
+                best_solution = child.clone()
+                best_fitness = fitness
+
+                no_improvement_count = 0
+                no_improvement_in_generation = False
+
+                if self.track_convergence:
+                    self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
+
+        if no_improvement_in_generation:
+            if self.verbose: print(f"No improvement in generation {generation}")
+            no_improvement_count += 1
+
+        return population, current_fitnesses, current_num_vehicles, best_fitness, best_solution, no_improvement_count
+    
+    def _reproduce_binary(
+        self,
+        problem: PDPTWProblem,
+        population: list[PDPTWSolution],
+        current_fitnesses: list,
+        current_num_vehicles: list,
+        best_fitness: float,
+        best_solution: PDPTWSolution,
+        generation: int,
+        start_time: float,
+        no_improvement_count: int
+    ) -> tuple[list[PDPTWSolution], list, list, float, PDPTWSolution, int]:
+        """Binary reproduction.
+
+        Returns:
+            tuple: (population, current_fitnesses, current_num_vehicles, best_fitness, best_solution, no_improvement_count)
+        """
+        no_improvement_in_generation = True
+        parent1, parent1_idx = self.selection_operator.select(population, current_fitnesses)
+        parent2, parent2_idx = self.selection_operator.select(population, current_fitnesses)
+        children = self.crossover_operator.crossover(problem, parent1, parent2)
+        if not children:
+            return population, current_fitnesses, current_num_vehicles, best_fitness, best_solution, no_improvement_count
+        child = random.choice(children) if children else None
+        child = self.mutation_operator.mutate(problem, child)
+        child, fitness = self.local_search_operator.search(problem, child)
         
+        worse_idx = parent1_idx if compare(current_fitnesses[parent1_idx], current_num_vehicles[parent1_idx], current_fitnesses[parent2_idx], current_num_vehicles[parent2_idx]) else parent2_idx
+        if compare(fitness, child.num_vehicles_used, current_fitnesses[worse_idx], current_num_vehicles[worse_idx]):
+            population[worse_idx] = child
+            current_fitnesses[worse_idx] = fitness
+            current_num_vehicles[worse_idx] = child.num_vehicles_used
+
+            if self.track_convergence:
+                self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
+        if compare(fitness, child.num_vehicles_used, best_fitness, best_solution.num_vehicles_used):
+            if self.verbose: print(f"New best solution found with fitness {fitness:.2f} at generation {generation}")
+            best_solution = child.clone()
+            best_fitness = fitness
+
+            no_improvement_count = 0
+            no_improvement_in_generation = False
+
+            if self.track_convergence:
+                self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
+        if no_improvement_in_generation:
+            if self.verbose: print(f"No improvement in generation {generation}")
+            no_improvement_count += 1
+        return population, current_fitnesses, current_num_vehicles, best_fitness, best_solution, no_improvement_count
+
     def _ensure_diversity(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, current_num_vehicles: list):
         """Ensure diversity in the population by removing duplicates and using a distance metric."""
         # Remove duplicates

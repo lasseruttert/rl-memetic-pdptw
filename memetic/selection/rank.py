@@ -34,6 +34,6 @@ class RankSelection(BaseSelection):
         rand_value = random.random()
         for i, cum_prob in enumerate(cumulative_probs):
             if rand_value <= cum_prob:
-                return population[ranked_indices[i]]
+                return population[ranked_indices[i]], ranked_indices[i]
         
-        return population[ranked_indices[-1]]  # Fallback in case of rounding errors
+        return population[ranked_indices[-1]], ranked_indices[-1]  # Fallback in case of rounding errors

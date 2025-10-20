@@ -20,4 +20,4 @@ class ElitistSelection(BaseSelection):
             PDPTWSolution: The selected individual.
         """
         best_idx = min(range(len(population)), key=lambda idx: fitnesses[idx])
-        return population[best_idx]
+        return population[best_idx], best_idx

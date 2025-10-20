@@ -35,6 +35,6 @@ class RouletteWheelSelection(BaseSelection):
         rand_value = random.random()
         for i, cum_prob in enumerate(cumulative_probs):
             if rand_value <= cum_prob:
-                return population[i]
-        
-        return population[-1] 
+                return population[i], i
+
+        return population[-1], len(population) - 1

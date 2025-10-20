@@ -29,4 +29,4 @@ class KTournamentSelection(BaseSelection):
         """
         tournament_indices = random.sample(range(len(population)), self.k)
         best_idx = min(tournament_indices, key=lambda idx: fitnesses[idx])
-        return population[best_idx]
+        return population[best_idx], best_idx
