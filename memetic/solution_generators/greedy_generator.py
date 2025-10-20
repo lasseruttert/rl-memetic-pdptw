@@ -17,6 +17,6 @@ class GreedyGenerator(BaseGenerator):
         return solutions
 
     def _generate_single_solution(self, problem: PDPTWProblem) -> PDPTWSolution:
-        solution = PDPTWSolution(problem, [[] for _ in range(problem.num_vehicles)])
+        solution = PDPTWSolution(problem, [[0,0] for _ in range(problem.num_vehicles)])
         solution = self.inserter.insert(problem, solution)
         return solution

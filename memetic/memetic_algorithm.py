@@ -119,7 +119,7 @@ class MemeticSolver:
         
         # * Initial Solution Generator
         if initial_solution_generator is None:
-            initial_solution_generator = 'random'
+            initial_solution_generator = 'greedy'
         if isinstance(initial_solution_generator, str):
             if initial_solution_generator.lower() == 'random':
                 initial_solution_generator = RandomGenerator()
@@ -405,6 +405,7 @@ class MemeticSolver:
             population = initial_population
         else:
             population = self.initial_solution_generator.generate(problem, self.population_size)
+            
         
         if self.init_with_local_search:
             if self.verbose: print("Improving initial population with local search...")

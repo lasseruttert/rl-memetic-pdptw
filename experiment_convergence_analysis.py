@@ -170,13 +170,18 @@ def compute_average_convergence(series_list: list, max_time: int, num_points: in
 
 def plot_single_instance(instance_name: str, runs: list, results_path: Path, max_time: int):
     """
-    Create convergence plots for a single instance (separate files for fitness and vehicles).
+    Create convergence plots for a single instance (separate files for fitness, vehicles, and avg fitness).
 
     Args:
         instance_name: Name of the instance
         runs: List of run data for this instance
         results_path: Path to save plots
         max_time: Maximum time in seconds
+
+    Creates three plot files:
+        - convergence_{instance_name}_fitness.png: Best fitness over time
+        - convergence_{instance_name}_vehicles.png: Number of vehicles over time
+        - convergence_{instance_name}_avg_fitness.png: Average population fitness over time
     """
     if not runs:
         return
@@ -186,6 +191,7 @@ def plot_single_instance(instance_name: str, runs: list, results_path: Path, max
     # Collect all data for averaging
     all_fitness_series = []
     all_vehicle_series = []
+    all_avg_fitness_series = []
 
     for idx, run_data in enumerate(runs):
         convergence = run_data['convergence']
@@ -195,10 +201,12 @@ def plot_single_instance(instance_name: str, runs: list, results_path: Path, max
             times = list(convergence.keys())
             best_fitnesses = [convergence[t]['best_fitness'] for t in times]
             num_vehicles = [convergence[t]['num_vehicles'] for t in times]
+            avg_fitnesses = [convergence[t]['avg_fitness'] for t in times]
 
             # Store for averaging
             all_fitness_series.append((times, best_fitnesses))
             all_vehicle_series.append((times, num_vehicles))
+            all_avg_fitness_series.append((times, avg_fitnesses))
 
     # Plot 1: Best Fitness over Time 
     fig1, ax1 = plt.subplots(1, 1, figsize=(12, 6))
@@ -280,6 +288,47 @@ def plot_single_instance(instance_name: str, runs: list, results_path: Path, max
     plot_file_vehicles = results_path / f'convergence_{instance_name}_vehicles.png'
     plt.savefig(plot_file_vehicles, dpi=300, bbox_inches='tight')
     print(f"    Saved vehicles plot: {plot_file_vehicles}")
+    plt.close()
+
+    # Plot 3: Average Fitness over Time (population average)
+    fig3, ax3 = plt.subplots(1, 1, figsize=(12, 6))
+
+    for idx, run_data in enumerate(runs):
+        convergence = run_data['convergence']
+        seed = run_data['seed']
+
+        if convergence:
+            times = list(convergence.keys())
+            avg_fitnesses = [convergence[t]['avg_fitness'] for t in times]
+
+            ax3.plot(times, avg_fitnesses,
+                    label=f'Run {idx+1} (seed={seed})',
+                    color=colors[idx],
+                    alpha=0.5,
+                    linewidth=1.2)
+
+    # Compute and plot average of avg fitness
+    if all_avg_fitness_series:
+        avg_times, avg_avg_fitness = compute_average_convergence(all_avg_fitness_series, max_time)
+        ax3.plot(avg_times, avg_avg_fitness,
+                label='Average',
+                color='red',
+                alpha=1.0,
+                linewidth=3.0,
+                linestyle='-',
+                zorder=10)
+
+    ax3.set_xlabel('Time (seconds)', fontsize=12)
+    ax3.set_ylabel('Average Fitness (Population)', fontsize=12)
+    ax3.set_title(f'{instance_name} - Average Population Fitness Convergence', fontsize=14, fontweight='bold')
+    ax3.legend(loc='best', fontsize=9)
+    ax3.grid(True, alpha=0.3)
+    ax3.set_xlim(0, max_time)
+
+    plt.tight_layout()
+    plot_file_avg_fitness = results_path / f'convergence_{instance_name}_avg_fitness.png'
+    plt.savefig(plot_file_avg_fitness, dpi=300, bbox_inches='tight')
+    print(f"    Saved avg fitness plot: {plot_file_avg_fitness}")
     plt.close()
 
 
