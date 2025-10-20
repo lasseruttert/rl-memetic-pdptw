@@ -9,7 +9,7 @@ class SwapWithinOperator(BaseOperator):
         self.max_attempts = max_attempts
         self.single_route = single_route
         self.type = type
-        self.name = f"SwapWithin-{self.type}-{'Single' if self.single_route else 'All'}-Max{self.max_attempts}"
+        self.name = f"SwapWithin-{self.type}-{'S' if self.single_route else 'A'}-Max{self.max_attempts}"
 
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()

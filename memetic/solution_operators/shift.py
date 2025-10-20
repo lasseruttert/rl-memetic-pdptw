@@ -27,7 +27,7 @@ class ShiftOperator(BaseOperator):
         self.type = type
         self.segment_length = segment_length
         self.max_shift_distance = max_shift_distance
-        self.name = f"Shift-{self.type}-{'Single' if self.single_route else 'All'}-Max{self.max_attempts}-Seg{self.segment_length}-Dist{self.max_shift_distance}"
+        self.name = f"Shift-{self.type}-{'S' if self.single_route else 'A'}-Max{self.max_attempts}-Seg{self.segment_length}-Dist{self.max_shift_distance}"
 
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()

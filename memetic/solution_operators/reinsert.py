@@ -40,7 +40,7 @@ class ReinsertOperator(BaseOperator):
             self.insertion_heuristic = Regret2Insertion()
         if insertion_heuristic == 'random':
             self.insertion_heuristic = RandomInsertion()
-        self.name = f"Reinsert-{insertion_heuristic}-{'Clustered' if clustered else 'Unclustered'}-Max{self.max_attempts}-{'AllowNewVehicles' if allow_new_vehicles else 'NoNewVehicles'}-{'AllowSameVehicle' if allow_same_vehicle else 'NoSameVehicle'}-{'ForceSameVehicle' if force_same_vehicle else 'NoForceSameVehicle'}"
+        self.name = f"Reinsert-{'C' if clustered else 'nC'}-Max{self.max_attempts}-{'NewV' if allow_new_vehicles else 'NoNewV'}-{'SameV' if allow_same_vehicle else 'NoSameV'}-{'F_SameV' if force_same_vehicle else 'nF_SameV'}"
 
     def apply(self, problem: PDPTWProblem, solution: PDPTWSolution) -> PDPTWSolution:
         new_solution = solution.clone()

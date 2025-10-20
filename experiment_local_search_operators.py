@@ -9,6 +9,7 @@ from memetic.solution_generators.random_solution import generate_random_solution
 from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.solution_operators.route_elimination import RouteEliminationOperator
 from memetic.solution_operators.flip import FlipOperator
+from memetic.solution_operators.merge import MergeOperator
 from memetic.solution_operators.swap_within import SwapWithinOperator
 from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
@@ -34,6 +35,12 @@ if __name__ == "__main__":
         FlipOperator(),
         FlipOperator(max_attempts=5),
         FlipOperator(single_route=True),
+        
+        MergeOperator(type="random", num_routes=2),
+        MergeOperator(type="random", num_routes=2, reorder=False),
+        
+        MergeOperator(type="min", num_routes=2),
+        MergeOperator(type="min", num_routes=2, reorder=False),
         
         SwapWithinOperator(),
         SwapWithinOperator(max_attempts=5),
@@ -79,36 +86,40 @@ if __name__ == "__main__":
         i += 1
         
     for operator in operators:
-        print(f"{operator.__class__.__name__}: applied {operator.applications} times, improved {operator.improvements} times")
+        print(f"{operator.name}: applied {operator.applications} times, improved {operator.improvements} times")
         
-# ? ReinsertOperator: applied 26148 times, improved 2158 times
-# ? ReinsertOperator: applied 26148 times, improved 5016 times
-# ? ReinsertOperator: applied 26148 times, improved 1006 times
-# ? ReinsertOperator: applied 26148 times, improved 2137 times
-# ? ReinsertOperator: applied 26148 times, improved 2155 times
-# ? RouteEliminationOperator: applied 26148 times, improved 3284 times
-# ? FlipOperator: applied 26148 times, improved 0 times
-# ? FlipOperator: applied 26148 times, improved 0 times
-# ? FlipOperator: applied 26148 times, improved 61 times
-# ? SwapWithinOperator: applied 26148 times, improved 102 times
-# ? SwapWithinOperator: applied 26148 times, improved 88 times
-# ? SwapWithinOperator: applied 26148 times, improved 202 times
-# ? SwapWithinOperator: applied 26148 times, improved 277 times
-# ? SwapWithinOperator: applied 26148 times, improved 541 times
-# ? SwapBetweenOperator: applied 26148 times, improved 221 times
-# ? SwapBetweenOperator: applied 26148 times, improved 1041 times
-# ? TransferOperator: applied 26148 times, improved 270 times
-# ? TransferOperator: applied 26148 times, improved 165 times
-# ? TransferOperator: applied 26148 times, improved 145 times
-# ? ShiftOperator: applied 26148 times, improved 196 times
-# ? ShiftOperator: applied 26148 times, improved 138 times
-# ? ShiftOperator: applied 26148 times, improved 209 times
-# ? ShiftOperator: applied 26148 times, improved 219 times
-# ? ShiftOperator: applied 26148 times, improved 147 times
-# ? ShiftOperator: applied 26148 times, improved 234 times
-# ? ShiftOperator: applied 26148 times, improved 58 times
-# ? TwoOptOperator: applied 26148 times, improved 731 times
-# ? CLSM1Operator: applied 26148 times, improved 357 times
-# ? CLSM2Operator: applied 26148 times, improved 2143 times
-# ? CLSM3Operator: applied 26148 times, improved 861 times
-# ? CLSM4Operator: applied 26148 times, improved 1404 times
+#? Reinsert-nC-Max1-NewV-SameV-nF_SameV: applied 25947 times, improved 2117 times
+#? Reinsert-C-Max5-NewV-SameV-nF_SameV: applied 25947 times, improved 4964 times     
+#? Reinsert-nC-Max1-NewV-SameV-F_SameV: applied 25947 times, improved 953 times      
+#? Reinsert-nC-Max1-NewV-NoSameV-nF_SameV: applied 25947 times, improved 2123 times  
+#? Reinsert-nC-Max1-NoNewV-NoSameV-nF_SameV: applied 25947 times, improved 2120 times
+#? RouteElimination: applied 25947 times, improved 3045 times
+#? Flip-All-Unlimited: applied 25947 times, improved 0 times
+#? Flip-All-Max5: applied 25947 times, improved 0 times
+#? Flip-Single-Unlimited: applied 25947 times, improved 57 times
+#? Merge-random-N2-F-R: applied 25947 times, improved 472 times
+#? Merge-random-N2-F-nR: applied 25947 times, improved 453 times
+#? Merge-min-N2-F-R: applied 25947 times, improved 765 times
+#? Merge-min-N2-F-nR: applied 25947 times, improved 765 times
+#? SwapWithin-random-A-MaxNone: applied 25947 times, improved 98 times
+#? SwapWithin-random-A-Max5: applied 25947 times, improved 99 times
+#? SwapWithin-random-S-MaxNone: applied 25947 times, improved 213 times
+#? SwapWithin-best-S-MaxNone: applied 25947 times, improved 310 times
+#? SwapWithin-best-A-MaxNone: applied 25947 times, improved 573 times
+#? SwapBetween-random: applied 25947 times, improved 216 times
+#? SwapBetween-best: applied 25947 times, improved 1036 times
+#? Transfer-A-Max1: applied 25947 times, improved 250 times
+#? Transfer-S-Max1: applied 25947 times, improved 185 times
+#? Transfer-S-Max5: applied 25947 times, improved 149 times
+#? Shift-random-A-Max5-Seg3-Dist3: applied 25947 times, improved 2 times
+#? Shift-random-A-Max5-Seg2-Dist4: applied 25947 times, improved 14 times
+#? Shift-random-A-Max3-Seg4-Dist2: applied 25947 times, improved 34 times
+#? Shift-random-A-Max3-Seg3-Dist5: applied 25947 times, improved 12 times
+#? Shift-best-A-Max5-Seg2-Dist3: applied 25947 times, improved 154 times
+#? Shift-best-A-Max5-Seg3-Dist2: applied 25947 times, improved 216 times
+#? Shift-random-S-Max5-Seg3-Dist3: applied 25947 times, improved 81 times
+#? TwoOpt: applied 25947 times, improved 713 times
+#? CLS-M1: applied 25947 times, improved 251 times
+#? CLS-M2: applied 25947 times, improved 2069 times
+#? CLS-M3: applied 25947 times, improved 836 times
+#? CLS-M4: applied 25947 times, improved 1351 times
