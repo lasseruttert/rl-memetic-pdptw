@@ -12,7 +12,7 @@ from matplotlib import cm
 
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
-from utils.instance_manager import InstanceManager
+from utils.li_lim_instance_manager import LiLimInstanceManager
 from memetic.memetic_algorithm import MemeticSolver
 
 
@@ -42,7 +42,7 @@ def run_convergence_experiment(
     results_path.mkdir(parents=True, exist_ok=True)
 
     # Setup
-    manager = InstanceManager(base_dir=data_dir)
+    manager = LiLimInstanceManager(base_dir=data_dir)
 
     # Store all convergence data
     all_convergence_data = {}

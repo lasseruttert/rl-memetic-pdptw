@@ -115,4 +115,5 @@ class MergeOperator(BaseOperator):
     
     def _delete_routes(self, solution: PDPTWSolution, routes_to_delete):
         for route in routes_to_delete:
-            solution.routes.remove(route)
+            route_idx = solution.routes.index(route)
+            solution.routes[route_idx] = [0, 0]  # Replace with empty route

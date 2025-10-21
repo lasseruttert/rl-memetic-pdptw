@@ -1,7 +1,7 @@
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
 from utils.li_lim_reader import li_lim_reader
-from utils.instance_manager import InstanceManager
+from utils.li_lim_instance_manager import LiLimInstanceManager
 
 from memetic.local_search.naive_local_search import NaiveLocalSearch
 from memetic.solution_generators.random_solution import generate_random_solution
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         CLSM4Operator()
     ]
 
-    instance_manager = InstanceManager()
+    instance_manager = LiLimInstanceManager()
 
     i = 0
 

@@ -25,11 +25,14 @@ def li_lim_reader(file_path):
             delivery_index=parts[8]
         )
         nodes.append(node)
+        
+    problem_name = file_path.split('/')[-1].split('.')[0]
 
     problem = PDPTWProblem(
         num_vehicles=num_vehicles,
         vehicle_capacity=vehicle_capacity,
-        nodes=nodes
+        nodes=nodes,
+        name=problem_name
     )
 
     return problem

@@ -234,3 +234,19 @@ class PDPTWSolution:
         new_solution = PDPTWSolution(self.problem, routes=routes)
 
         return new_solution
+    
+    def get_solution_txt(self) -> str:
+        """Generates a textual representation of the solution in a specific format."""
+        lines = []
+        lines.append(f"Instance name: {self.problem.name}")
+        lines.append(f"Authors: Placeholder")
+        lines.append(f"Date: Placeholder")
+        lines.append(f"Reference: Placeholder")
+        lines.append(f"Solution")
+        # Vehicle routes - Format: Route # : node1 node2 ... nodeN (no depot at start/end)
+        for i, route in enumerate(self.routes):
+            if len(route) > 2:
+                route_str = ' '.join(map(str, route))
+                lines.append(f"Route {i} : {route_str}")
+        
+        return '\n'.join(lines)

@@ -54,22 +54,27 @@ class Request:
 @dataclass
 class PDPTWProblem:
     """A Pickup and Delivery Problem with Time Windows (PDPTW) instance."""
-    num_vehicles: int 
+    num_vehicles: int
     """The total number of vehicles available for routing."""
     vehicle_capacity: int
     """The maximum capacity of each vehicle."""
     nodes: list[Node]
     """A list of all nodes in the problem, including depot, pickups, and deliveries."""
-    
+    distance_matrix: np.ndarray = None
+    """Optional pre-computed distance/time matrix. If None, will be computed from node coordinates."""
+    name: str = "PDPTW Problem"
+
     def __post_init__(self):
         n = len(self.nodes)
 
-        self.distance_matrix = np.zeros((n, n))
-        for i in range(n):
-            for j in range(n):
-                dx = self.nodes[i].x - self.nodes[j].x
-                dy = self.nodes[i].y - self.nodes[j].y
-                self.distance_matrix[i, j] = np.hypot(dx, dy)
+        # Only compute distance matrix if not provided
+        if self.distance_matrix is None:
+            self.distance_matrix = np.zeros((n, n))
+            for i in range(n):
+                for j in range(n):
+                    dx = self.nodes[i].x - self.nodes[j].x
+                    dy = self.nodes[i].y - self.nodes[j].y
+                    self.distance_matrix[i, j] = np.hypot(dx, dy)
                 
         self.nodes_dict = {node.index: node for node in self.nodes}
         self.demands = np.array([node.demand for node in self.nodes])
@@ -91,7 +96,7 @@ class PDPTWProblem:
         
     def __str__(self) -> str:
         header = (
-            f"\033[1;33mPDPTW Problem\033[1;30m | "
+            f"\033[1;33mPDPTW Problem: {self.name}\033[1;30m | "
             f"\033[1;33mVehicles: {self.num_vehicles}\033[1;30m | "
             f"\033[1;33mCapacity: {self.vehicle_capacity}\033[1;30m | "
             f"\033[1;33mNodes: {len(self.nodes)}\033[1;30m | "

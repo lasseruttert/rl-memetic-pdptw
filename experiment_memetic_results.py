@@ -7,7 +7,7 @@ import time
 
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
-from utils.instance_manager import InstanceManager
+from utils.li_lim_instance_manager import LiLimInstanceManager
 from utils.result_logger import JSONResultLogger
 from memetic.memetic_algorithm import MemeticSolver
 
@@ -34,7 +34,7 @@ def run_benchmark_suite(
         **solver_params: Parameter für MemeticSolver (z.B. population_size, max_generations)
     """
     # Setup
-    manager = InstanceManager(base_dir=data_dir)
+    manager = LiLimInstanceManager(base_dir=data_dir)
     logger = JSONResultLogger(results_dir=results_dir)
     
     # Statistiken
@@ -151,7 +151,7 @@ def run_single_instance(
         algorithm_name: Name für Logging
         **solver_params: Parameter für MemeticSolver
     """
-    manager = InstanceManager(base_dir=data_dir)
+    manager = LiLimInstanceManager(base_dir=data_dir)
     logger = JSONResultLogger(results_dir=results_dir)
     
     # Lade Problem

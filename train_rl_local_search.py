@@ -49,7 +49,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
-from utils.instance_manager import InstanceManager
+from utils.li_lim_instance_manager import LiLimInstanceManager
 from memetic.local_search.rl_local_search.rl_local_search import RLLocalSearch
 from memetic.local_search.rl_local_search.dqn_network import detect_attention_from_checkpoint
 from memetic.local_search.rl_local_search.ppo_network import detect_ppo_from_checkpoint
@@ -125,29 +125,78 @@ def create_operators():
     ]
 
 
-def create_problem_generator(size: int = 100, categories: list[str] = None):
+def create_problem_generator(size: int = 100, categories: list[str] = None, instance_subset: dict = None, return_name: bool = False):
     """Create a function that generates problem instances using InstanceManager.
 
     Args:
         size: Problem size (100, 200, 400, 600, 1000)
         categories: List of categories to sample from (default: all)
+        instance_subset: Dict mapping category -> list of instance names to use (default: all instances in categories)
+        return_name: If True, generator returns (problem, instance_name) tuple instead of just problem
 
     Returns:
-        Generator function that returns random problem instances
+        Generator function that returns random problem instances (or (problem, name) if return_name=True)
     """
-    instance_manager = InstanceManager()
+    instance_manager = LiLimInstanceManager()
 
     if categories is None:
         categories = list(instance_manager.CATEGORIES.keys())
 
-    def generator() -> PDPTWProblem:
-        # Randomly select category and instance
-        category = random.choice(categories)
-        instance_name = random.choice(instance_manager.CATEGORIES[category])
+    # If instance_subset is provided, use only those instances
+    if instance_subset is None:
+        available_instances = {cat: instance_manager.CATEGORIES[cat] for cat in categories}
+    else:
+        available_instances = instance_subset
+
+    def generator():
+        # Randomly select category and instance from available subset
+        category = random.choice(list(available_instances.keys()))
+        instance_name = random.choice(available_instances[category])
         # print(f"Loading instance: {instance_name} from category: {category}")
-        return instance_manager.load(instance_name, size)
+        problem = instance_manager.load(instance_name, size)
+
+        if return_name:
+            return problem, instance_name
+        else:
+            return problem
 
     return generator
+
+
+def split_instances_by_ratio(categories: list[str], train_ratio: float) -> tuple[dict, dict]:
+    """Split instances within each category by ratio.
+
+    Args:
+        categories: List of category names to split
+        train_ratio: Ratio for training (e.g., 0.7 = 70% train, 30% test)
+
+    Returns:
+        (train_instances, test_instances) where each is a dict {category: [instance_names]}
+    """
+    instance_manager = LiLimInstanceManager()
+    train_instances = {}
+    test_instances = {}
+
+    for category in categories:
+        all_instances = instance_manager.CATEGORIES[category]
+
+        if train_ratio >= 1.0:
+            # Use all instances for both training and testing
+            train_instances[category] = all_instances
+            test_instances[category] = all_instances
+        else:
+            split_index = int(len(all_instances) * train_ratio)
+
+            # Ensure at least 1 instance for training and testing if possible
+            if len(all_instances) > 1:
+                split_index = max(1, min(split_index, len(all_instances) - 1))
+            else:
+                split_index = 1
+
+            train_instances[category] = all_instances[:split_index]
+            test_instances[category] = all_instances[split_index:]
+
+    return train_instances, test_instances
 
 
 def create_solution_generator(problem: PDPTWProblem) -> PDPTWSolution:
@@ -198,7 +247,7 @@ def get_validation_instance_names(size: int, num_instances: int) -> list[str]:
 
 
 def create_validation_set(
-    instance_manager: InstanceManager,
+    instance_manager: LiLimInstanceManager,
     solution_generator: callable,
     size: int,
     mode: str = "fixed_benchmark",
@@ -209,7 +258,7 @@ def create_validation_set(
     """Create validation set for evaluating RL local search.
 
     Args:
-        instance_manager: InstanceManager for loading problems
+        instance_manager: LiLimInstanceManager for loading problems
         solution_generator: Function that generates initial solutions
         size: Problem size (100, 200, 400, 600, 1000)
         mode: "fixed_benchmark" (recommended) or "random_sampled"
@@ -322,6 +371,18 @@ def main():
     parser.add_argument("--validation_runs_per_seed", type=int, default=1,
                         help="Number of runs per seed for each validation instance (default: 1)")
 
+    # Train/Test split arguments
+    parser.add_argument("--train_ratio", type=float, default=0.8,
+                        help="Ratio of instances to use for training (0.0-1.0, default: 1.0 = use all for both train/test)")
+    parser.add_argument("--num_test_problems", type=int, default=50,
+                        help="Number of unique test cases (problem + initial solution) per seed (default: 50)")
+    parser.add_argument("--runs_per_problem", type=int, default=3,
+                        help="Number of runs per test case with different RNG seeds (default: 5)")
+    parser.add_argument("--deterministic_test_rng", action="store_true",
+                        help="Use deterministic RNG during testing for reproducible results")
+    parser.add_argument("--test_only", action="store_true",
+                        help="Skip training and only run testing/evaluation on existing models")
+
     # PPO-specific arguments
     parser.add_argument("--ppo_batch_size", type=int, default=2048,
                         help="PPO batch size - steps to accumulate before update (default: 2048)")
@@ -366,95 +427,128 @@ def main():
     print(f"Logging to: {log_filename}")
     print("=" * 80)
 
-    # Initialize RL local search with fresh operators
-    # Use different batch sizes for DQN (64) vs PPO (2048)
-    batch_size = 64 if RL_ALGORITHM == "dqn" else args.ppo_batch_size
+    if args.test_only:
+        print("\n*** TEST ONLY MODE - Skipping training ***\n")
+    else:
+        # Initialize RL local search with fresh operators
+        # Use different batch sizes for DQN (64) vs PPO (2048)
+        batch_size = 64 if RL_ALGORITHM == "dqn" else args.ppo_batch_size
 
-    rl_local_search = RLLocalSearch(
-        operators=create_operators(),
-        rl_algorithm=RL_ALGORITHM,
-        hidden_dims=[128, 128, 64],
-        learning_rate=1e-4,
-        gamma=0.90,
-        # DQN-specific parameters
-        epsilon_start=1.0,
-        epsilon_end=0.05,
-        epsilon_decay=0.9975,
-        target_update_interval=100,
-        replay_buffer_capacity=100000,
-        batch_size=batch_size,
-        n_step=3,
-        use_prioritized_replay=True,
-        per_alpha=0.6,
-        per_beta_start=0.4,
-        # PPO-specific parameters
-        ppo_clip_epsilon=args.ppo_clip_epsilon,
-        ppo_entropy_coef=args.ppo_entropy_coef,
-        ppo_num_epochs=args.ppo_num_epochs,
-        ppo_num_minibatches=args.ppo_num_minibatches,
-        # Common parameters
-        alpha=10.0,
-        beta=0.0,
-        acceptance_strategy=ACCEPTANCE_STRATEGY,
-        reward_strategy=REWARD_STRATEGY,
-        max_iterations=200,
-        max_no_improvement=50,
-        use_operator_attention=USE_OPERATOR_ATTENTION,
-        device="cuda",
-        verbose=True
+        rl_local_search = RLLocalSearch(
+            operators=create_operators(),
+            rl_algorithm=RL_ALGORITHM,
+            hidden_dims=[128, 128, 64],
+            learning_rate=1e-4,
+            gamma=0.90,
+            # DQN-specific parameters
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            replay_buffer_capacity=100000,
+            batch_size=batch_size,
+            n_step=3,
+            use_prioritized_replay=True,
+            per_alpha=0.6,
+            per_beta_start=0.4,
+            # PPO-specific parameters
+            ppo_clip_epsilon=args.ppo_clip_epsilon,
+            ppo_entropy_coef=args.ppo_entropy_coef,
+            ppo_num_epochs=args.ppo_num_epochs,
+            ppo_num_minibatches=args.ppo_num_minibatches,
+            # Common parameters
+            alpha=10.0,
+            beta=0.0,
+            acceptance_strategy=ACCEPTANCE_STRATEGY,
+            reward_strategy=REWARD_STRATEGY,
+            max_iterations=200,
+            max_no_improvement=50,
+            use_operator_attention=USE_OPERATOR_ATTENTION,
+            device="cuda",
+            verbose=True
+        )
+
+    # Create train/test split
+    train_instances, test_instances = split_instances_by_ratio(
+        categories=CATEGORIES,
+        train_ratio=args.train_ratio
     )
 
-    # # Create problem and solution generators
-    problem_generator = create_problem_generator(size=PROBLEM_SIZE, categories=CATEGORIES)
+    # Log the train/test split
+    print(f"\nTrain/Test Split (ratio={args.train_ratio}):")
+    for category in CATEGORIES:
+        print(f"  {category}:")
+        print(f"    Train ({len(train_instances[category])}): {train_instances[category]}")
+        print(f"    Test  ({len(test_instances[category])}): {test_instances[category]}")
+    print()
 
-    # Create validation set
-    instance_manager = InstanceManager()
-    validation_set = create_validation_set(
-        instance_manager=instance_manager,
-        solution_generator=create_solution_generator,
+    # Create problem and solution generators
+    # Training uses only train_instances
+    problem_generator = create_problem_generator(
         size=PROBLEM_SIZE,
-        mode=args.validation_mode,
-        num_instances=args.num_validation_instances,
-        seed=SEED if SEED is not None else 42,
-        problem_generator=problem_generator
+        categories=CATEGORIES,
+        instance_subset=train_instances
     )
 
-    total_validation_runs = len(args.validation_seeds) * args.validation_runs_per_seed
-    print(f"\nValidation Set:")
-    print(f"  Mode: {args.validation_mode}")
-    print(f"  Instances: {len(validation_set)}")
-    print(f"  Seeds: {args.validation_seeds}")
-    print(f"  Runs per seed: {args.validation_runs_per_seed}")
-    print(f"  Total runs per instance: {total_validation_runs}")
-    print(f"  Interval: {args.validation_interval} episodes\n")
-
-    # Train the RL agent
-    print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
-    print(f"Algorithm: {RL_ALGORITHM.upper()}")
-    print(f"Categories: {CATEGORIES}")
-    print(f"Operator Attention: {'ENABLED' if USE_OPERATOR_ATTENTION else 'DISABLED'}")
-
-    training_history = rl_local_search.train(
-        problem_generator=problem_generator,
-        initial_solution_generator=create_solution_generator,
-        num_episodes=args.num_episodes,
-        new_instance_interval=5,
-        new_solution_interval=1,
-        update_interval=1,
-        warmup_episodes=10,
-        save_interval=1000,
-        save_path=f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_o",
-        tensorboard_dir=f"runs/{RUN_NAME}",
-        seed=SEED,
-        validation_set=validation_set,
-        validation_interval=args.validation_interval,
-        validation_seeds=args.validation_seeds,
-        validation_runs_per_seed=args.validation_runs_per_seed
+    # Testing uses only test_instances and returns instance names for tracking
+    test_problem_generator = create_problem_generator(
+        size=PROBLEM_SIZE,
+        categories=CATEGORIES,
+        instance_subset=test_instances,
+        return_name=True
     )
 
-    print("\nTraining completed!")
-    print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
-    print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
+    if not args.test_only:
+        # Create validation set
+        instance_manager = LiLimInstanceManager()
+        validation_set = create_validation_set(
+            instance_manager=instance_manager,
+            solution_generator=create_solution_generator,
+            size=PROBLEM_SIZE,
+            mode=args.validation_mode,
+            num_instances=args.num_validation_instances,
+            seed=SEED if SEED is not None else 42,
+            problem_generator=problem_generator
+        )
+
+        total_validation_runs = len(args.validation_seeds) * args.validation_runs_per_seed
+        print(f"\nValidation Set:")
+        print(f"  Mode: {args.validation_mode}")
+        print(f"  Instances: {len(validation_set)}")
+        print(f"  Seeds: {args.validation_seeds}")
+        print(f"  Runs per seed: {args.validation_runs_per_seed}")
+        print(f"  Total runs per instance: {total_validation_runs}")
+        print(f"  Interval: {args.validation_interval} episodes\n")
+
+        # Train the RL agent
+        print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
+        print(f"Algorithm: {RL_ALGORITHM.upper()}")
+        print(f"Categories: {CATEGORIES}")
+        print(f"Operator Attention: {'ENABLED' if USE_OPERATOR_ATTENTION else 'DISABLED'}")
+
+        training_history = rl_local_search.train(
+            problem_generator=problem_generator,
+            initial_solution_generator=create_solution_generator,
+            num_episodes=args.num_episodes,
+            new_instance_interval=5,
+            new_solution_interval=1,
+            update_interval=1,
+            warmup_episodes=10,
+            save_interval=1000,
+            save_path=f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_o",
+            tensorboard_dir=f"runs/{RUN_NAME}",
+            seed=SEED,
+            validation_set=validation_set,
+            validation_interval=args.validation_interval,
+            validation_seeds=args.validation_seeds,
+            validation_runs_per_seed=args.validation_runs_per_seed
+        )
+
+        print("\nTraining completed!")
+        print(f"Final average reward: {sum(training_history['episode_rewards'][-100:]) / 100:.2f}")
+        print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
+    else:
+        print("\nStarting evaluation on test instances...")
 
     # Create baseline methods with independent operator instances
     adaptive_local_search = AdaptiveLocalSearch(operators=create_operators(), max_no_improvement=50, max_iterations=200)
@@ -473,9 +567,9 @@ def main():
         f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_o_final.pt",
     ]
 
-    # Configure seeds for testing 
-    TEST_SEEDS = [42, 422, 100, 200, 300]  
-    NUM_TESTS_PER_SEED = 50  # Number of tests per seed
+    # Configure seeds for testing
+    TEST_SEEDS = [42, 422, 100, 200, 300]
+    # Total number of test evaluations = num_test_problems * runs_per_problem per seed
 
     # Build RLLocalSearch instances for each provided path and try to load them.
     rl_models = []
@@ -599,158 +693,263 @@ def main():
         return
 
     # Compare RL local search models vs Naive local search and Random local search
-    # Results structure: per seed -> per model -> list of (initial, best, time) tuples
-    all_seeds_results = {}
+    # Results structure: per instance -> per method -> list of (initial, best, time, case_idx, run_idx) tuples
+    instance_results = {}
 
     print("\n--- Comparing RL models vs Naive/Random Local Search ---")
-    print(f"Testing across {len(TEST_SEEDS)} seeds with {NUM_TESTS_PER_SEED} tests per seed")
-    print(f"Seeds: {TEST_SEEDS}")
+    print(f"Testing Configuration:")
+    print(f"  Seeds: {TEST_SEEDS}")
+    print(f"  Test problems per seed: {args.num_test_problems}")
+    print(f"  Runs per problem: {args.runs_per_problem}")
+    print(f"  Total evaluations per seed: {args.num_test_problems * args.runs_per_problem}")
+    print(f"  Deterministic RNG: {args.deterministic_test_rng}")
+    print()
 
     for seed_idx, test_seed in enumerate(TEST_SEEDS):
         print(f"\n{'='*80}")
         print(f"SEED {seed_idx+1}/{len(TEST_SEEDS)}: {test_seed}")
         print(f"{'='*80}")
 
-        rl_results = [[] for _ in range(len(rl_models))]  # per-model collected tuples (initial, best, time)
-        adaptive_results = []
-        naive_results = []
-        naive_with_best_results = []
-        random_results = []
-
-        for i in range(NUM_TESTS_PER_SEED):
-            print(f"\nTest {i+1}/{NUM_TESTS_PER_SEED}")
-            # Base seed for this test (ensures all methods see same randomness)
-            base_seed = test_seed + i
-            set_seed(base_seed)
-            test_problem = problem_generator()
+        # Generate test cases (problem + initial solution pairs) upfront for this seed
+        print(f"\nGenerating {args.num_test_problems} test cases...")
+        test_cases = []
+        for case_idx in range(args.num_test_problems):
+            set_seed(test_seed + case_idx)
+            test_problem, instance_name = test_problem_generator()
             initial_solution = create_solution_generator(test_problem)
-
-            # Evaluate initial solution
             initial_fitness = fitness(test_problem, initial_solution)
-            print(f"Initial fitness: {initial_fitness:.2f}")
+            test_cases.append((test_problem, initial_solution, initial_fitness, instance_name))
 
-            # Run each RL model
-            for midx, model in enumerate(rl_models):
-                set_seed(base_seed)  # Reset to same seed for fair comparison
-                rl_solution = initial_solution.clone()
-                t0 = time.time()
-                try:
-                    rl_best_solution, rl_best_fitness = model.search(
-                        problem=test_problem,
-                        solution=rl_solution,
-                        epsilon=0.0,
-                        deterministic_rng=True,
-                        base_seed=base_seed
+        # Run each test case multiple times
+        for case_idx, (test_problem, initial_solution, initial_fitness, instance_name) in enumerate(test_cases):
+            print(f"\nTest Case {case_idx+1}/{args.num_test_problems} - Instance: {instance_name}")
+            print(f"  Initial fitness: {initial_fitness:.2f}")
+
+            # Initialize instance tracking if first time seeing this instance
+            if instance_name not in instance_results:
+                instance_results[instance_name] = {
+                    'rl_models': [[] for _ in range(len(rl_models))],
+                    'adaptive': [],
+                    'naive': [],
+                    'naive_with_best': [],
+                    'random': []
+                }
+
+            for run_idx in range(args.runs_per_problem):
+                if args.runs_per_problem > 1:
+                    print(f"  Run {run_idx+1}/{args.runs_per_problem}")
+
+                # Different RNG seed for each run
+                run_seed = test_seed + case_idx * 1000 + run_idx
+
+                # Run each RL model
+                for midx, model in enumerate(rl_models):
+                    set_seed(run_seed)  # Same seed for all methods in this run
+                    rl_solution = initial_solution.clone()
+                    t0 = time.time()
+                    try:
+                        rl_best_solution, rl_best_fitness = model.search(
+                            problem=test_problem,
+                            solution=rl_solution,
+                            epsilon=0.0,
+                            deterministic_rng=args.deterministic_test_rng,
+                            base_seed=run_seed
+                        )
+                    except Exception as e:
+                        print(f"    Model {model_names[midx]} failed: {e}")
+                        rl_best_fitness = float('inf')
+                    rl_time = time.time() - t0
+                    if args.runs_per_problem > 1:
+                        print(f"    {model_names[midx]}: {rl_best_fitness:.2f} (time: {rl_time:.2f}s)")
+                    else:
+                        print(f"  {model_names[midx]}: {rl_best_fitness:.2f} (time: {rl_time:.2f}s)")
+                    instance_results[instance_name]['rl_models'][midx].append(
+                        (initial_fitness, rl_best_fitness, rl_time, case_idx, run_idx)
                     )
-                except Exception as e:
-                    print(f"Model {model_names[midx]} failed on test {i+1}: {e}")
-                    rl_best_fitness = float('inf')
-                rl_time = time.time() - t0
-                print(f"{model_names[midx]}: best fitness: {rl_best_fitness:.2f} (time: {rl_time:.2f}s)")
-                rl_results[midx].append((initial_fitness, rl_best_fitness, rl_time))
 
-            # Adaptive local search
-            set_seed(base_seed)
-            adaptive_solution = initial_solution.clone()
-            t0 = time.time()
-            adaptive_best_solution, adaptive_best_fitness = adaptive_local_search.search(
-                problem=test_problem,
-                solution=adaptive_solution,
-                deterministic_rng=True,
-                base_seed=base_seed
-            )
-            adaptive_time = time.time() - t0
-            print(f"Adaptive: best fitness: {adaptive_best_fitness:.2f} (time: {adaptive_time:.2f}s)")
-            adaptive_results.append((initial_fitness, adaptive_best_fitness, adaptive_time))
+                # Adaptive local search
+                set_seed(run_seed)
+                adaptive_solution = initial_solution.clone()
+                t0 = time.time()
+                adaptive_best_solution, adaptive_best_fitness = adaptive_local_search.search(
+                    problem=test_problem,
+                    solution=adaptive_solution,
+                    deterministic_rng=args.deterministic_test_rng,
+                    base_seed=run_seed
+                )
+                adaptive_time = time.time() - t0
+                if args.runs_per_problem > 1:
+                    print(f"    Adaptive: {adaptive_best_fitness:.2f} (time: {adaptive_time:.2f}s)")
+                else:
+                    print(f"  Adaptive: {adaptive_best_fitness:.2f} (time: {adaptive_time:.2f}s)")
+                instance_results[instance_name]['adaptive'].append(
+                    (initial_fitness, adaptive_best_fitness, adaptive_time, case_idx, run_idx)
+                )
 
-            # Naive local search
-            set_seed(base_seed)
-            naive_solution = initial_solution.clone()
-            t0 = time.time()
-            naive_best_solution, naive_best_fitness = naive_local_search.search(
-                problem=test_problem,
-                solution=naive_solution,
-                deterministic_rng=True,
-                base_seed=base_seed
-            )
-            naive_time = time.time() - t0
-            print(f"Naive: best fitness: {naive_best_fitness:.2f} (time: {naive_time:.2f}s)")
-            naive_results.append((initial_fitness, naive_best_fitness, naive_time))
+                # Naive local search
+                set_seed(run_seed)
+                naive_solution = initial_solution.clone()
+                t0 = time.time()
+                naive_best_solution, naive_best_fitness = naive_local_search.search(
+                    problem=test_problem,
+                    solution=naive_solution,
+                    deterministic_rng=args.deterministic_test_rng,
+                    base_seed=run_seed
+                )
+                naive_time = time.time() - t0
+                if args.runs_per_problem > 1:
+                    print(f"    Naive: {naive_best_fitness:.2f} (time: {naive_time:.2f}s)")
+                else:
+                    print(f"  Naive: {naive_best_fitness:.2f} (time: {naive_time:.2f}s)")
+                instance_results[instance_name]['naive'].append(
+                    (initial_fitness, naive_best_fitness, naive_time, case_idx, run_idx)
+                )
 
-            # Naive local search with best improvement
-            set_seed(base_seed)
-            naive_with_best_solution = initial_solution.clone()
-            t0 = time.time()
-            naive_with_best_best_solution, naive_with_best_best_fitness = naive_with_best_local_search.search(
-                problem=test_problem,
-                solution=naive_with_best_solution,
-                deterministic_rng=True,
-                base_seed=base_seed
-            )
-            naive_with_best_time = time.time() - t0
-            print(f"Naive (best improvement): best fitness: {naive_with_best_best_fitness:.2f} (time: {naive_with_best_time:.2f}s)")
-            naive_with_best_results.append((initial_fitness, naive_with_best_best_fitness, naive_with_best_time))
+                # Naive local search with best improvement
+                set_seed(run_seed)
+                naive_with_best_solution = initial_solution.clone()
+                t0 = time.time()
+                naive_with_best_best_solution, naive_with_best_best_fitness = naive_with_best_local_search.search(
+                    problem=test_problem,
+                    solution=naive_with_best_solution,
+                    deterministic_rng=args.deterministic_test_rng,
+                    base_seed=run_seed
+                )
+                naive_with_best_time = time.time() - t0
+                if args.runs_per_problem > 1:
+                    print(f"    Naive (best): {naive_with_best_best_fitness:.2f} (time: {naive_with_best_time:.2f}s)")
+                else:
+                    print(f"  Naive (best): {naive_with_best_best_fitness:.2f} (time: {naive_with_best_time:.2f}s)")
+                instance_results[instance_name]['naive_with_best'].append(
+                    (initial_fitness, naive_with_best_best_fitness, naive_with_best_time, case_idx, run_idx)
+                )
 
-            # Random local search
-            set_seed(base_seed)
-            random_solution = initial_solution.clone()
-            t0 = time.time()
-            random_best_solution, random_best_fitness = random_local_search.search(
-                problem=test_problem,
-                solution=random_solution,
-                deterministic_rng=True,
-                base_seed=base_seed
-            )
-            random_time = time.time() - t0
-            print(f"Random: best fitness: {random_best_fitness:.2f} (time: {random_time:.2f}s)")
-            random_results.append((initial_fitness, random_best_fitness, random_time))
+                # Random local search
+                set_seed(run_seed)
+                random_solution = initial_solution.clone()
+                t0 = time.time()
+                random_best_solution, random_best_fitness = random_local_search.search(
+                    problem=test_problem,
+                    solution=random_solution,
+                    deterministic_rng=args.deterministic_test_rng,
+                    base_seed=run_seed
+                )
+                random_time = time.time() - t0
+                if args.runs_per_problem > 1:
+                    print(f"    Random: {random_best_fitness:.2f} (time: {random_time:.2f}s)")
+                else:
+                    print(f"  Random: {random_best_fitness:.2f} (time: {random_time:.2f}s)")
+                instance_results[instance_name]['random'].append(
+                    (initial_fitness, random_best_fitness, random_time, case_idx, run_idx)
+                )
 
-        # Store results for this seed
-        all_seeds_results[test_seed] = {
-            'rl_models': rl_results,
-            'adaptive': adaptive_results,
-            'naive': naive_results,
-            'naive_with_best': naive_with_best_results,
-            'random': random_results
-        }
+        # Print brief summary for this seed
+        total_evals = args.num_test_problems * args.runs_per_problem
+        print(f"\n--- Completed Seed {test_seed}: {total_evals} evaluations across {len(test_cases)} test cases ---")
 
-        # Print summary for this seed
-        print(f"\n--- Summary for Seed {test_seed} ---")
-        avg_initial = sum(r[0] for r in rl_results[0]) / NUM_TESTS_PER_SEED if rl_results[0] else 0.0
-        print(f"Average initial fitness: {avg_initial:.2f}")
-        for midx, name in enumerate(model_names):
-            avg_best = sum(r[1] for r in rl_results[midx]) / NUM_TESTS_PER_SEED
-            avg_time = sum(r[2] for r in rl_results[midx]) / NUM_TESTS_PER_SEED
-            print(f"Model {name}: Avg best fitness: {avg_best:.2f} (avg time: {avg_time:.2f}s)")
-
-        avg_adaptive = sum(r[1] for r in adaptive_results) / NUM_TESTS_PER_SEED
-        avg_time_adaptive = sum(r[2] for r in adaptive_results) / NUM_TESTS_PER_SEED
-        avg_naive = sum(r[1] for r in naive_results) / NUM_TESTS_PER_SEED
-        avg_time_naive = sum(r[2] for r in naive_results) / NUM_TESTS_PER_SEED
-        avg_naive_with_best = sum(r[1] for r in naive_with_best_results) / NUM_TESTS_PER_SEED
-        avg_time_naive_with_best = sum(r[2] for r in naive_with_best_results) / NUM_TESTS_PER_SEED
-        avg_random = sum(r[1] for r in random_results) / NUM_TESTS_PER_SEED
-        avg_time_random = sum(r[2] for r in random_results) / NUM_TESTS_PER_SEED
-        print(f"Adaptive: Avg best fitness: {avg_adaptive:.2f} (avg time: {avg_time_adaptive:.2f}s)")
-        print(f"Naive: Avg best fitness: {avg_naive:.2f} (avg time: {avg_time_naive:.2f}s)")
-        print(f"Naive (best improvement): Avg best fitness: {avg_naive_with_best:.2f} (avg time: {avg_time_naive_with_best:.2f}s)")
-        print(f"Random: Avg best fitness: {avg_random:.2f} (avg time: {avg_time_random:.2f}s)")
-
-    # Overall summary across all seeds
+    # Per-instance summary
     print(f"\n{'='*80}")
-    print("OVERALL SUMMARY ACROSS ALL SEEDS")
-    print(f"{'='*80}")
-    total_tests = len(TEST_SEEDS) * NUM_TESTS_PER_SEED
-    print(f"Total tests: {total_tests} ({len(TEST_SEEDS)} seeds × {NUM_TESTS_PER_SEED} tests per seed)")
+    print("PER-INSTANCE PERFORMANCE SUMMARY")
+    print(f"{'='*80}\n")
 
-    # Aggregate all results across seeds
+    for instance_name in sorted(instance_results.keys()):
+        results = instance_results[instance_name]
+
+        # Calculate number of unique test cases and total tests for this instance
+        if results['adaptive']:
+            num_tests = len(results['adaptive'])
+            # Count unique case indices to get number of unique test cases
+            unique_cases = len(set(r[3] for r in results['adaptive']))
+            runs_per_case = args.runs_per_problem
+        else:
+            num_tests = 0
+            unique_cases = 0
+            runs_per_case = 0
+
+        if num_tests == 0:
+            continue
+
+        print(f"--- {instance_name} ---")
+        print(f"  Test cases: {unique_cases}, Runs per case: {runs_per_case}, Total tests: {num_tests}")
+
+        # Average initial fitness
+        avg_initial = np.mean([r[0] for r in results['adaptive']])
+        std_initial = np.std([r[0] for r in results['adaptive']])
+        print(f"  Avg Initial: {avg_initial:.2f} ± {std_initial:.2f}")
+
+        if runs_per_case > 1:
+            # Show within-solution variance
+            print(f"\n  Method Performance (mean ± overall_std, within-solution std):")
+
+            # RL models
+            for midx, name in enumerate(model_names):
+                all_results = results['rl_models'][midx]
+                avg_best = np.mean([r[1] for r in all_results])
+                std_best = np.std([r[1] for r in all_results])
+
+                # Within-solution variance (how much method varies on same initial solution)
+                case_variances = []
+                for case_idx in range(unique_cases):
+                    case_results = [r[1] for r in all_results if r[3] == case_idx]
+                    if len(case_results) > 1:
+                        case_variances.append(np.std(case_results))
+
+                avg_within_std = np.mean(case_variances) if case_variances else 0.0
+                avg_improvement = np.mean([r[0] - r[1] for r in all_results])
+
+                print(f"    {name:45s}: {avg_best:.2f} ± {std_best:.2f} (within: {avg_within_std:.2f}, Δ={avg_improvement:+.2f})")
+
+            # Baselines
+            for method_name, method_key in [('Adaptive', 'adaptive'), ('Naive', 'naive'),
+                                             ('Naive (best)', 'naive_with_best'), ('Random', 'random')]:
+                all_results = results[method_key]
+                avg_best = np.mean([r[1] for r in all_results])
+                std_best = np.std([r[1] for r in all_results])
+
+                case_variances = []
+                for case_idx in range(unique_cases):
+                    case_results = [r[1] for r in all_results if r[3] == case_idx]
+                    if len(case_results) > 1:
+                        case_variances.append(np.std(case_results))
+
+                avg_within_std = np.mean(case_variances) if case_variances else 0.0
+                avg_improvement = np.mean([r[0] - r[1] for r in all_results])
+
+                print(f"    {method_name:45s}: {avg_best:.2f} ± {std_best:.2f} (within: {avg_within_std:.2f}, Δ={avg_improvement:+.2f})")
+        else:
+            # Simpler output for single runs
+            print(f"\n  Method Performance (mean ± std):")
+
+            for midx, name in enumerate(model_names):
+                all_results = results['rl_models'][midx]
+                avg_best = np.mean([r[1] for r in all_results])
+                std_best = np.std([r[1] for r in all_results])
+                avg_improvement = np.mean([r[0] - r[1] for r in all_results])
+                print(f"    {name:45s}: {avg_best:.2f} ± {std_best:.2f} (Δ={avg_improvement:+.2f})")
+
+            for method_name, method_key in [('Adaptive', 'adaptive'), ('Naive', 'naive'),
+                                             ('Naive (best)', 'naive_with_best'), ('Random', 'random')]:
+                all_results = results[method_key]
+                avg_best = np.mean([r[1] for r in all_results])
+                std_best = np.std([r[1] for r in all_results])
+                avg_improvement = np.mean([r[0] - r[1] for r in all_results])
+                print(f"    {method_name:45s}: {avg_best:.2f} ± {std_best:.2f} (Δ={avg_improvement:+.2f})")
+
+        print()
+
+    # Overall summary across all instances
+    print(f"{'='*80}")
+    print("OVERALL SUMMARY ACROSS ALL INSTANCES")
+    print(f"{'='*80}")
+
+    # Aggregate all results
     all_rl_results = [[] for _ in range(len(rl_models))]
     all_adaptive_results = []
     all_naive_results = []
     all_naive_with_best_results = []
     all_random_results = []
 
-    for seed, results in all_seeds_results.items():
+    for instance_name, results in instance_results.items():
         for midx in range(len(rl_models)):
             all_rl_results[midx].extend(results['rl_models'][midx])
         all_adaptive_results.extend(results['adaptive'])
@@ -758,37 +957,31 @@ def main():
         all_naive_with_best_results.extend(results['naive_with_best'])
         all_random_results.extend(results['random'])
 
-    # Print overall averages
-    avg_initial = sum(r[0] for r in all_rl_results[0]) / total_tests if all_rl_results[0] else 0.0
-    print(f"\nAverage initial fitness: {avg_initial:.2f}")
+    total_tests = len(all_adaptive_results) if all_adaptive_results else 0
+    print(f"Total evaluations: {total_tests}")
+    print(f"Unique instances tested: {len(instance_results)}")
 
-    print("\nRL Models:")
-    for midx, name in enumerate(model_names):
-        avg_best = sum(r[1] for r in all_rl_results[midx]) / total_tests
-        avg_time = sum(r[2] for r in all_rl_results[midx]) / total_tests
-        std_best = np.std([r[1] for r in all_rl_results[midx]])
-        print(f"  {name}: Avg best: {avg_best:.2f} ± {std_best:.2f} (avg time: {avg_time:.2f}s)")
+    if total_tests > 0:
+        # Print overall averages
+        avg_initial = np.mean([r[0] for r in all_adaptive_results])
+        print(f"\nAverage initial fitness: {avg_initial:.2f}")
 
-    print("\nBaseline Methods:")
-    avg_adaptive = sum(r[1] for r in all_adaptive_results) / total_tests
-    avg_time_adaptive = sum(r[2] for r in all_adaptive_results) / total_tests
-    std_adaptive = np.std([r[1] for r in all_adaptive_results])
-    print(f"  Adaptive: Avg best: {avg_adaptive:.2f} ± {std_adaptive:.2f} (avg time: {avg_time_adaptive:.2f}s)")
+        print("\nRL Models:")
+        for midx, name in enumerate(model_names):
+            avg_best = np.mean([r[1] for r in all_rl_results[midx]])
+            avg_time = np.mean([r[2] for r in all_rl_results[midx]])
+            std_best = np.std([r[1] for r in all_rl_results[midx]])
+            avg_improvement = np.mean([r[0] - r[1] for r in all_rl_results[midx]])
+            print(f"  {name}: {avg_best:.2f} ± {std_best:.2f} (Δ={avg_improvement:+.2f}, time: {avg_time:.2f}s)")
 
-    avg_naive = sum(r[1] for r in all_naive_results) / total_tests
-    avg_time_naive = sum(r[2] for r in all_naive_results) / total_tests
-    std_naive = np.std([r[1] for r in all_naive_results])
-    print(f"  Naive: Avg best: {avg_naive:.2f} ± {std_naive:.2f} (avg time: {avg_time_naive:.2f}s)")
-
-    avg_naive_with_best = sum(r[1] for r in all_naive_with_best_results) / total_tests
-    avg_time_naive_with_best = sum(r[2] for r in all_naive_with_best_results) / total_tests
-    std_naive_with_best = np.std([r[1] for r in all_naive_with_best_results])
-    print(f"  Naive (best improvement): Avg best: {avg_naive_with_best:.2f} ± {std_naive_with_best:.2f} (avg time: {avg_time_naive_with_best:.2f}s)")
-
-    avg_random = sum(r[1] for r in all_random_results) / total_tests
-    avg_time_random = sum(r[2] for r in all_random_results) / total_tests
-    std_random = np.std([r[1] for r in all_random_results])
-    print(f"  Random: Avg best: {avg_random:.2f} ± {std_random:.2f} (avg time: {avg_time_random:.2f}s)")
+        print("\nBaseline Methods:")
+        for method_name, method_results in [('Adaptive', all_adaptive_results), ('Naive', all_naive_results),
+                                              ('Naive (best)', all_naive_with_best_results), ('Random', all_random_results)]:
+            avg_best = np.mean([r[1] for r in method_results])
+            avg_time = np.mean([r[2] for r in method_results])
+            std_best = np.std([r[1] for r in method_results])
+            avg_improvement = np.mean([r[0] - r[1] for r in method_results])
+            print(f"  {method_name}: {avg_best:.2f} ± {std_best:.2f} (Δ={avg_improvement:+.2f}, time: {avg_time:.2f}s)")
 
     print(f"\n{'='*80}")
 

@@ -1,18 +1,19 @@
 from pathlib import Path
-from typing import Optional, Literal, Iterator
+from typing import Optional, Iterator
 from utils.pdptw_problem import PDPTWProblem
-from utils.li_lim_reader import li_lim_reader
+from utils.pdptw_reader import pdptw_reader
 
-class InstanceManager:
+
+class LiLimInstanceManager:
     """
-    Manager für Li & Lim PDPTW Benchmark-Instanzen.
-    Ermöglicht Navigation und Iteration durch Instanzen verschiedener Größen und Kategorien.
+    Manager for Li & Lim PDPTW Benchmark instances.
+    Enables navigation and iteration through instances of different sizes and categories.
     """
-    
-    # Verfügbare Problemgrößen
+
+    # Available sizes
     SIZES = [100, 200, 400, 600, 1000]
-    
-    # Instanz-Namen pro Kategorie
+
+    # Instance names per category (for size 100)
     CATEGORIES = {
         'lc1': ['lc101', 'lc102', 'lc103', 'lc104', 'lc105', 'lc106', 'lc107', 'lc108', 'lc109'],
         'lc2': ['lc201', 'lc202', 'lc203', 'lc204', 'lc205', 'lc206', 'lc207', 'lc208'],
@@ -21,19 +22,25 @@ class InstanceManager:
         'lrc1': ['lrc101', 'lrc102', 'lrc103', 'lrc104', 'lrc105', 'lrc106', 'lrc107', 'lrc108'],
         'lrc2': ['lrc201', 'lrc202', 'lrc203', 'lrc204', 'lrc205', 'lrc206', 'lrc207', 'lrc208']
     }
-    
+
     def __init__(self, base_dir: str = 'data'):
         """
         Args:
-            base_dir: Basis-Verzeichnis mit pdp_100, pdp_200, etc. Unterordnern
+            base_dir: Base directory with pdp_100, pdp_200, etc. subdirectories
         """
         self.base_dir = Path(base_dir)
         self.current_size = 100
         self.current_category = 'lc1'
         self.current_index = 0
         self._problem_cache = {}
-    
+
     def _get_categories(self, size: int) -> dict:
+        """
+        Returns the category structure for a given size.
+
+        For size 100: uses lowercase names (lc101, lr101, etc.)
+        For other sizes: uses uppercase names (LC1_2_1, LR1_2_1, etc.)
+        """
         if size == 100:
             return {
                 'lc1': ['lc101', 'lc102', 'lc103', 'lc104', 'lc105', 'lc106', 'lc107', 'lc108', 'lc109'],
@@ -55,206 +62,218 @@ class InstanceManager:
             }
 
     def _get_path(self, instance_name: str, size: int) -> Path:
-        """Pfad zur Datei - Namen sind schon korrekt."""
+        """Returns path to instance file."""
         return self.base_dir / f'pdp_{size}' / f'{instance_name}.txt'
-    
+
     def load(self, instance_name: str, size: Optional[int] = None) -> PDPTWProblem:
         """
-        Lädt eine spezifische Instanz.
-        
+        Loads a specific instance.
+
         Args:
-            instance_name: Name der Instanz (z.B. 'lc101')
-            size: Problemgröße (default: current_size)
+            instance_name: Instance name (e.g., 'lc101' or 'LC1_2_1')
+            size: Problem size (default: current_size)
+
+        Returns:
+            Loaded PDPTW problem instance
         """
         if size is None:
             size = self.current_size
-        
+
         cache_key = (instance_name, size)
         if cache_key not in self._problem_cache:
             path = self._get_path(instance_name, size)
             if not path.exists():
                 raise FileNotFoundError(f"Instance file not found: {path}")
-            self._problem_cache[cache_key] = li_lim_reader(str(path))
-        
+            self._problem_cache[cache_key] = pdptw_reader(str(path))
+
         return self._problem_cache[cache_key]
-    
+
     def current(self) -> PDPTWProblem:
-        """Gibt das aktuelle Problem zurück."""
-        instance_name = self.CATEGORIES[self.current_category][self.current_index]
+        """Returns the current problem."""
+        categories = self._get_categories(self.current_size)
+        instance_name = categories[self.current_category][self.current_index]
         return self.load(instance_name, self.current_size)
-    
+
     def next(self) -> PDPTWProblem:
         """
-        Springt zur nächsten Instanz in der aktuellen Kategorie und Größe.
-        Wechselt automatisch zur nächsten Kategorie wenn am Ende.
+        Jumps to the next instance in the current category and size.
+        Automatically switches to the next category when at the end.
         """
-        category_instances = self.CATEGORIES[self.current_category]
+        categories_dict = self._get_categories(self.current_size)
+        category_instances = categories_dict[self.current_category]
         self.current_index += 1
-        
+
         if self.current_index >= len(category_instances):
-            # Zur nächsten Kategorie
-            categories = list(self.CATEGORIES.keys())
+            # Move to next category
+            categories = list(categories_dict.keys())
             current_cat_idx = categories.index(self.current_category)
-            
+
             if current_cat_idx < len(categories) - 1:
                 self.current_category = categories[current_cat_idx + 1]
                 self.current_index = 0
             else:
-                # Zurück zum Start
+                # Wrap back to start
                 self.current_category = categories[0]
                 self.current_index = 0
-        
+
         return self.current()
-    
+
     def prev(self) -> PDPTWProblem:
-        """Springt zur vorherigen Instanz."""
+        """Jumps to the previous instance."""
         self.current_index -= 1
-        
+
         if self.current_index < 0:
-            # Zur vorherigen Kategorie
-            categories = list(self.CATEGORIES.keys())
+            # Move to previous category
+            categories_dict = self._get_categories(self.current_size)
+            categories = list(categories_dict.keys())
             current_cat_idx = categories.index(self.current_category)
-            
+
             if current_cat_idx > 0:
                 self.current_category = categories[current_cat_idx - 1]
-                self.current_index = len(self.CATEGORIES[self.current_category]) - 1
+                self.current_index = len(categories_dict[self.current_category]) - 1
             else:
-                # Zum Ende springen
+                # Wrap to end
                 self.current_category = categories[-1]
-                self.current_index = len(self.CATEGORIES[self.current_category]) - 1
-        
+                self.current_index = len(categories_dict[self.current_category]) - 1
+
         return self.current()
-    
-    def jump_to_size(self, size: int) -> 'InstanceManager':
+
+    def jump_to_size(self, size: int) -> 'LiLimInstanceManager':
         """
-        Wechselt zur angegebenen Problemgröße.
-        
+        Switches to the specified problem size.
+
         Args:
-            size: Eine der verfügbaren Größen (100, 200, 400, 600, 1000)
+            size: One of the available sizes (100, 200, 400, 600, 1000)
         """
         if size not in self.SIZES:
             raise ValueError(f"Size {size} not available. Choose from {self.SIZES}")
         self.current_size = size
         return self
-    
-    def jump_to_category(self, category: str) -> 'InstanceManager':
+
+    def jump_to_category(self, category: str) -> 'LiLimInstanceManager':
         """
-        Wechselt zur angegebenen Kategorie.
-        
+        Switches to the specified category.
+
         Args:
-            category: Eine der Kategorien ('lc1', 'lc2', 'lr1', 'lr2', 'lrc1', 'lrc2')
+            category: One of the categories ('lc1', 'lc2', 'lr1', 'lr2', 'lrc1', 'lrc2')
         """
         if category not in self.CATEGORIES:
             raise ValueError(f"Category {category} not available. Choose from {list(self.CATEGORIES.keys())}")
         self.current_category = category
         self.current_index = 0
         return self
-    
-    def jump_to(self, instance_name: str) -> 'InstanceManager':
+
+    def jump_to(self, instance_name: str) -> 'LiLimInstanceManager':
         """
-        Springt direkt zu einer benannten Instanz.
-        
+        Jumps directly to a named instance.
+
         Args:
-            instance_name: Name der Instanz (z.B. 'lc201')
+            instance_name: Instance name (e.g., 'lc201' or 'LC1_2_1')
         """
-        for category, instances in self.CATEGORIES.items():
+        categories_dict = self._get_categories(self.current_size)
+        for category, instances in categories_dict.items():
             if instance_name in instances:
                 self.current_category = category
                 self.current_index = instances.index(instance_name)
                 return self
-        
-        raise ValueError(f"Instance {instance_name} not found")
-    
+
+        raise ValueError(f"Instance {instance_name} not found for size {self.current_size}")
+
     def get_all_in_category(self, category: str, size: Optional[int] = None) -> list[PDPTWProblem]:
         """
-        Lädt alle Instanzen einer Kategorie.
-        
+        Loads all instances of a category.
+
         Args:
-            category: Kategorie-Name
-            size: Problemgröße (default: current_size)
+            category: Category name
+            size: Problem size (default: current_size)
         """
-        if category not in self.CATEGORIES:
-            raise ValueError(f"Unknown category: {category}")
-        
         if size is None:
             size = self.current_size
-            
+
+        categories_dict = self._get_categories(size)
+        if category not in categories_dict:
+            raise ValueError(f"Unknown category: {category}")
+
         problems = []
-        for instance_name in self.CATEGORIES[category]:
+        for instance_name in categories_dict[category]:
             problems.append(self.load(instance_name, size))
-        
+
         return problems
-    
+
     def get_all(self, size: Optional[int] = None) -> list[PDPTWProblem]:
         """
-        Lädt alle verfügbaren Instanzen einer Größe.
-        
+        Loads all available instances of a size.
+
         Args:
-            size: Problemgröße (default: current_size)
+            size: Problem size (default: current_size)
         """
         if size is None:
             size = self.current_size
-            
+
+        categories_dict = self._get_categories(size)
         problems = []
-        for category in self.CATEGORIES.keys():
+        for category in categories_dict.keys():
             problems.extend(self.get_all_in_category(category, size))
-        
+
         return problems
-    
+
     def iterate_current(self) -> Iterator[tuple[str, int, PDPTWProblem]]:
         """
-        Iteriert nur über Instanzen der aktuellen Größe und Kategorie.
-        
+        Iterates only over instances of the current size and category.
+
         Yields:
             (instance_name, size, problem) tuples
         """
-        for instance_name in self.CATEGORIES[self.current_category]:
+        categories_dict = self._get_categories(self.current_size)
+        for instance_name in categories_dict[self.current_category]:
             problem = self.load(instance_name, self.current_size)
             yield (instance_name, self.current_size, problem)
-    
+
     def iterate_category(self, category: str, size: Optional[int] = None) -> Iterator[tuple[str, int, PDPTWProblem]]:
         """
-        Iteriert über alle Instanzen einer Kategorie.
-        
+        Iterates over all instances of a category.
+
         Args:
-            category: Kategorie-Name
-            size: Problemgröße (default: current_size)
-            
+            category: Category name
+            size: Problem size (default: current_size)
+
         Yields:
             (instance_name, size, problem) tuples
         """
         if size is None:
             size = self.current_size
-            
-        for instance_name in self.CATEGORIES[category]:
+
+        categories_dict = self._get_categories(size)
+        for instance_name in categories_dict[category]:
             problem = self.load(instance_name, size)
             yield (instance_name, size, problem)
-    
+
     def iterate_size(self, size: int) -> Iterator[tuple[str, str, int, PDPTWProblem]]:
         """
-        Iteriert über alle Instanzen ALLER Kategorien einer bestimmten Größe.
-        
+        Iterates over all instances of ALL categories for a specific size.
+
         Args:
-            size: Problemgröße
-            
+            size: Problem size
+
         Yields:
             (instance_name, category, size, problem) tuples
         """
-        for category, instances in self.CATEGORIES.items():
+        categories_dict = self._get_categories(size)
+        for category, instances in categories_dict.items():
             for instance_name in instances:
                 problem = self.load(instance_name, size)
                 yield (instance_name, category, size, problem)
-    
-    def iterate_all(self, 
+
+    def iterate_all(self,
                    sizes: Optional[list[int]] = None,
                    categories: Optional[list[str]] = None) -> Iterator[tuple[str, str, int, PDPTWProblem]]:
         """
-        Iteriert über ALLE Instanzen aller Größen und Kategorien.
-        
+        Iterates over ALL instances across all sizes and categories.
+
         Args:
-            sizes: Liste von Größen (default: alle verfügbaren)
-            categories: Liste von Kategorien (default: alle verfügbaren)
-            
+            sizes: List of sizes (default: all available)
+            categories: List of categories (default: all available)
+
         Yields:
             (instance_name, category, size, problem) tuples
         """
@@ -262,16 +281,20 @@ class InstanceManager:
             sizes = self.SIZES
         if categories is None:
             categories = list(self.CATEGORIES.keys())
-        
-        for size in sizes:
-            for category in categories:
-                if category not in self.CATEGORIES:
-                    continue
-                for instance_name in self.CATEGORIES[category]:
-                    problem = self.load(instance_name, size)
-                    yield (instance_name, category, size, problem)
-    
-    def __repr__(self) -> str:
-        instance_name = self.CATEGORIES[self.current_category][self.current_index]
-        return f"InstanceManager(current={instance_name}, size={self.current_size}, category={self.current_category})"
 
+        for size in sizes:
+            categories_dict = self._get_categories(size)
+            for category in categories:
+                if category not in categories_dict:
+                    continue
+                for instance_name in categories_dict[category]:
+                    try:
+                        problem = self.load(instance_name, size)
+                        yield (instance_name, category, size, problem)
+                    except FileNotFoundError:
+                        continue  # Skip missing files
+
+    def __repr__(self) -> str:
+        categories = self._get_categories(self.current_size)
+        instance_name = categories[self.current_category][self.current_index]
+        return f"LiLimInstanceManager(current={instance_name}, size={self.current_size}, category={self.current_category})"
