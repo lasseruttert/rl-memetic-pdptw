@@ -238,15 +238,28 @@ class PDPTWSolution:
     def get_solution_txt(self) -> str:
         """Generates a textual representation of the solution in a specific format."""
         lines = []
-        lines.append(f"Instance name: {self.problem.name}")
-        lines.append(f"Authors: Placeholder")
-        lines.append(f"Date: Placeholder")
-        lines.append(f"Reference: Placeholder")
+        lines.append(f"Instance name : {self.problem.name}")
+        lines.append(f"Authors       : Placeholder")
+        lines.append(f"Date          : Placeholder")
+        lines.append(f"Reference     : Placeholder")
         lines.append(f"Solution")
         # Vehicle routes - Format: Route # : node1 node2 ... nodeN (no depot at start/end)
+        index = 1
         for i, route in enumerate(self.routes):
             if len(route) > 2:
-                route_str = ' '.join(map(str, route))
-                lines.append(f"Route {i} : {route_str}")
-        
+                route_no_depot = route[1:-1]  # Exclude starting and ending depot
+                route_str = ' '.join(map(str, route_no_depot))
+                lines.append(f"Route {index} : {route_str}")
+                index += 1  
         return '\n'.join(lines)
+
+    def save_solution_txt(self, save_path: str):
+        """Saves the textual representation of the solution to a file."""
+        solution_txt = self.get_solution_txt()
+        # make sure save_path exists
+        import os   
+        os.makedirs(save_path, exist_ok=True)
+        file_path = f"{save_path}/{self.problem.name}.{self.num_vehicles_used}_{int(self.total_distance)}.txt"
+        # Force Unix line endings with newline='\n' and UTF-8 encoding
+        with open(file_path, 'w', newline='\n', encoding='utf-8') as file:
+            file.write(solution_txt)
