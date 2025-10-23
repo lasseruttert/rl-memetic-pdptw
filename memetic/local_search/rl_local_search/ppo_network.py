@@ -58,7 +58,6 @@ class PPONetwork(nn.Module):
 
         # Build architecture based on attention flag
         if not use_operator_attention:
-            # STANDARD BRANCH: Simple concatenation architecture
             # Shared feature extraction layers
             feature_layers = []
             prev_dim = state_dim
@@ -201,8 +200,6 @@ class PPONetwork(nn.Module):
             solution_embed = self.solution_encoder(solution_features)  # (batch_size, d_model)
 
             # Encode operator features (apply encoder to each operator)
-            # Input: (batch_size, num_ops, op_dim_per_op)
-            # Reshape for encoder: (batch_size * num_ops, op_dim_per_op)
             operator_features_reshaped = operator_features.reshape(-1, self.operator_feature_dim_per_op)
             operator_embed_reshaped = self.operator_encoder(operator_features_reshaped)  # (batch * num_ops, d_model)
             # Reshape back: (batch_size, num_ops, d_model)

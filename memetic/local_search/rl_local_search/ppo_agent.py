@@ -232,20 +232,16 @@ class PPOAgent:
         advantages = np.zeros_like(rewards)
         last_advantage = 0.0
 
-        # Compute advantages in reverse order
         for t in reversed(range(len(rewards))):
             if t == len(rewards) - 1:
                 next_val = next_value
             else:
                 next_val = values[t + 1]
 
-            # TD error: δ_t = r_t + γ * V(s_{t+1}) - V(s_t)
             delta = rewards[t] + self.gamma * next_val * (1 - dones[t]) - values[t]
 
-            # GAE: A_t = δ_t + (γλ) * δ_{t+1} + (γλ)^2 * δ_{t+2} + ...
             advantages[t] = last_advantage = delta + self.gamma * self.gae_lambda * (1 - dones[t]) * last_advantage
 
-        # Returns are advantages + values
         returns = advantages + values
 
         return advantages, returns
@@ -344,7 +340,6 @@ class PPOAgent:
                 policy_loss = -torch.min(ratio * mb_advantages, clipped_ratio * mb_advantages).mean()
 
                 # Value loss (clipped)
-                # Convert old values to tensor for clipping
                 old_values = torch.FloatTensor(values[mb_indices]).to(self.device)
                 value_pred_clipped = old_values + torch.clamp(
                     state_values - old_values,

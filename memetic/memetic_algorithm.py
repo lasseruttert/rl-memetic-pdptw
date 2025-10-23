@@ -38,7 +38,7 @@ from memetic.solution_operators.two_opt import TwoOptOperator
 from memetic.solution_operators.two_opt_star import TwoOptStarOperator
 
 from memetic.utils.distance_measure import DistanceMeasure
-from memetic.utils.edge_frequency import SparseCentroid, compute_sparse_edges # TODO: use centroid for diversity
+from memetic.utils.edge_frequency import SparseCentroid, compute_sparse_edges 
 
 import time
 import random
@@ -340,6 +340,8 @@ class MemeticSolver:
         # Set reproducer function pointer based on strategy
         if self.reproduction_strategy == 'sequential':
             self.reproducer = self._reproduce_sequential
+        elif self.reproduction_strategy == 'sequential_with_buffer':
+            self.reproducer = self._reproduce_sequential_with_buffer
         elif self.reproduction_strategy == 'binary':
             self.reproducer = self._reproduce_binary
             if self.max_generations is not None:
@@ -386,6 +388,7 @@ class MemeticSolver:
         done = False
         generation = 0
         no_improvement_count = 0
+        executed_backup_strategy = False
         
         start_time = time.time()
         
@@ -448,6 +451,12 @@ class MemeticSolver:
             )
                 
             generation += 1
+            
+            if not executed_backup_strategy and self.max_no_improvement is not None and no_improvement_count >= self.max_no_improvement // 2:
+                if self.verbose: 
+                    print("\033[1;31mNo improvement for half of max_no_improvement.\033[0m")
+                population, current_fitnesses, current_num_vehicles = self._execute_backup_strategy(problem, population, current_fitnesses, current_num_vehicles)
+                executed_backup_strategy = True
 
             if self._check_if_done(generation, no_improvement_count, start_time):
                 if self.verbose: print("\033[1;31mStopping criteria met.\033[0m\n")
@@ -633,6 +642,15 @@ class MemeticSolver:
         # TODO: use some distance metric to ensure diversity
 
         return population, current_fitnesses, current_num_vehicles
+    
+    def _execute_backup_strategy(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, current_num_vehicles: list):
+        """Execute a backup strategy to diversify the population.""" # TODO Implement other stategies
+        for i in range(len(population)):
+            if random.random() < 0.5:
+                population[i] = self.initial_solution_generator.generate(problem, 1)[0]
+                current_fitnesses[i] = self.fitness_function(problem, population[i])
+                current_num_vehicles[i] = population[i].num_vehicles_used
+        return population, current_fitnesses, current_num_vehicles
         
     def _evaluate(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, iteration: int, start_time: float):
         """Evaluate the population and store statistics."""
@@ -694,8 +712,3 @@ class MemeticSolver:
         if self.max_time_seconds is not None and (time.time() - start_time) >= self.max_time_seconds:
             return True
         return False
-    
-@dataclass
-class Individual: # TODO: use this class instead of multiple lists
-    solution: PDPTWSolution
-    fitness: float

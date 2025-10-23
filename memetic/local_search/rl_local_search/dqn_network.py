@@ -14,11 +14,6 @@ class DQNNetwork(nn.Module):
     - A(s,a): Advantage function - "How much better is action a compared to others?"
 
     Q(s,a) = V(s) + (A(s,a) - mean(A(s,a)))
-
-    Benefits for PDPTW local search:
-    - Learns state quality independently from action selection
-    - Better handles states where all actions have similar Q-values
-    - Faster convergence when many actions have similar effects
     """
 
     def __init__(
@@ -61,12 +56,11 @@ class DQNNetwork(nn.Module):
 
         # Build architecture based on attention flag
         if not use_operator_attention:
-            # ORIGINAL BRANCH: Standard Dueling DQN
             # Shared feature extraction layers
             feature_layers = []
             prev_dim = state_dim
 
-            for hidden_dim in hidden_dims[:-1]:  # All but last layer
+            for hidden_dim in hidden_dims[:-1]:
                 feature_layers.append(nn.Linear(prev_dim, hidden_dim))
                 feature_layers.append(nn.ReLU())
                 feature_layers.append(nn.Dropout(dropout_rate))
@@ -91,7 +85,6 @@ class DQNNetwork(nn.Module):
             )
 
         else:
-            # ATTENTION BRANCH: Operator Attention Architecture
             # Model dimension for attention
             d_model = hidden_dims[0]
 
@@ -207,7 +200,6 @@ class DQNNetwork(nn.Module):
             solution_embed = self.solution_encoder(solution_features)  # (batch_size, d_model)
 
             # Encode operator features (apply encoder to each operator)
-            # Input: (batch_size, num_ops, op_dim_per_op)
             # Reshape for encoder: (batch_size * num_ops, op_dim_per_op)
             operator_features_reshaped = operator_features.reshape(-1, self.operator_feature_dim_per_op)
             operator_embed_reshaped = self.operator_encoder(operator_features_reshaped)  # (batch * num_ops, d_model)
@@ -215,7 +207,6 @@ class DQNNetwork(nn.Module):
             operator_embed = operator_embed_reshaped.reshape(batch_size, self.num_operators, -1)
 
             # Cross-attention: Solution (query) attends to Operators (key/value)
-            # Query: (batch_size, 1, d_model) - unsqueeze for attention
             solution_query = solution_embed.unsqueeze(1)  # (batch_size, 1, d_model)
             # Key/Value: (batch_size, num_ops, d_model)
             attended_output, attention_weights = self.cross_attention(
@@ -566,7 +557,6 @@ class DQNAgent:
             next_actions = self.q_network(next_states).argmax(dim=1)
             next_q_values = self.target_network(next_states).gather(1, next_actions.unsqueeze(1)).squeeze(1)
 
-            # n-step TD target: r + γ^n * Q(s', a')
             gamma_n = self.gamma ** n_steps.float()
             target_q_values = rewards + (1 - dones) * gamma_n * next_q_values
 

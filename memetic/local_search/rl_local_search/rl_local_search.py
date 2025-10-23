@@ -347,7 +347,6 @@ class RLLocalSearch(BaseLocalSearch):
             # Compute per-instance statistics
             instance_avg_fitnesses.append(np.mean(instance_fitnesses))
 
-            # Variance WITHIN seeds (same seed, multiple runs) - should be ~0 if deterministic
             within_seed_stds = []
             for base_seed in validation_seeds:
                 seed_results = results_per_seed[base_seed]
@@ -357,7 +356,6 @@ class RLLocalSearch(BaseLocalSearch):
                     within_seed_stds.append(0.0)
             instance_std_within_seeds.append(np.mean(within_seed_stds))
 
-            # Variance ACROSS seeds (different seeds) - expected to be >0
             seed_averages = [np.mean(results_per_seed[base_seed]) for base_seed in validation_seeds]
             if len(seed_averages) > 1:
                 instance_std_across_seeds.append(np.std(seed_averages))
