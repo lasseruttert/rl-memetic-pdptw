@@ -32,7 +32,8 @@ def li_lim_reader(file_path):
         num_vehicles=num_vehicles,
         vehicle_capacity=vehicle_capacity,
         nodes=nodes,
-        name=problem_name
+        name=problem_name,
+        dataset="Li & Lim"
     )
 
     return problem

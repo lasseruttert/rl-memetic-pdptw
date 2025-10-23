@@ -63,6 +63,7 @@ class PDPTWProblem:
     distance_matrix: np.ndarray = None
     """Optional pre-computed distance/time matrix. If None, will be computed from node coordinates."""
     name: str = "PDPTW Problem"
+    dataset: str = "Generic"
 
     def __post_init__(self):
         n = len(self.nodes)

@@ -72,7 +72,8 @@ def mendeley_reader(file_path):
         vehicle_capacity=capacity,
         nodes=nodes,
         distance_matrix=distance_matrix,
-        name=problem_name
+        name=problem_name,
+        dataset="Mendeley"
     )
 
     return problem
