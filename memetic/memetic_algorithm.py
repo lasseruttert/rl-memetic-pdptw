@@ -537,9 +537,9 @@ class MemeticSolver:
             tuple: (population, current_fitnesses, current_num_vehicles, best_fitness, best_solution, no_improvement_count)
         """
         no_improvement_in_generation = True
-        new_population = [None for _ in range(len(population))]
-        new_fitnesses = [None for _ in range(len(population))]
-        new_num_vehicles = [None for _ in range(len(population))]
+        new_population = [population[i].clone() for i in range(len(population))]
+        new_fitnesses = [current_fitnesses[i] for i in range(len(population))]
+        new_num_vehicles = [current_num_vehicles[i] for i in range(len(population))]
         for i in range(len(population)):
             parent1 = population[i]
             parent2 = population[i + 1] if i + 1 < len(population) else population[0]
