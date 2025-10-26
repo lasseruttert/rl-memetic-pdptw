@@ -24,7 +24,7 @@ class LocalSearchEnv(gym.Env):
         operators: list[BaseOperator],
         alpha: float = 1.0,
         acceptance_strategy: str = "greedy",
-        reward_strategy: str = "initial_improvement",
+        reward_strategy: str = "binary",
         max_steps: int = 100,
         max_no_improvement: Optional[int] = None
     ):

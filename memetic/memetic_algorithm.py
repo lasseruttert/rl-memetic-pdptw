@@ -353,6 +353,7 @@ class MemeticSolver:
 
         self.evaluation_interval = evaluation_interval
         self.evaluations = {}
+        self.final_evaluation = {}
         
         self.verbose = verbose
         
@@ -461,6 +462,7 @@ class MemeticSolver:
             if self._check_if_done(generation, no_improvement_count, start_time):
                 if self.verbose: print("\033[1;31mStopping criteria met.\033[0m\n")
                 done = True
+                self._final_evaluation(problem, population, current_fitnesses, generation, start_time, best_fitness)
         
         if self.calculate_upper_bound_vehicles: problem.num_vehicles = original_num_vehicles
 
@@ -609,7 +611,15 @@ class MemeticSolver:
             current_num_vehicles[worse_idx] = child.num_vehicles_used
 
             if self.track_convergence:
-                self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
+                self.convergence[time.time() - start_time] = {
+                    "best_fitness": best_fitness, 
+                    "num_vehicles": best_solution.num_vehicles_used, 
+                    "min_fitness": min(current_fitnesses),
+                    "max_fitness": max(current_fitnesses),
+                    "avg_fitness": sum(current_fitnesses) / len(current_fitnesses),
+                    "std_fitness": (sum((f - sum(current_fitnesses) / len(current_fitnesses)) ** 2 for f in current_fitnesses) / len(current_fitnesses)) ** 0.5,
+                    "feasible": sum(1 for solution in population if solution.is_feasible) / len(population)
+                    }
         if compare(fitness, child.num_vehicles_used, best_fitness, best_solution.num_vehicles_used):
             if self.verbose: print(f"New best solution found with fitness {fitness:.2f} at generation {generation}")
             best_solution = child.clone()
@@ -619,7 +629,15 @@ class MemeticSolver:
             no_improvement_in_generation = False
 
             if self.track_convergence:
-                self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
+                self.convergence[time.time() - start_time] = {
+                    "best_fitness": best_fitness, 
+                    "num_vehicles": best_solution.num_vehicles_used, 
+                    "min_fitness": min(current_fitnesses),
+                    "max_fitness": max(current_fitnesses),
+                    "avg_fitness": sum(current_fitnesses) / len(current_fitnesses),
+                    "std_fitness": (sum((f - sum(current_fitnesses) / len(current_fitnesses)) ** 2 for f in current_fitnesses) / len(current_fitnesses)) ** 0.5,
+                    "feasible": sum(1 for solution in population if solution.is_feasible) / len(population)
+                    }
         if no_improvement_in_generation:
             if self.verbose: print(f"No improvement in generation {generation}")
             no_improvement_count += 1
@@ -677,6 +695,71 @@ class MemeticSolver:
         }
         return # TODO: add more detailed evaluation
     
+    def _final_evaluation(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, iteration: int, start_time: float, best_fitness: float = None):
+        """Final evaluation of the population and store statistics."""
+        self._evaluate(problem, population, current_fitnesses, iteration, start_time)
+        # add time it took to find final fitness,
+        if self.track_convergence and self.convergence:
+            # Use the tracked best_fitness if provided, otherwise fall back to min
+            if best_fitness is None:
+                best_fitness = min(current_fitnesses)
+
+            final_time = None
+            last_t = None
+            epsilon = 1e-9  # For floating point comparison
+
+            # Iterate backwards to find when we first achieved this fitness
+            for t in sorted(self.convergence.keys(), reverse=True):
+                if self.convergence[t]['best_fitness'] > best_fitness + epsilon:
+                    # Found a point where fitness was worse - the next point (last_t) is when we achieved it
+                    final_time = last_t if last_t is not None else t
+                    break
+                last_t = t
+
+            # If we never found a worse fitness, it means best was found at the earliest tracked time
+            if final_time is None:
+                final_time = min(self.convergence.keys())
+
+            # Calculate number of improvements and longest stagnation from convergence data
+            sorted_times = sorted(self.convergence.keys())
+            improvements = []
+            stagnation_periods = []
+
+            prev_best = float('inf')
+            prev_time = sorted_times[0] if sorted_times else 0.0
+
+            for t in sorted_times:
+                current_best = self.convergence[t]['best_fitness']
+                if current_best < prev_best - epsilon:
+                    # Improvement occurred
+                    improvements.append({
+                        'time': t,
+                        'fitness': current_best,
+                        'improvement': prev_best - current_best
+                    })
+                    if len(improvements) > 1:
+                        # Calculate stagnation period since last improvement
+                        stagnation_periods.append(t - prev_time)
+                    prev_time = t
+                    prev_best = current_best
+
+            # Add final stagnation period (from last improvement to end)
+            total_time = time.time() - start_time
+            if improvements:
+                final_stagnation = total_time - prev_time
+                stagnation_periods.append(final_stagnation)
+
+            num_improvements = len(improvements)
+            longest_stagnation = max(stagnation_periods) if stagnation_periods else 0.0
+            avg_stagnation = sum(stagnation_periods) / len(stagnation_periods) if stagnation_periods else 0.0
+
+            self.final_evaluation['total_time'] = total_time
+            self.final_evaluation['time_to_final_fitness'] = final_time
+            self.final_evaluation['final_fitness'] = best_fitness
+            self.final_evaluation['num_improvements'] = num_improvements
+            self.final_evaluation['longest_stagnation'] = longest_stagnation
+            self.final_evaluation['avg_stagnation'] = avg_stagnation
+            
     def _calculate_upper_bound_vehicles(self, problem: PDPTWProblem) -> int:
         """Calculate an upper bound on the number of vehicles needed to serve all customers."""
         old_num_no_improvement = self.local_search_operator.max_no_improvement
