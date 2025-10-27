@@ -24,3 +24,4 @@ class HybridGenerator(BaseGenerator):
             solutions.append(solution)
         
         return solutions
+    

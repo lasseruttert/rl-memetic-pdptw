@@ -69,6 +69,7 @@ class MutationEnv(gym.Env):
         # Cached population statistics
         self.population_fitnesses: Optional[list[float]] = None
         self.population_num_vehicles: Optional[list[int]] = None
+        self.cached_population_diversity: Optional[float] = None
 
         # Early stopping tracking
         self.no_improvement_count: int = 0
@@ -175,6 +176,9 @@ class MutationEnv(gym.Env):
         # Clear distance measure cache
         self.distance_measure.clear_cache()
 
+        # Initialize diversity cache
+        self.cached_population_diversity = self._calculate_population_diversity(self.population)
+
         observation = self._get_state()
 
         info = {
@@ -201,20 +205,22 @@ class MutationEnv(gym.Env):
 
         # Apply selected operator (includes no-op if provided in operators list)
         operator = self.operators[action]
-        if operator.name == "NoOp":
-            pass # TODO: does this need different logic, like early stopping
-        
-        new_solution = operator.apply(self.problem, self.current_solution)
+        operator_name = operator.name if hasattr(operator, 'name') else f"Operator{action}"
+
+        # Handle NoOp operator - skip mutation but still calculate reward
+        if operator_name == "NoOp":
+            new_solution = self.current_solution.clone()
+        else:
+            new_solution = operator.apply(self.problem, self.current_solution)
 
         old_measures = self.current_measures
         new_measures = self._get_solution_measures(self.problem, new_solution, self.population)
 
         # Create hypothetical new population (replace solution at stored index)
-        new_population = [s.clone() for s in self.population]
-        old_population = self.population.copy()
-
-        # Replace the solution at the stored index
-        new_population[self.solution_index] = new_solution.clone()
+        # Optimization: Only create new list with references, don't clone unchanged solutions
+        old_population = self.population
+        new_population = list(self.population)  # Shallow copy of list
+        new_population[self.solution_index] = new_solution  # Replace with new solution
 
         # Update fitnesses and vehicle counts - only recalculate for the changed solution
         new_population_fitnesses = self.population_fitnesses.copy()
@@ -225,7 +231,7 @@ class MutationEnv(gym.Env):
 
 
         # Calculate reward metrics
-        reward = self._calculate_reward(
+        reward, new_diversity = self._calculate_reward(
             old_population=old_population,
             new_population=new_population,
             old_fitnesses=self.population_fitnesses,
@@ -249,9 +255,8 @@ class MutationEnv(gym.Env):
             self.no_improvement_count += 1
 
         # Accept solution based on strategy
-        # accepted = self._accept_solution(old_measures, new_measures)
-        accepted = True if reward > 0 else False
-        
+        accepted = self._accept_solution(old_measures, new_measures, reward)
+
         improvement = self._compare_solutions_by_measures(new_measures, old_measures)
 
         # Update state if accepted
@@ -259,9 +264,12 @@ class MutationEnv(gym.Env):
             self.current_solution = new_solution
             self.current_measures = new_measures.copy()
             # Update the stored population with the new solution (at the stored index)
-            self.population = new_population
+            # Clone new_population list to avoid aliasing issues
+            self.population = list(new_population)
             self.population_fitnesses = new_population_fitnesses
             self.population_num_vehicles = new_population_num_vehicles
+            # Update diversity cache
+            self.cached_population_diversity = new_diversity
 
         # Calculate fitness improvement for metrics
 
@@ -295,8 +303,6 @@ class MutationEnv(gym.Env):
         # Observation and info
         observation = self._get_state()
 
-        operator_name = operator.name if hasattr(operator, 'name') else f"Operator{action}"
-
         info = {
             'fitness': self.current_measures['fitness'],
             'new_fitness': new_measures["fitness"],
@@ -321,7 +327,7 @@ class MutationEnv(gym.Env):
         new_num_vehicles: list[int],
         old_measures: dict,
         new_measures: dict
-    ) -> float:
+    ) -> tuple[float, float]:
         """Calculate reward based on comprehensive metrics.
 
         This method calculates all available metrics and passes them to _compose_reward()
@@ -338,7 +344,7 @@ class MutationEnv(gym.Env):
             new_measures: Measures dict for solution after mutation
 
         Returns:
-            Scalar reward value
+            Tuple of (reward, new_population_diversity) for cache update
         """
         metrics = self._calculate_reward_metrics(
             old_population=old_population,
@@ -351,7 +357,10 @@ class MutationEnv(gym.Env):
             new_measures=new_measures
         )
 
-        return self._compose_reward(metrics)
+        reward = self._compose_reward(metrics)
+        new_diversity = metrics['population_diversity_new']
+
+        return reward, new_diversity
 
     def _calculate_reward_metrics(
         self,
@@ -483,8 +492,16 @@ class MutationEnv(gym.Env):
         metrics['num_vehicles_change'] = old_vehicles - new_vehicles
 
         # Population diversity (average pairwise distance)
-        old_pop_diversity = self._calculate_population_diversity(old_population)
-        new_pop_diversity = self._calculate_population_diversity(new_population)
+        # Use incremental calculation for efficiency (O(n) instead of O(n²))
+        if self.cached_population_diversity is not None:
+            old_pop_diversity, new_pop_diversity = self._calculate_diversity_incremental(
+                old_population, new_population, self.solution_index, self.cached_population_diversity
+            )
+        else:
+            # Fallback to full calculation if cache is not available
+            old_pop_diversity = self._calculate_population_diversity(old_population)
+            new_pop_diversity = self._calculate_population_diversity(new_population)
+
         metrics['population_diversity_old'] = old_pop_diversity
         metrics['population_diversity_new'] = new_pop_diversity
         metrics['population_diversity_change'] = new_pop_diversity - old_pop_diversity
@@ -513,8 +530,57 @@ class MutationEnv(gym.Env):
 
         return total_distance / count if count > 0 else 0.0
 
+    def _calculate_diversity_incremental(
+        self,
+        old_population: list[PDPTWSolution],
+        new_population: list[PDPTWSolution],
+        changed_index: int,
+        old_diversity: float
+    ) -> tuple[float, float]:
+        """Calculate population diversity incrementally when one solution changes.
+
+        This is much faster than recalculating all pairwise distances (O(n) vs O(n²)).
+
+        Args:
+            old_population: Population before change
+            new_population: Population after change
+            changed_index: Index of the solution that changed
+            old_diversity: Cached diversity value before change
+
+        Returns:
+            Tuple of (old_population_diversity, new_population_diversity)
+        """
+        n = len(old_population)
+        if n <= 1:
+            return 0.0, 0.0
+
+        total_pairs = n * (n - 1) / 2
+
+        # Calculate contribution of old solution (sum of distances to all others)
+        old_solution = old_population[changed_index]
+        old_contribution = 0.0
+        for i in range(n):
+            if i != changed_index:
+                old_contribution += self.distance_measure.edge_distance(old_solution, old_population[i])
+
+        # Calculate contribution of new solution (sum of distances to all others)
+        new_solution = new_population[changed_index]
+        new_contribution = 0.0
+        for i in range(n):
+            if i != changed_index:
+                new_contribution += self.distance_measure.edge_distance(new_solution, new_population[i])
+
+        # Incremental update: remove old contribution, add new contribution
+        old_total_distance = old_diversity * total_pairs
+        new_total_distance = old_total_distance - old_contribution + new_contribution
+        new_diversity = new_total_distance / total_pairs
+
+        return old_diversity, new_diversity
+
     def _compose_reward(self, metrics: dict) -> float:
         """Compose final reward from calculated metrics.
+
+        Dispatches to different reward strategies based on self.reward_strategy.
 
         Args:
             metrics: Dictionary of all calculated metrics
@@ -522,21 +588,180 @@ class MutationEnv(gym.Env):
         Returns:
             Scalar reward value
         """
-        # reward 1 for fitness improvements, 1 for diversity increase a la compare solutions method
-        # reward -1 for fitness decrease, -1 for diversity decrease and for duplicates
+        if self.reward_strategy == "binary":
+            return self._reward_binary(metrics)
+        elif self.reward_strategy == "magnitude_based":
+            return self._reward_magnitude_based(metrics)
+        elif self.reward_strategy == "diversity_focused":
+            return self._reward_diversity_focused(metrics)
+        elif self.reward_strategy == "adaptive":
+            return self._reward_adaptive(metrics)
+        else:
+            # Default to binary
+            return self._reward_binary(metrics)
+
+    def _reward_binary(self, metrics: dict) -> float:
+        """Binary reward strategy: +1/-1 for improvements/degradations.
+
+        Simple and stable reward that treats all improvements equally.
+
+        Args:
+            metrics: Dictionary of all calculated metrics
+
+        Returns:
+            Reward value in range [-3, +3]
+        """
         reward = 0.0
+
+        # Fitness component
         if metrics['fitness_improvement'] > 0:
             reward += 1.0
         elif metrics['fitness_improvement'] < 0:
             reward -= 1.0
-            
+
+        # Diversity component
         if metrics['diversity_change'] > 0:
             reward += 1.0
         elif metrics['diversity_change'] < 0:
             reward -= 1.0
-        
+
+        # Feasibility component
+        if metrics['new_measures']['is_feasible'] and not metrics['old_measures']['is_feasible']:
+            reward += 1.0
+        elif not metrics['new_measures']['is_feasible'] and metrics['old_measures']['is_feasible']:
+            reward -= 1.0
+
+        # Duplicate penalty
         if metrics['is_duplicate']:
             reward -= 1.0
+
+        return reward
+
+    def _reward_magnitude_based(self, metrics: dict) -> float:
+        """Magnitude-based reward: Scale by improvement percentage.
+
+        Rewards are proportional to the size of the improvement, encouraging
+        operators that make larger changes.
+
+        Args:
+            metrics: Dictionary of all calculated metrics
+
+        Returns:
+            Reward value (scaled and clipped)
+        """
+        reward = 0.0
+
+        # Fitness component: scaled by percentage improvement
+        fitness_reward = metrics['fitness_improvement_pct'] * 10  # Scale up for visibility
+        fitness_reward = np.clip(fitness_reward, -3, 3)  # Clip to reasonable range
+        reward += fitness_reward
+
+        # Diversity component: scaled by normalized change
+        diversity_change = metrics['diversity_change']
+        # Normalize by typical diversity scale (assume 0-1 range for diversity)
+        diversity_reward = np.clip(diversity_change * 5, -2, 2)
+        reward += diversity_reward
+
+        # Feasibility component: binary
+        if metrics['new_measures']['is_feasible'] and not metrics['old_measures']['is_feasible']:
+            reward += 2.0
+        elif not metrics['new_measures']['is_feasible'] and metrics['old_measures']['is_feasible']:
+            reward -= 2.0
+
+        # Duplicate penalty: stronger
+        if metrics['is_duplicate']:
+            reward -= 2.0
+
+        return reward
+
+    def _reward_diversity_focused(self, metrics: dict) -> float:
+        """Diversity-focused reward: Prioritize diversity over fitness.
+
+        Mutation's primary role in memetic algorithms is maintaining diversity.
+        This strategy weights diversity improvements more heavily than fitness.
+
+        Args:
+            metrics: Dictionary of all calculated metrics
+
+        Returns:
+            Reward value
+        """
+        reward = 0.0
+
+        # Fitness component: lower weight (0.3)
+        if metrics['fitness_improvement'] > 0:
+            reward += 0.3
+        elif metrics['fitness_improvement'] < 0:
+            reward -= 0.3
+
+        # Diversity component: higher weight (0.7)
+        if metrics['diversity_change'] > 0:
+            reward += 0.7
+        elif metrics['diversity_change'] < 0:
+            reward -= 0.7
+
+        # Feasibility component: standard weight
+        if metrics['new_measures']['is_feasible'] and not metrics['old_measures']['is_feasible']:
+            reward += 1.0
+        elif not metrics['new_measures']['is_feasible'] and metrics['old_measures']['is_feasible']:
+            reward -= 1.0
+
+        # Duplicate penalty: very strong (diversity is critical)
+        if metrics['is_duplicate']:
+            reward -= 2.0
+
+        return reward
+
+    def _reward_adaptive(self, metrics: dict) -> float:
+        """Adaptive reward: Adjust weights based on population state.
+
+        Automatically balances exploration (diversity) and exploitation (fitness)
+        based on the current population diversity. When diversity is low, emphasize
+        diversity; when diversity is high, emphasize fitness.
+
+        Args:
+            metrics: Dictionary of all calculated metrics
+
+        Returns:
+            Reward value
+        """
+        # Calculate current population diversity score (normalized 0-1)
+        # Higher value = more diverse population
+        pop_diversity = metrics['population_diversity_new']
+
+        # Normalize diversity to 0-1 range (assuming typical diversity range 0-1)
+        # If your diversity values are on a different scale, adjust this
+        pop_diversity_normalized = np.clip(pop_diversity, 0, 1)
+
+        # Adaptive weights
+        # Low diversity (converged) → high diversity weight, low fitness weight
+        # High diversity → low diversity weight, high fitness weight
+        diversity_weight = 1.0 - pop_diversity_normalized
+        fitness_weight = pop_diversity_normalized
+
+        reward = 0.0
+
+        # Fitness component: adaptive weight
+        if metrics['fitness_improvement'] > 0:
+            reward += fitness_weight
+        elif metrics['fitness_improvement'] < 0:
+            reward -= fitness_weight
+
+        # Diversity component: adaptive weight
+        if metrics['diversity_change'] > 0:
+            reward += diversity_weight
+        elif metrics['diversity_change'] < 0:
+            reward -= diversity_weight
+
+        # Feasibility component: standard
+        if metrics['new_measures']['is_feasible'] and not metrics['old_measures']['is_feasible']:
+            reward += 1.0
+        elif not metrics['new_measures']['is_feasible'] and metrics['old_measures']['is_feasible']:
+            reward -= 1.0
+
+        # Duplicate penalty: scaled by diversity need
+        if metrics['is_duplicate']:
+            reward -= (1.0 + diversity_weight)  # Stronger penalty when diversity is low
 
         return reward
 
@@ -628,19 +853,33 @@ class MutationEnv(gym.Env):
 
         return False
 
-    def _accept_solution(self, old_measures: dict, new_measures: dict) -> bool:
+    def _accept_solution(self, old_measures: dict, new_measures: dict, reward: float) -> bool:
         """Determine whether to accept the new solution.
 
         Args:
             old_measures: Measures dict of current solution
             new_measures: Measures dict of new solution
+            reward: Reward value for the mutation
 
         Returns:
             True if solution should be accepted, False otherwise
         """
-        # Use the same comparison logic as solution comparison
-        # This accepts if new solution is better according to our multi-criteria comparison
-        return self._compare_solutions_by_measures(new_measures, old_measures)
+        if self.acceptance_strategy == "reward_based":
+            # Accept if reward is non-negative
+            return reward >= 0
+
+        elif self.acceptance_strategy == "greedy":
+            # Accept only if new solution is better
+            return self._compare_solutions_by_measures(new_measures, old_measures)
+
+        elif self.acceptance_strategy == "always":
+            # Always accept
+            return True
+
+
+        else:
+            # Default to greedy
+            return self._compare_solutions_by_measures(new_measures, old_measures)
     
     def _get_solution_features(self, problem: PDPTWProblem, solution: PDPTWSolution) -> np.ndarray:
         """Extract feature vector from a solution for RL state representation.

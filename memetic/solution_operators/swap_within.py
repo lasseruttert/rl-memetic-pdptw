@@ -28,6 +28,11 @@ class SwapWithinOperator(BaseOperator):
                     # select two requests in the route and swap each pickup and delivery
                     nodes_in_route = route[1:-1]  # Exclude depot
                     requests = set(problem.get_pair(node) for node in nodes_in_route)
+
+                    # Skip if fewer than 2 unique requests
+                    if len(requests) < 2:
+                        continue
+
                     request1, request2 = random.sample(requests, 2)
                     pickup1, delivery1 = request1
                     pickup2, delivery2 = request2
@@ -39,6 +44,7 @@ class SwapWithinOperator(BaseOperator):
                     # Swap the positions
                     route[idx1_pickup], route[idx2_pickup] = route[idx2_pickup], route[idx1_pickup]
                     route[idx1_delivery], route[idx2_delivery] = route[idx2_delivery], route[idx1_delivery]
+                    attempts += 1
 
             new_solution._clear_cache()
 
