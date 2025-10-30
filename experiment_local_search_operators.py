@@ -20,6 +20,9 @@ from memetic.solution_operators.cls_m1 import CLSM1Operator
 from memetic.solution_operators.cls_m2 import CLSM2Operator
 from memetic.solution_operators.cls_m3 import CLSM3Operator
 from memetic.solution_operators.cls_m4 import CLSM4Operator
+from memetic.solution_operators.request_shift_within import RequestShiftWithinOperator
+from memetic.solution_operators.node_swap_within import NodeSwapWithinOperator
+
 import time
 
 if __name__ == "__main__":
@@ -68,7 +71,11 @@ if __name__ == "__main__":
         CLSM1Operator(),
         CLSM2Operator(),
         CLSM3Operator(),
-        CLSM4Operator()
+        CLSM4Operator(),
+        
+        RequestShiftWithinOperator(),
+        NodeSwapWithinOperator(check_precedence=True),
+        NodeSwapWithinOperator(check_precedence=False),
     ]
 
     instance_manager = LiLimInstanceManager()
@@ -123,3 +130,6 @@ if __name__ == "__main__":
 #? CLS-M2: applied 25947 times, improved 2069 times
 #? CLS-M3: applied 25947 times, improved 836 times
 #? CLS-M4: applied 25947 times, improved 1351 times
+#? RequestShiftWithin: applied 26499 times, improved 100 times
+#? NodeSwapWithin-WithPrecedence: applied 26499 times, improved 36 times
+#? NodeSwapWithin: applied 26499 times, improved 31 times

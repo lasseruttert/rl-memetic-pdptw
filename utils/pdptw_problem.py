@@ -188,6 +188,15 @@ class PDPTWProblem:
             return (node.pickup_index, node.index)
         else:
             raise ValueError(f"Node {node_index} is neither pickup nor delivery.")
+        
+    def get_other(self, node_index: int) -> int:
+        """Returns the paired node index for a given pickup or delivery node."""
+        if self.is_pickup(node_index):
+            return self.pickup_to_delivery[node_index]
+        elif self.is_delivery(node_index):
+            return self.delivery_to_pickup[node_index]
+        else:
+            raise ValueError(f"Node {node_index} is neither pickup nor delivery.")
     
     @property
     def data(self) -> dict:
