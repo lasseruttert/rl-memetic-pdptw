@@ -331,9 +331,9 @@ class RLMutation(BaseMutation):
         population_fitnesses = [None] * len(population)
         for i in range(len(population)):
             # Apply local search to each solution in the population
-            improved_solution, fit = self.ls.search(instance, population[i])
+            improved_solution, sol_fit = self.ls.search(instance, population[i])
             population[i] = improved_solution
-            population_fitnesses[i] = fit
+            population_fitnesses[i] = sol_fit
         random_index = random.randint(0, len(population) - 1)
         current_solution = population[random_index]
 
@@ -362,9 +362,9 @@ class RLMutation(BaseMutation):
                 population_fitnesses = [None] * len(population)
                 for i in range(len(population)):
                     # Apply local search to each solution in the population
-                    improved_solution, fitness = self.ls.search(instance, population[i])
+                    improved_solution, sol_fitness = self.ls.search(instance, population[i])
                     population[i] = improved_solution
-                    population_fitnesses[i] = fitness
+                    population_fitnesses[i] = sol_fitness
                 random_index = random.randint(0, len(population) - 1)
                 current_solution = population[random_index]
                 population_num_vehicles = [sol.num_vehicles_used for sol in population]
@@ -377,9 +377,9 @@ class RLMutation(BaseMutation):
                 population_fitnesses = [None] * len(population)
                 for i in range(len(population)):
                     # Apply local search to each solution in the population
-                    improved_solution, fitness = self.ls.search(instance, population[i])
+                    improved_solution, sol_fitness = self.ls.search(instance, population[i])
                     population[i] = improved_solution
-                    population_fitnesses[i] = fitness
+                    population_fitnesses[i] = sol_fitness
                 random_index = random.randint(0, len(population) - 1)
                 current_solution = population[random_index]
                 population_num_vehicles = [sol.num_vehicles_used for sol in population]
@@ -796,7 +796,7 @@ class RLMutation(BaseMutation):
 
         if self.rl_algorithm == "dqn":
             log_msg += f"eps: {self.agent.epsilon:.3f} | "
-        elif self.rl_algorithm == "ppo" and hasattr(self, 'ppo_episode_stats') and self.ppo_episode_stats['entropy']:
+        elif self.rl_algorithm == "ppo" and hasattr(self, 'ppo_episode_stats') and len(self.ppo_episode_stats.get('entropy', [])) > 0:
             log_msg += f"entropy: {self.ppo_episode_stats['entropy'][-1]:.3f} | "
 
         log_msg += (f"Loss: {avg_loss:.4f} | "

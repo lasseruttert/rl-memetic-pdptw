@@ -216,10 +216,10 @@ def main():
     parser.add_argument("--rl_algorithm", type=str, default="ppo",
                         choices=["dqn", "ppo"],
                         help="RL algorithm to use: dqn or ppo (default: ppo)")
-    parser.add_argument("--acceptance_strategy", type=str, default="always",
+    parser.add_argument("--acceptance_strategy", type=str, default="greedy",
                         choices=["greedy", "always"],
                         help="Acceptance strategy for mutation")
-    parser.add_argument("--reward_strategy", type=str, default="binary",
+    parser.add_argument("--reward_strategy", type=str, default="hybrid_sparse",
                         help="Reward strategy for RL agent")
     parser.add_argument("--problem_size", type=int, default=100,
                         choices=[100, 200, 400, 600, 1000],
@@ -418,7 +418,7 @@ def main():
 
     # Evaluation configuration
     NUM_TEST_INSTANCES = 20
-    NUM_EPISODES_PER_TEST = 10  # Number of mutation episodes per test instance
+    NUM_EPISODES_PER_TEST = 1  # Number of mutation episodes per test instance
     TEST_SEEDS = [42, 111, 222]
 
     print(f"\nEvaluation Configuration:")
@@ -469,15 +469,12 @@ def main():
                 best_episode_solution = current_solution.clone()
 
                 # Apply 100 mutation steps using NaiveMutation
-                for step in range(100):  # max_steps = 100
-                    # Apply one mutation step (random operator)
-                    current_solution = naive_mutation.mutate(problem, current_solution, population)
-                    current_fitness = fitness(problem, current_solution)
-
-                    # Track best solution
-                    if current_fitness < best_episode_fitness:
-                        best_episode_fitness = current_fitness
-                        best_episode_solution = current_solution.clone()
+                current_solution = naive_mutation.mutate(problem, current_solution, population)
+                current_fitness = fitness(problem, current_solution)
+                # Track best solution
+                if current_fitness < best_episode_fitness:
+                    best_episode_fitness = current_fitness
+                    best_episode_solution = current_solution.clone()
 
                 # Calculate diversity for best solution
                 distances = [
@@ -571,6 +568,7 @@ def main():
             gamma=0.99,
             batch_size=eval_batch_size,
             alpha=1.0,
+            reward_strategy=REWARD_STRATEGY,
             acceptance_strategy=ACCEPTANCE_STRATEGY,
             max_steps=30,
             device="cuda",

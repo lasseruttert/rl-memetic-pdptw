@@ -104,6 +104,8 @@ class PPOMutationAgent:
     def normalize_state(self, state: np.ndarray, update_stats: bool = True) -> np.ndarray:
         """Normalize state using running mean and std.
 
+        Uses Welford's online algorithm for numerically stable variance calculation.
+
         Args:
             state: State to normalize
             update_stats: Whether to update running statistics
@@ -114,14 +116,20 @@ class PPOMutationAgent:
         if self.state_mean is None:
             self.state_mean = np.zeros(self.state_dim, dtype=np.float32)
             self.state_std = np.ones(self.state_dim, dtype=np.float32)
+            self.state_m2 = np.zeros(self.state_dim, dtype=np.float32)  # For Welford's algorithm
 
         if update_stats and self.normalization_samples < 100000:
-            # Update running statistics
+            # Welford's online algorithm for numerically stable variance
             self.normalization_samples += 1
-            alpha = 1.0 / self.normalization_samples
             delta = state - self.state_mean
-            self.state_mean += alpha * delta
-            self.state_std = np.sqrt((1 - alpha) * (self.state_std ** 2) + alpha * (delta ** 2))
+            self.state_mean += delta / self.normalization_samples
+            delta2 = state - self.state_mean
+            self.state_m2 += delta * delta2
+
+            # Calculate std from accumulated M2
+            if self.normalization_samples > 1:
+                variance = self.state_m2 / (self.normalization_samples - 1)
+                self.state_std = np.sqrt(variance + 1e-8)  # Add epsilon for numerical stability
 
         # Normalize with small epsilon to avoid division by zero
         normalized = (state - self.state_mean) / (self.state_std + 1e-8)
@@ -446,6 +454,7 @@ class PPOMutationAgent:
             'training_stats': self.training_stats,
             'state_mean': self.state_mean,
             'state_std': self.state_std,
+            'state_m2': getattr(self, 'state_m2', None),
             'normalization_samples': self.normalization_samples
         }, path)
 
@@ -461,7 +470,12 @@ class PPOMutationAgent:
         self.update_count = checkpoint['update_count']
         self.training_stats = checkpoint['training_stats']
 
-        # Load normalization statistics if available
+        # Load normalization statistics if available (backward compatibility)
         self.state_mean = checkpoint.get('state_mean', None)
         self.state_std = checkpoint.get('state_std', None)
+        self.state_m2 = checkpoint.get('state_m2', None)
         self.normalization_samples = checkpoint.get('normalization_samples', 0)
+
+        # Initialize state_m2 if not in checkpoint (backward compatibility)
+        if self.state_m2 is None and self.state_mean is not None:
+            self.state_m2 = np.zeros(self.state_dim, dtype=np.float32)

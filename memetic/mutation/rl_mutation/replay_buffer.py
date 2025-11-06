@@ -326,8 +326,10 @@ class PrioritizedReplayBuffer:
         probabilities = priorities ** self.alpha
         probabilities /= probabilities.sum()
 
-        # Sample indices
-        indices = np.random.choice(self.size, batch_size, p=probabilities, replace=False)
+        # Sample indices (allow replacement if batch_size > buffer size)
+        replace = batch_size > self.size
+        actual_batch_size = min(batch_size, self.size)
+        indices = np.random.choice(self.size, actual_batch_size, p=probabilities, replace=replace)
 
         # Calculate importance sampling weights
         beta = self._compute_beta()
