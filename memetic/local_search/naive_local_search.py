@@ -7,6 +7,7 @@ from memetic.fitness.fitness import fitness
 from memetic.utils.compare import compare
 import random
 import numpy as np
+import time
 
 from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.solution_operators.route_elimination import RouteEliminationOperator
@@ -24,7 +25,7 @@ from memetic.solution_operators.cls_m4 import CLSM4Operator
 class NaiveLocalSearch(BaseLocalSearch):
     """A simple local search framework that applies a list of operators iteratively until no improvement is found.
     """
-    def __init__(self, operators: list = [], max_no_improvement: int = 3, max_iterations: int = 50, first_improvement: bool = True, random_operator_order: bool = False):
+    def __init__(self, operators: list = [], max_no_improvement: int = 3, max_iterations: int = 50, first_improvement: bool = True, random_operator_order: bool = False, tracking: bool = False):
         """
         Args:
             operators (list, optional): List of local search operators to apply. Defaults to [].
@@ -48,6 +49,7 @@ class NaiveLocalSearch(BaseLocalSearch):
         self.max_iterations = max_iterations
         self.first_improvement = first_improvement
         self.random_operator_order = random_operator_order
+        self.tracking = tracking
     
     def search(self, problem: PDPTWProblem, solution: PDPTWSolution, deterministic_rng: bool = False, base_seed: int = 0) -> tuple[PDPTWSolution, float]:
         """Start the local search process.
@@ -65,6 +67,11 @@ class NaiveLocalSearch(BaseLocalSearch):
         iteration = 0
         best_solution = solution
         best_fitness = fitness(problem, best_solution)
+        
+        if self.tracking:
+            best_fitnesses = [best_fitness]
+            best_num_vehicles = [best_solution.num_vehicles_used]
+            times = [time.time()]
 
         while no_improvement_count < self.max_no_improvement and iteration < self.max_iterations:
             improved = False
@@ -88,6 +95,11 @@ class NaiveLocalSearch(BaseLocalSearch):
                         best_solution = new_solution
                         best_fitness = new_fitness
                         improved = True
+                        
+                        if self.tracking:
+                            best_fitnesses.append(best_fitness)
+                            best_num_vehicles.append(best_solution.num_vehicles_used)
+                            times.append(time.time())
                         break
                     else:
                         if compare(new_fitness, new_solution.num_vehicles_used, best_fitness_neighbor, best_num_vehicles_neighbor):
@@ -99,7 +111,15 @@ class NaiveLocalSearch(BaseLocalSearch):
                 best_solution = best_neighbor
                 best_fitness = best_fitness_neighbor
                 improved = True
+                
+                if self.tracking:
+                    best_fitnesses.append(best_fitness)
+                    best_num_vehicles.append(best_solution.num_vehicles_used)
+                    times.append(time.time())
             
             no_improvement_count = 0 if improved else no_improvement_count + 1
             iteration += 1
+            
+        if self.tracking:
+            return best_solution, best_fitness, best_fitnesses, best_num_vehicles, times
         return best_solution, best_fitness

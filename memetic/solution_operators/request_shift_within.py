@@ -36,5 +36,10 @@ class RequestShiftWithinOperator(BaseOperator):
         insert_positions = [pos for pos in range(1, len(route)+1) if pos != new_pickup_pos]
         new_delivery_pos = random.choice(insert_positions)
         route.insert(new_delivery_pos, delivery)
+        
+        route = [node for node in route if node != 0]  # Remove depots temporarily
+        route.insert(0, 0)
+        route.append(0)
 
+        new_solution.routes[route_index] = route
         return new_solution
