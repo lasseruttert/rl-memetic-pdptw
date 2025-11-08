@@ -462,7 +462,7 @@ class MemeticSolver:
             if self._check_if_done(generation, no_improvement_count, start_time):
                 if self.verbose: print("\033[1;31mStopping criteria met.\033[0m\n")
                 done = True
-                self._final_evaluation(problem, population, current_fitnesses, generation, start_time, best_fitness)
+                self._final_evaluation(problem, population, current_fitnesses, generation, start_time, best_fitness, best_solution)
         
         if self.calculate_upper_bound_vehicles: problem.num_vehicles = original_num_vehicles
 
@@ -502,7 +502,7 @@ class MemeticSolver:
                 current_num_vehicles[i] = child.num_vehicles_used
 
                 if self.track_convergence:
-                    self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
+                    self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "total_distance": best_solution.total_distance, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
 
             if compare(fitness, child.num_vehicles_used, best_fitness, best_solution.num_vehicles_used):
                 if self.verbose: print(f"New best solution found with fitness {fitness:.2f} at generation {generation}")
@@ -513,7 +513,7 @@ class MemeticSolver:
                 no_improvement_in_generation = False
 
                 if self.track_convergence:
-                    self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
+                    self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "total_distance": best_solution.total_distance, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
 
         if no_improvement_in_generation:
             if self.verbose: print(f"No improvement in generation {generation}")
@@ -558,7 +558,7 @@ class MemeticSolver:
                 new_num_vehicles[i] = child.num_vehicles_used
 
                 if self.track_convergence:
-                    self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
+                    self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "total_distance": best_solution.total_distance, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
 
             if compare(fitness, child.num_vehicles_used, best_fitness, best_solution.num_vehicles_used):
                 if self.verbose: print(f"New best solution found with fitness {fitness:.2f} at generation {generation}")
@@ -569,7 +569,7 @@ class MemeticSolver:
                 no_improvement_in_generation = False
 
                 if self.track_convergence:
-                    self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
+                    self.convergence[time.time() - start_time] = {"best_fitness": best_fitness, "num_vehicles": best_solution.num_vehicles_used, "total_distance": best_solution.total_distance, "avg_fitness": sum(current_fitnesses) / len(current_fitnesses)}
 
         if no_improvement_in_generation:
             if self.verbose: print(f"No improvement in generation {generation}")
@@ -612,8 +612,9 @@ class MemeticSolver:
 
             if self.track_convergence:
                 self.convergence[time.time() - start_time] = {
-                    "best_fitness": best_fitness, 
-                    "num_vehicles": best_solution.num_vehicles_used, 
+                    "best_fitness": best_fitness,
+                    "num_vehicles": best_solution.num_vehicles_used,
+                    "total_distance": best_solution.total_distance,
                     "min_fitness": min(current_fitnesses),
                     "max_fitness": max(current_fitnesses),
                     "avg_fitness": sum(current_fitnesses) / len(current_fitnesses),
@@ -630,8 +631,9 @@ class MemeticSolver:
 
             if self.track_convergence:
                 self.convergence[time.time() - start_time] = {
-                    "best_fitness": best_fitness, 
-                    "num_vehicles": best_solution.num_vehicles_used, 
+                    "best_fitness": best_fitness,
+                    "num_vehicles": best_solution.num_vehicles_used,
+                    "total_distance": best_solution.total_distance,
                     "min_fitness": min(current_fitnesses),
                     "max_fitness": max(current_fitnesses),
                     "avg_fitness": sum(current_fitnesses) / len(current_fitnesses),
@@ -695,7 +697,7 @@ class MemeticSolver:
         }
         return # TODO: add more detailed evaluation
     
-    def _final_evaluation(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, iteration: int, start_time: float, best_fitness: float = None):
+    def _final_evaluation(self, problem: PDPTWProblem, population: list[PDPTWSolution], current_fitnesses: list, iteration: int, start_time: float, best_fitness: float = None, best_solution: PDPTWSolution = None):
         """Final evaluation of the population and store statistics."""
         self._evaluate(problem, population, current_fitnesses, iteration, start_time)
         # add time it took to find final fitness,
@@ -756,6 +758,8 @@ class MemeticSolver:
             self.final_evaluation['total_time'] = total_time
             self.final_evaluation['time_to_final_fitness'] = final_time
             self.final_evaluation['final_fitness'] = best_fitness
+            if best_solution is not None:
+                self.final_evaluation['final_total_distance'] = best_solution.total_distance
             self.final_evaluation['num_improvements'] = num_improvements
             self.final_evaluation['longest_stagnation'] = longest_stagnation
             self.final_evaluation['avg_stagnation'] = avg_stagnation

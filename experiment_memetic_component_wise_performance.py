@@ -247,11 +247,28 @@ def run_experiment():
             np.random.seed(seed)
 
             # Get best known solution
+            # Note: instance.name may contain full path, extract just the filename
+            clean_instance_name = Path(instance_name).stem if ('/' in instance_name or '\\' in instance_name) else instance_name
+
+            # Temporarily update instance name for BKS lookup
+            original_name = instance.name
+            instance.name = clean_instance_name
+
             try:
-                bks_fitness, bks_num_vehicles = best_known_solutions.get_bks_as_tuple(instance)
-            except:
+                # Note: get_bks_as_tuple returns (num_vehicles, total_distance)
+                bks_num_vehicles, bks_total_distance = best_known_solutions.get_bks_as_tuple(instance)
+
+                # Calculate BKS fitness using the same formula as solver
+                # Assuming BKS solutions are feasible (penalty = 0)
+                bks_fitness = bks_total_distance * (1 + bks_num_vehicles / instance.num_vehicles)
+            except Exception as e:
+                print(f"    Warning: Could not retrieve BKS for {clean_instance_name}: {e}")
                 bks_fitness = None
                 bks_num_vehicles = None
+                bks_total_distance = None
+            finally:
+                # Restore original name
+                instance.name = original_name
 
             # Run solver
             run_start_time = time.time()
@@ -263,6 +280,7 @@ def run_experiment():
                 'instance_name': instance_name,
                 'bks_fitness': bks_fitness,
                 'bks_num_vehicles': bks_num_vehicles,
+                'bks_total_distance': bks_total_distance,
                 'best_fitness': solver.fitness_function(instance, best_solution),
                 'best_num_vehicles': best_solution.num_vehicles_used,
                 'best_total_distance': best_solution.total_distance,
