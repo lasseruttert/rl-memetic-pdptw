@@ -171,6 +171,8 @@ class LocalSearchEnv(gym.Env):
         # Apply selected operator
         operator = self.operators[action]
         new_solution = operator.apply(self.problem, self.current_solution)
+        
+        operator.applications += 1
 
         # Calculate new fitness
         new_fitness = fitness(self.problem, new_solution)
@@ -195,6 +197,8 @@ class LocalSearchEnv(gym.Env):
 
         # Track fitness improvement for this step
         fitness_improvement = self.current_fitness - new_fitness
+        if fitness_improvement > 0:
+            operator.improvements += 1
 
         if accepted:
             self.current_solution = new_solution
@@ -240,6 +244,7 @@ class LocalSearchEnv(gym.Env):
             'best_fitness': self.best_fitness,
             'operator': operator.name if hasattr(operator, 'name') else f"Operator{action}",
             'fitness_improvement': fitness_improvement,
+            'no_improvement_count': self.no_improvement_count
         }
 
         return observation, reward, terminated, truncated, info

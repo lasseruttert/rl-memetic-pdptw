@@ -448,6 +448,18 @@ class PPOAgent:
         self.policy_network.train()
 
         return action_logits.cpu().numpy().flatten()
+    
+    def get_attention_weights(self, state: np.ndarray, update_stats: bool = False) -> Optional[np.ndarray]:
+        """Get operator attention weights for a given state.
+
+        Args:
+            state: Current state observation
+            update_stats: Whether to update normalization statistics
+        Returns:
+            Array of attention weights for each operator, or None if attention is not used
+        """
+
+        return None
 
     def save(self, path: str):
         """Save the agent's network and state.

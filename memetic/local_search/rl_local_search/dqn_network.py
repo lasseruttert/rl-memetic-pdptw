@@ -168,8 +168,6 @@ class DQNNetwork(nn.Module):
             Q-values for each action of shape (batch_size, action_dim)
         """
         if not self.use_operator_attention:
-            # ORIGINAL FORWARD: Standard Dueling DQN
-            # Extract shared features
             features = self.feature_extractor(state)
 
             # Compute value and advantage
@@ -178,7 +176,6 @@ class DQNNetwork(nn.Module):
 
             # Combine using dueling architecture formula
             # Q(s,a) = V(s) + (A(s,a) - mean(A(s,a)))
-            # Subtracting the mean ensures identifiability (unique V and A)
             q_values = value + (advantage - advantage.mean(dim=1, keepdim=True))
 
             return q_values
@@ -421,12 +418,12 @@ class DQNAgent:
             normalized_state = self.normalize_state(state, update_stats=update_stats)
 
             # Greedy action
-            self.q_network.eval()  # Set to eval mode to disable dropout
+            self.q_network.eval()  
             with torch.no_grad():
                 state_tensor = torch.FloatTensor(normalized_state).unsqueeze(0).to(self.device)
                 q_values = self.q_network(state_tensor)
                 action = q_values.argmax(dim=1).item()
-            self.q_network.train()  # Set back to train mode
+            self.q_network.train()  
             return action
 
     def get_q_values(self, state: np.ndarray, update_stats: bool = False) -> np.ndarray:
@@ -449,68 +446,6 @@ class DQNAgent:
 
         return q_values.cpu().numpy().flatten()
 
-    # ORIGINAL UPDATE (1-step, no prioritized replay) 
-    # def update(self, batch: dict) -> float:
-    #     """Update the Q-network using a batch of transitions.
-    #
-    #     Args:
-    #         batch: Dictionary containing:
-    #             - states: np.ndarray of shape (batch_size, state_dim)
-    #             - actions: np.ndarray of shape (batch_size,)
-    #             - rewards: np.ndarray of shape (batch_size,)
-    #             - next_states: np.ndarray of shape (batch_size, state_dim)
-    #             - dones: np.ndarray of shape (batch_size,)
-    #
-    #     Returns:
-    #         Loss value
-    #     """
-    #     # Normalize states
-    #     normalized_states = np.array([self.normalize_state(s, update_stats=False) for s in batch['states']])
-    #     normalized_next_states = np.array([self.normalize_state(s, update_stats=False) for s in batch['next_states']])
-    #
-    #     # Convert to tensors
-    #     states = torch.FloatTensor(normalized_states).to(self.device)
-    #     actions = torch.LongTensor(batch['actions']).to(self.device)
-    #     rewards = torch.FloatTensor(batch['rewards']).to(self.device)
-    #     next_states = torch.FloatTensor(normalized_next_states).to(self.device)
-    #     dones = torch.FloatTensor(batch['dones']).to(self.device)
-    #
-    #     # Current Q-values
-    #     current_q_values = self.q_network(states).gather(1, actions.unsqueeze(1)).squeeze(1)
-    #
-    #     with torch.no_grad():
-    #         # --- OPTION 1: Double DQN (DDQN) ---
-    #         next_actions = self.q_network(next_states).argmax(dim=1)  # Select with Q-network
-    #         next_q_values = self.target_network(next_states).gather(1, next_actions.unsqueeze(1)).squeeze(1)  # Evaluate with target
-    #
-    #         # --- OPTION 2: Standard DQN ---
-    #         # Uncomment this line and comment out the two DDQN lines above:
-    #         # next_q_values = self.target_network(next_states).max(dim=1)[0]
-    #
-    #         target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
-    #
-    #     # Compute loss (Huber loss for stability)
-    #     loss = F.smooth_l1_loss(current_q_values, target_q_values)
-    #
-    #     # Optimize
-    #     self.optimizer.zero_grad()
-    #     loss.backward()
-    #     # Gradient clipping for stability
-    #     torch.nn.utils.clip_grad_norm_(self.q_network.parameters(), max_norm=10.0)
-    #     self.optimizer.step()
-    #
-    #     # Update target network periodically
-    #     self.update_count += 1
-    #     if self.update_count % self.target_update_interval == 0:
-    #         self.target_network.load_state_dict(self.q_network.state_dict())
-    #
-    #     # Track loss
-    #     loss_value = loss.item()
-    #     self.training_losses.append(loss_value)
-    #
-    #     return loss_value
-
-    # CURRENT UPDATE (n-step + optional prioritized replay support)
     def update(self, batch: dict, weights: Optional[np.ndarray] = None) -> tuple[float, Optional[np.ndarray]]:
         """Update the Q-network using a batch of transitions.
 
@@ -588,6 +523,18 @@ class DQNAgent:
     def decay_epsilon(self):
         """Decay exploration rate."""
         self.epsilon = max(self.epsilon_end, self.epsilon * self.epsilon_decay)
+
+    def get_attention_weights(self, state: np.ndarray, update_stats: bool = False) -> Optional[np.ndarray]:
+        """Get operator attention weights for a given state.
+
+        Args:
+            state: Current state observation
+            update_stats: Whether to update normalization statistics
+        Returns:
+            Array of attention weights for each operator, or None if attention is not used
+        """
+
+        return None
 
     def save(self, path: str):
         """Save the agent's networks and state.

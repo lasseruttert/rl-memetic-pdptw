@@ -828,10 +828,6 @@ class RLMutation(BaseMutation):
     def mutate(self, problem: PDPTWProblem, solution: PDPTWSolution, population: List[PDPTWSolution]) -> PDPTWSolution:
         """Mutate the given solution using trained RL agent for operator selection.
 
-        This method uses the trained RL policy to adaptively select mutation operators
-        based on problem, solution, and population features. Unlike naive mutation that
-        randomly selects operators, this method uses learned operator selection.
-
         Args:
             problem: The PDPTW problem instance
             solution: The solution to mutate

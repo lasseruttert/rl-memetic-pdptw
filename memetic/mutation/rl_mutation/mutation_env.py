@@ -200,9 +200,21 @@ class MutationEnv(gym.Env):
         operator = self.operators[action]
         operator_name = operator.name if hasattr(operator, 'name') else f"Operator{action}"
 
-        # Handle NoOp operator - skip mutation but still calculate reward
+        # Handle NoOp operator - if noop is selected, the mutation is done 
         if operator_name == "NoOp":
-            new_solution = self.current_solution.clone()
+            reward = 0.0
+            accepted = False
+            improvement = False
+            truncated = False
+            terminated = True
+            info = {
+                'fitness': self.current_measures['fitness'],
+                'step': self.step_count,
+                'population_mean_fitness': np.mean(self.population_fitnesses),
+                'population_best_fitness': np.min(self.population_fitnesses),
+                'best_measures': self.best_measures
+            }
+            
         else:
             new_solution = operator.apply(self.problem, self.current_solution)
 

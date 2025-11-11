@@ -89,7 +89,7 @@ class DQNMutationAgent:
         if self.state_mean is None:
             self.state_mean = np.zeros(self.state_dim, dtype=np.float32)
             self.state_std = np.ones(self.state_dim, dtype=np.float32)
-            self.state_m2 = np.zeros(self.state_dim, dtype=np.float32)  # For Welford's algorithm
+            self.state_m2 = np.zeros(self.state_dim, dtype=np.float32)
 
         if update_stats and self.normalization_samples < 100000:
             # Welford's online algorithm for numerically stable variance

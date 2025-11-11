@@ -173,7 +173,6 @@ class PPONetwork(nn.Module):
                 - state_values: State value estimates (batch_size, 1)
         """
         if not self.use_operator_attention:
-            # STANDARD FORWARD: Simple concatenation
             # Extract shared features
             features = self.feature_extractor(state)
 

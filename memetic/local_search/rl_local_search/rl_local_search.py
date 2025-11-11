@@ -71,7 +71,8 @@ class RLLocalSearch(BaseLocalSearch):
         max_no_improvement: Optional[int] = None,
         use_operator_attention: bool = False,
         device: str = "cuda",
-        verbose: bool = False
+        verbose: bool = False,
+        tracking: bool = False
     ):
         """Initialize RL-based local search.
 
@@ -257,6 +258,8 @@ class RLLocalSearch(BaseLocalSearch):
             'losses': [],
             'epsilon_values': []
         }
+        
+        self.tracking = tracking
 
     def _set_seed(self, seed: int):
         """Set random seeds for reproducibility.
@@ -887,6 +890,9 @@ class RLLocalSearch(BaseLocalSearch):
         Returns:
             Tuple of (best_solution, best_fitness)
         """
+        if self.tracking:
+            run_history = {}
+        
         # Use provided max_iterations or default from init
         if max_iterations is None:
             max_iterations = self.max_iterations
@@ -902,9 +908,10 @@ class RLLocalSearch(BaseLocalSearch):
 
         best_solution = solution.clone()
         best_fitness = fitness(problem, best_solution)
-
+        
         # Inference loop
         done = False
+        base_time = time.time()
         for iteration in range(max_iterations):
             if done:
                 break
@@ -933,6 +940,19 @@ class RLLocalSearch(BaseLocalSearch):
                     best_solution = self.env.current_solution.clone()
                     best_fitness = step_info['fitness']
 
+                run_history[iteration] = {
+                        'time': time.time() - base_time,
+                        'action': action,
+                        'operator': step_info['operator'],
+                        'no_improvement_count': step_info['no_improvement_count'],
+                        'accepted': step_info['accepted'],
+                        'fitness': step_info['fitness'],
+                        'fitness_improvement': step_info['fitness_improvement'],
+                        'total_distance': best_solution.total_distance,
+                        'num_vehicles_used': best_solution.num_vehicles_used,
+                        'is_feasible': best_solution.is_feasible,
+                    }
+
                 # Move to next state
                 state = next_state
                 done = terminated or truncated
@@ -957,6 +977,19 @@ class RLLocalSearch(BaseLocalSearch):
                     # Apply operator (environment handles state management)
                     next_state, reward, terminated, truncated, step_info = self.env.step(action)
                     state = next_state
+                    
+                    run_history[iteration] = {
+                        'time': time.time() - base_time,
+                        'action': action,
+                        'operator': step_info['operator'],
+                        'no_improvement_count': step_info['no_improvement_count'],
+                        'accepted': step_info['accepted'],
+                        'fitness': step_info['fitness'],
+                        'fitness_improvement': step_info['fitness_improvement'],
+                        'total_distance': best_solution.total_distance,
+                        'num_vehicles_used': best_solution.num_vehicles_used,
+                        'is_feasible': best_solution.is_feasible
+                    }
 
                     # Check if this operator improved fitness
                     if step_info['fitness'] < best_fitness:
@@ -985,6 +1018,19 @@ class RLLocalSearch(BaseLocalSearch):
                     # Apply operator (environment handles state management)
                     next_state, reward, terminated, truncated, step_info = self.env.step(action)
                     state = next_state
+                    
+                    run_history[iteration] = {
+                        'time': time.time() - base_time,
+                        'action': action,
+                        'operator': step_info['operator'],
+                        'no_improvement_count': step_info['no_improvement_count'],
+                        'accepted': step_info['accepted'],
+                        'fitness': step_info['fitness'],
+                        'fitness_improvement': step_info['fitness_improvement'],
+                        'total_distance': best_solution.total_distance,
+                        'num_vehicles_used': best_solution.num_vehicles_used,
+                        'is_feasible': best_solution.is_feasible
+                    }
 
                     # Check if this operator improved fitness
                     if step_info['fitness'] < best_fitness:
