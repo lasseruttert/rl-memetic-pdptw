@@ -213,9 +213,9 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Train RL-based mutation with configurable strategies")
-    parser.add_argument("--rl_algorithm", type=str, default="ppo",
+    parser.add_argument("--rl_algorithm", type=str, default="dqn",
                         choices=["dqn", "ppo"],
-                        help="RL algorithm to use: dqn or ppo (default: ppo)")
+                        help="RL algorithm to use: dqn or ppo (default: dqn)")
     parser.add_argument("--acceptance_strategy", type=str, default="greedy",
                         choices=["greedy", "always"],
                         help="Acceptance strategy for mutation")
@@ -232,6 +232,8 @@ def main():
                         help="Random seed for reproducibility (default: 42)")
     parser.add_argument("--include_noop", action="store_true",
                         help="Include NoOp operator in operator set")
+    parser.add_argument("--no_population_features", action="store_true",
+                        help="Disable population-aware features in state (default: enabled)")
 
     # Training loop intervals
     parser.add_argument("--new_instance_interval", type=int, default=6,
@@ -285,7 +287,8 @@ def main():
 
     seed_suffix = f"_seed{SEED}" if SEED is not None else ""
     noop_suffix = "_noop" if args.include_noop else ""
-    RUN_NAME = f"rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}{seed_suffix}_{int(time.time())}"
+    pop_features_suffix = "_nopopfeat" if args.no_population_features else ""
+    RUN_NAME = f"rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}{pop_features_suffix}{seed_suffix}_{int(time.time())}"
 
     # Setup logging to file
     log_dir = "logs"
@@ -334,6 +337,7 @@ def main():
             reward_strategy=REWARD_STRATEGY,
             max_steps=100,
             max_no_improvement=None,
+            use_population_features=not args.no_population_features,
             device="cuda",
             verbose=True
         )
@@ -367,6 +371,7 @@ def main():
         print(f"Algorithm: {RL_ALGORITHM.upper()}")
         print(f"Categories: {CATEGORIES}")
         print(f"Population size: {POPULATION_SIZE}")
+        print(f"Population features: {'DISABLED' if args.no_population_features else 'ENABLED'}")
         print(f"Include NoOp: {args.include_noop}")
         print(f"Operators: {[op.name if hasattr(op, 'name') else type(op).__name__ for op in create_operators(args.include_noop)]}")
 
@@ -380,7 +385,7 @@ def main():
             update_interval=1,
             warmup_episodes=10,
             save_interval=500,
-            save_path=f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}_{SEED}",
+            save_path=f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}{pop_features_suffix}_{SEED}",
             tensorboard_dir=f"runs/{RUN_NAME}",
             seed=SEED,
             log_interval=10
@@ -391,7 +396,7 @@ def main():
         print(f"Final average fitness (last 100): {np.mean(training_history['episode_best_fitness'][-100:]):.2f}")
 
         # Save final model
-        final_model_path = f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}_{SEED}_final.pt"
+        final_model_path = f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}{pop_features_suffix}_{SEED}_final.pt"
         rl_mutation.save(final_model_path)
         print(f"\nSaved final model to: {final_model_path}")
 
@@ -405,7 +410,7 @@ def main():
 
     # Load trained models for evaluation
     MODEL_PATHS = [
-        f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}_{SEED}_final.pt",
+        f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}{pop_features_suffix}_{SEED}_final.pt",
     ]
 
     # Test by running mutation episodes and comparing best solutions
@@ -571,6 +576,7 @@ def main():
             reward_strategy=REWARD_STRATEGY,
             acceptance_strategy=ACCEPTANCE_STRATEGY,
             max_steps=30,
+            use_population_features=not args.no_population_features,
             device="cuda",
             verbose=False
         )

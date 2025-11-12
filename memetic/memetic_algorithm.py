@@ -376,6 +376,7 @@ class MemeticSolver:
         # Reset tracking data
         self.evaluations = {}
         self.convergence = {}
+        self.final_evaluation = {}
         if self.track_history:
             self.history = {}
         

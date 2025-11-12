@@ -4,6 +4,8 @@ Visualization Script for Memetic Component-wise Performance Experiment
 Generates focused plots for analyzing memetic algorithm component performance:
 1. Convergence plots (4 metrics: best_fitness, avg_fitness, num_vehicles, total_distance)
 2. Time to best solution
+3. Efficiency score: 1 / (final_fitness × time_to_best) - higher is better
+4. Time-quality product: final_fitness × time_to_best - lower is better
 
 Each plot type is generated for:
 - Overall (all instances)
@@ -24,7 +26,7 @@ import matplotlib.pyplot as plt
 # ============================================================================
 
 RESULTS_FILE = "results/memetic_component_results.json"
-OUTPUT_BASE_DIR = "results/plots"
+OUTPUT_BASE_DIR = "results/memetic_component_plots"
 
 # Plot styling
 plt.rcParams['figure.dpi'] = 300
@@ -332,6 +334,136 @@ def plot_time_to_best(results, output_dir, category=None):
     save_figure(fig, output_dir / filename)
     plt.close()
 
+def plot_efficiency_score(results, output_dir, category=None):
+    """Bar chart showing efficiency score: 1 / (final_fitness × time_to_best) - higher is better."""
+    category_label = category if category else "overall"
+    print(f"  Creating efficiency score chart ({category_label})...")
+
+    # Collect data
+    combo_scores = defaultdict(list)
+
+    for combo_id, combo_data in results.items():
+        for instance_name, instance_data in combo_data['instances'].items():
+            if category:
+                parsed = parse_instance_name(instance_name)
+                if parsed['category'] != category:
+                    continue
+
+            final_eval = instance_data.get('final_evaluation')
+            if final_eval:
+                time_to_best = final_eval.get('time_to_final_fitness')
+                final_fitness = final_eval.get('final_fitness')
+
+                if time_to_best is not None and final_fitness is not None and time_to_best > 0 and final_fitness > 0:
+                    # Calculate efficiency score (higher is better)
+                    score = 1.0 / (final_fitness * time_to_best)
+                    combo_scores[combo_id].append(score)
+
+    # Filter out combinations with no data
+    combo_ids = sorted([cid for cid in combo_scores.keys() if combo_scores[cid]])
+    if not combo_ids:
+        print(f"    No data found for category {category_label}")
+        return
+
+    # Calculate averages
+    avg_scores = [np.mean(combo_scores[cid]) for cid in combo_ids]
+
+    # Create plot
+    fig, ax = plt.subplots(figsize=(8, 5))
+    x = np.arange(len(combo_ids))
+    bars = ax.bar(x, avg_scores, color=COMBO_COLORS[:len(combo_ids)],
+                   alpha=0.8, edgecolor='black')
+
+    ax.set_xlabel('Combination')
+    ax.set_ylabel('Efficiency Score (higher is better)')
+
+    if category:
+        title = f'Efficiency Score - {category.upper()}'
+    else:
+        title = 'Efficiency Score - Overall'
+    ax.set_title(title)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"C{cid.split('_')[1]}" for cid in combo_ids])
+    ax.grid(axis='y', alpha=0.3)
+
+    # Add value labels on bars
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+                f'{height:.2e}',
+                ha='center', va='bottom', fontsize=8)
+
+    # Save
+    filename = f'efficiency_score_{category_label}'
+    save_figure(fig, output_dir / filename)
+    plt.close()
+
+def plot_time_quality_product(results, output_dir, category=None):
+    """Bar chart showing time-quality product: final_fitness × time_to_best - lower is better."""
+    category_label = category if category else "overall"
+    print(f"  Creating time-quality product chart ({category_label})...")
+
+    # Collect data
+    combo_products = defaultdict(list)
+
+    for combo_id, combo_data in results.items():
+        for instance_name, instance_data in combo_data['instances'].items():
+            if category:
+                parsed = parse_instance_name(instance_name)
+                if parsed['category'] != category:
+                    continue
+
+            final_eval = instance_data.get('final_evaluation')
+            if final_eval:
+                time_to_best = final_eval.get('time_to_final_fitness')
+                final_fitness = final_eval.get('final_fitness')
+
+                if time_to_best is not None and final_fitness is not None:
+                    # Calculate time-quality product (lower is better)
+                    product = final_fitness * time_to_best
+                    combo_products[combo_id].append(product)
+
+    # Filter out combinations with no data
+    combo_ids = sorted([cid for cid in combo_products.keys() if combo_products[cid]])
+    if not combo_ids:
+        print(f"    No data found for category {category_label}")
+        return
+
+    # Calculate averages
+    avg_products = [np.mean(combo_products[cid]) for cid in combo_ids]
+
+    # Create plot
+    fig, ax = plt.subplots(figsize=(8, 5))
+    x = np.arange(len(combo_ids))
+    bars = ax.bar(x, avg_products, color=COMBO_COLORS[:len(combo_ids)],
+                   alpha=0.8, edgecolor='black')
+
+    ax.set_xlabel('Combination')
+    ax.set_ylabel('Time-Quality Product (lower is better)')
+
+    if category:
+        title = f'Time-Quality Product - {category.upper()}'
+    else:
+        title = 'Time-Quality Product - Overall'
+    ax.set_title(title)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([f"C{cid.split('_')[1]}" for cid in combo_ids])
+    ax.grid(axis='y', alpha=0.3)
+
+    # Add value labels on bars
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+                f'{height:.1f}',
+                ha='center', va='bottom', fontsize=8)
+
+    # Save
+    filename = f'time_quality_product_{category_label}'
+    save_figure(fig, output_dir / filename)
+    plt.close()
+
 # ============================================================================
 # MAIN ORCHESTRATION
 # ============================================================================
@@ -363,20 +495,26 @@ def create_all_plots():
     print("GENERATING OVERALL PLOTS")
     print("=" * 80)
 
-    print("\n[1/5] Best Fitness Convergence")
+    print("\n[1/7] Best Fitness Convergence")
     plot_convergence_best_fitness(results, overall_dir)
 
-    print("\n[2/5] Average Fitness Convergence")
+    print("\n[2/7] Average Fitness Convergence")
     plot_convergence_avg_fitness(results, overall_dir)
 
-    print("\n[3/5] Number of Vehicles Convergence")
+    print("\n[3/7] Number of Vehicles Convergence")
     plot_convergence_num_vehicles(results, overall_dir)
 
-    print("\n[4/5] Total Distance Convergence")
+    print("\n[4/7] Total Distance Convergence")
     plot_convergence_total_distance(results, overall_dir)
 
-    print("\n[5/5] Time to Best Solution")
+    print("\n[5/7] Time to Best Solution")
     plot_time_to_best(results, overall_dir)
+
+    print("\n[6/7] Efficiency Score")
+    plot_efficiency_score(results, overall_dir)
+
+    print("\n[7/7] Time-Quality Product")
+    plot_time_quality_product(results, overall_dir)
 
     # ========================================================================
     # PER-CATEGORY PLOTS
@@ -408,20 +546,26 @@ def create_all_plots():
             print(f"  No results for category {category}")
             continue
 
-        print("[1/5] Best Fitness Convergence")
+        print("[1/7] Best Fitness Convergence")
         plot_convergence_best_fitness(category_results, category_dir, category)
 
-        print("[2/5] Average Fitness Convergence")
+        print("[2/7] Average Fitness Convergence")
         plot_convergence_avg_fitness(category_results, category_dir, category)
 
-        print("[3/5] Number of Vehicles Convergence")
+        print("[3/7] Number of Vehicles Convergence")
         plot_convergence_num_vehicles(category_results, category_dir, category)
 
-        print("[4/5] Total Distance Convergence")
+        print("[4/7] Total Distance Convergence")
         plot_convergence_total_distance(category_results, category_dir, category)
 
-        print("[5/5] Time to Best Solution")
+        print("[5/7] Time to Best Solution")
         plot_time_to_best(category_results, category_dir, category)
+
+        print("[6/7] Efficiency Score")
+        plot_efficiency_score(category_results, category_dir, category)
+
+        print("[7/7] Time-Quality Product")
+        plot_time_quality_product(category_results, category_dir, category)
 
     print("\n" + "=" * 80)
     print("VISUALIZATION COMPLETE")
@@ -429,7 +573,7 @@ def create_all_plots():
     print(f"\nPlots saved to: {OUTPUT_BASE_DIR}/")
     print(f"  - Overall plots: {overall_dir}/")
     print(f"  - Individual category plots: {individual_dir}/")
-    print(f"\nTotal plots generated: {5 + (5 * len(categories))}")
+    print(f"\nTotal plots generated: {7 + (7 * len(categories))}")
 
 # ============================================================================
 # ENTRY POINT

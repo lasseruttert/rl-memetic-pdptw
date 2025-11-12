@@ -18,7 +18,7 @@ class NodeSwapWithinOperator(BaseOperator):
         if len(route) <= 2:
             return new_solution  # No swap possible
         
-        idx1, idx2 = random.sample(range(len(route)), 2)
+        idx1, idx2 = random.sample(range(1, len(route) -1), 2)
         
         if self.check_precedence:
             node1, node2 = route[idx1], route[idx2]

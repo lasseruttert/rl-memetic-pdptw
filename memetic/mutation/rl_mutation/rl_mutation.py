@@ -69,6 +69,7 @@ class RLMutation(BaseMutation):
         reward_strategy: str = "binary",
         max_steps: int = 100,
         max_no_improvement: Optional[int] = None,
+        use_population_features: bool = True,
         device: str = "cuda",
         verbose: bool = False
     ):
@@ -109,6 +110,7 @@ class RLMutation(BaseMutation):
                 reward_strategy: Strategy for calculating rewards
                 max_steps: Maximum steps per episode
                 max_no_improvement: Early stopping after N steps without improvement
+                use_population_features: Whether to include population-aware features in state (default: True)
                 device: Device for training ("cuda" or "cpu")
                 verbose: Whether to print training progress
         """
@@ -124,6 +126,7 @@ class RLMutation(BaseMutation):
         self.reward_strategy = reward_strategy
         self.max_steps = max_steps
         self.batch_size = batch_size
+        self.use_population_features = use_population_features
         self.verbose = verbose
 
         # Algorithm-specific parameters
@@ -138,7 +141,8 @@ class RLMutation(BaseMutation):
             acceptance_strategy=acceptance_strategy,
             reward_strategy=reward_strategy,
             max_steps=max_steps,
-            max_no_improvement=max_no_improvement
+            max_no_improvement=max_no_improvement,
+            use_population_features=use_population_features
         )
 
         # Agent initialization (DQN or PPO)
@@ -343,6 +347,7 @@ class RLMutation(BaseMutation):
         if self.verbose:
             print(f"Starting RL Mutation training for {num_episodes} episodes...")
             print(f"State dim: {self.agent.state_dim}, Action dim: {self.agent.action_dim}")
+            print(f"Population features: {'ENABLED' if self.use_population_features else 'DISABLED'}")
             print(f"Operators: {[op.name if hasattr(op, 'name') else type(op).__name__ for op in self.operators]}")
 
         # PPO-specific: Track accumulated steps across episodes
@@ -645,6 +650,7 @@ class RLMutation(BaseMutation):
             'acceptance_strategy': self.acceptance_strategy,
             'reward_strategy': self.reward_strategy,
             'alpha': self.env.alpha,
+            'use_population_features': self.use_population_features,
             'new_instance_interval': new_instance_interval,
             'new_population_interval': new_population_interval,
             'new_solution_interval': new_solution_interval,
@@ -806,17 +812,105 @@ class RLMutation(BaseMutation):
         print(log_msg)
 
     def save(self, path: str):
-        """Save the RL agent and training history."""
-        self.agent.save(path)
+        """Save the RL agent, training history, and configuration.
+
+        Args:
+            path: Path to save the model (without extension)
+
+        Saves three files:
+            - {path}.pt: Neural network weights
+            - {path}_history.pkl: Training history
+            - {path}_config.pkl: Complete configuration including operators and hyperparameters
+        """
         import pickle
+
+        # Save agent weights
+        self.agent.save(path)
+
+        # Save training history
         history_path = path.replace('.pt', '_history.pkl')
         with open(history_path, 'wb') as f:
             pickle.dump(self.training_history, f)
 
-    def load(self, path: str):
-        """Load a trained RL agent."""
-        self.agent.load(path)
+        # Save complete configuration
+        config = {
+            'rl_algorithm': self.rl_algorithm,
+            'operators': self.operators,
+            'operator_names': [op.name if hasattr(op, 'name') else type(op).__name__ for op in self.operators],
+            'acceptance_strategy': self.acceptance_strategy,
+            'reward_strategy': self.reward_strategy,
+            'max_steps': self.max_steps,
+            'batch_size': self.batch_size,
+            'use_population_features': self.use_population_features,
+            'verbose': self.verbose,
+            # Environment config
+            'env_config': {
+                'alpha': self.env.alpha,
+                'max_steps': self.env.max_steps,
+                'max_no_improvement': self.env.max_no_improvement,
+            },
+            # Agent config
+            'agent_config': {
+                'state_dim': self.agent.state_dim,
+                'action_dim': self.agent.action_dim,
+                'hidden_dims': self.agent.hidden_dims if hasattr(self.agent, 'hidden_dims') else None,
+                'learning_rate': self.agent.optimizer.param_groups[0]['lr'],
+                'gamma': self.agent.gamma,
+                'device': str(self.agent.device),
+            }
+        }
+
+        # Add algorithm-specific config
+        if self.rl_algorithm == 'dqn':
+            config['dqn_config'] = {
+                'epsilon': self.agent.epsilon,
+                'epsilon_end': self.agent.epsilon_end,
+                'epsilon_decay': self.agent.epsilon_decay,
+                'target_update_interval': self.agent.target_update_interval,
+                'n_step': self.n_step,
+                'use_prioritized_replay': self.use_prioritized_replay,
+                'replay_buffer_capacity': self.replay_buffer.capacity if self.replay_buffer else None,
+            }
+        elif self.rl_algorithm == 'ppo':
+            config['ppo_config'] = {
+                'clip_epsilon': self.agent.clip_epsilon,
+                'entropy_coef': self.agent.entropy_coef,
+                'value_coef': self.agent.value_coef,
+                'gae_lambda': self.agent.gae_lambda,
+                'max_grad_norm': self.agent.max_grad_norm,
+                'num_epochs': self.agent.num_epochs,
+                'num_minibatches': self.agent.num_minibatches,
+                'normalize_advantages': self.agent.normalize_advantages,
+            }
+
+        config_path = path.replace('.pt', '_config.pkl')
+        with open(config_path, 'wb') as f:
+            pickle.dump(config, f)
+
+        if self.verbose:
+            print(f"Saved model to {path}")
+            print(f"  - Weights: {path}")
+            print(f"  - History: {history_path}")
+            print(f"  - Config: {config_path}")
+            print(f"  - Operators: {config['operator_names']}")
+            print(f"  - Population features: {config['use_population_features']}")
+
+    def load(self, path: str, load_config: bool = True):
+        """Load a trained RL agent.
+
+        Args:
+            path: Path to the saved model
+            load_config: If True, also load and display configuration
+
+        Returns:
+            config: Configuration dictionary if load_config=True, else None
+        """
         import pickle
+
+        # Load agent weights
+        self.agent.load(path)
+
+        # Load training history
         history_path = path.replace('.pt', '_history.pkl')
         try:
             with open(history_path, 'rb') as f:
@@ -824,6 +918,44 @@ class RLMutation(BaseMutation):
         except FileNotFoundError:
             if self.verbose:
                 print(f"Warning: Training history not found at {history_path}")
+
+        # Load configuration
+        config = None
+        if load_config:
+            config_path = path.replace('.pt', '_config.pkl')
+            try:
+                with open(config_path, 'rb') as f:
+                    config = pickle.load(f)
+
+                if self.verbose:
+                    print(f"Loaded model from {path}")
+                    print(f"Configuration:")
+                    print(f"  - Algorithm: {config['rl_algorithm']}")
+                    print(f"  - Operators: {config['operator_names']}")
+                    print(f"  - Acceptance: {config['acceptance_strategy']}")
+                    print(f"  - Reward: {config['reward_strategy']}")
+                    print(f"  - Max steps: {config['max_steps']}")
+                    print(f"  - Population features: {config['use_population_features']}")
+
+                # Validate critical settings
+                warnings = []
+                if config['rl_algorithm'] != self.rl_algorithm:
+                    warnings.append(f"Algorithm mismatch: current={self.rl_algorithm}, saved={config['rl_algorithm']}")
+                if len(config['operators']) != len(self.operators):
+                    warnings.append(f"Number of operators mismatch: current={len(self.operators)}, saved={len(config['operators'])}")
+                if config['use_population_features'] != self.use_population_features:
+                    warnings.append(f"Population features mismatch: current={self.use_population_features}, saved={config['use_population_features']}")
+
+                if warnings and self.verbose:
+                    print("\nWARNINGS - Configuration mismatches detected:")
+                    for warning in warnings:
+                        print(f"  ! {warning}")
+
+            except FileNotFoundError:
+                if self.verbose:
+                    print(f"Warning: Configuration file not found at {config_path}")
+
+        return config
 
     def mutate(self, problem: PDPTWProblem, solution: PDPTWSolution, population: List[PDPTWSolution]) -> PDPTWSolution:
         """Mutate the given solution using trained RL agent for operator selection.

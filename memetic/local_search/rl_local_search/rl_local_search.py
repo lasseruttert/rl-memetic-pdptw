@@ -1055,27 +1055,106 @@ class RLLocalSearch(BaseLocalSearch):
         return best_solution, best_fitness
 
     def save(self, path: str):
-        """Save the RL agent and training history.
+        """Save the RL agent, training history, and configuration.
 
         Args:
-            path: Path to save the model
+            path: Path to save the model (without extension)
+
+        Saves three files:
+            - {path}.pt: Neural network weights
+            - {path}_history.pkl: Training history
+            - {path}_config.pkl: Complete configuration including operators and hyperparameters
         """
-        self.agent.save(path)
-        # Optionally save training history as well
         import pickle
+
+        # Save agent weights
+        self.agent.save(path)
+
+        # Save training history
         history_path = path.replace('.pt', '_history.pkl')
         with open(history_path, 'wb') as f:
             pickle.dump(self.training_history, f)
 
-    def load(self, path: str):
+        # Save complete configuration
+        config = {
+            'rl_algorithm': self.rl_algorithm,
+            'operators': self.operators,  # Save the actual operator objects
+            'operator_names': [op.name if hasattr(op, 'name') else type(op).__name__ for op in self.operators],
+            'acceptance_strategy': self.acceptance_strategy,
+            'reward_strategy': self.reward_strategy,
+            'type': self.type,
+            'max_iterations': self.max_iterations,
+            'batch_size': self.batch_size,
+            'use_operator_attention': self.use_operator_attention,
+            'verbose': self.verbose,
+            'tracking': self.tracking,
+            # Environment config
+            'env_config': {
+                'alpha': self.env.alpha,
+                'max_steps': self.env.max_steps,
+                'max_no_improvement': self.env.max_no_improvement,
+            },
+            # Agent config (algorithm-agnostic)
+            'agent_config': {
+                'state_dim': self.agent.state_dim,
+                'action_dim': self.agent.action_dim,
+                'hidden_dims': self.agent.hidden_dims if hasattr(self.agent, 'hidden_dims') else None,
+                'learning_rate': self.agent.optimizer.param_groups[0]['lr'],
+                'gamma': self.agent.gamma,
+                'device': str(self.agent.device),
+            }
+        }
+
+        # Add algorithm-specific config
+        if self.rl_algorithm == 'dqn':
+            config['dqn_config'] = {
+                'epsilon': self.agent.epsilon,
+                'epsilon_end': self.agent.epsilon_end,
+                'epsilon_decay': self.agent.epsilon_decay,
+                'target_update_interval': self.agent.target_update_interval,
+                'n_step': self.n_step,
+                'use_prioritized_replay': self.use_prioritized_replay,
+                'replay_buffer_capacity': self.replay_buffer.capacity if self.replay_buffer else None,
+            }
+        elif self.rl_algorithm == 'ppo':
+            config['ppo_config'] = {
+                'clip_epsilon': self.agent.clip_epsilon,
+                'entropy_coef': self.agent.entropy_coef,
+                'value_coef': self.agent.value_coef,
+                'gae_lambda': self.agent.gae_lambda,
+                'max_grad_norm': self.agent.max_grad_norm,
+                'num_epochs': self.agent.num_epochs,
+                'num_minibatches': self.agent.num_minibatches,
+                'normalize_advantages': self.agent.normalize_advantages,
+            }
+
+        config_path = path.replace('.pt', '_config.pkl')
+        with open(config_path, 'wb') as f:
+            pickle.dump(config, f)
+
+        if self.verbose:
+            print(f"Saved model to {path}")
+            print(f"  - Weights: {path}")
+            print(f"  - History: {history_path}")
+            print(f"  - Config: {config_path}")
+            print(f"  - Operators: {config['operator_names']}")
+
+    def load(self, path: str, load_config: bool = True):
         """Load a trained RL agent.
 
         Args:
             path: Path to the saved model
+            load_config: If True, also load and display configuration
+
+        Returns:
+            config: Configuration dictionary if load_config=True, else None
         """
-        self.agent.load(path)
-        # Optionally load training history
         import pickle
+
+        # Load agent weights
+        self.agent.load(path)
+
+        # Load training history
         history_path = path.replace('.pt', '_history.pkl')
         try:
             with open(history_path, 'rb') as f:
@@ -1083,3 +1162,184 @@ class RLLocalSearch(BaseLocalSearch):
         except FileNotFoundError:
             if self.verbose:
                 print(f"Warning: Training history not found at {history_path}")
+
+        # Load configuration
+        config = None
+        if load_config:
+            config_path = path.replace('.pt', '_config.pkl')
+            try:
+                with open(config_path, 'rb') as f:
+                    config = pickle.load(f)
+
+                if self.verbose:
+                    print(f"Loaded model from {path}")
+                    print(f"Configuration:")
+                    print(f"  - Algorithm: {config['rl_algorithm']}")
+                    print(f"  - Operators: {config['operator_names']}")
+                    print(f"  - Type: {config['type']}")
+                    print(f"  - Acceptance: {config['acceptance_strategy']}")
+                    print(f"  - Reward: {config['reward_strategy']}")
+                    print(f"  - Max iterations: {config['max_iterations']}")
+                    print(f"  - Attention: {config['use_operator_attention']}")
+
+                # Validate that current instance matches saved config
+                self._validate_loaded_config(config)
+
+            except FileNotFoundError:
+                if self.verbose:
+                    print(f"Warning: Configuration file not found at {config_path}")
+                    print("Make sure to use the same operators and hyperparameters as during training!")
+
+        return config
+
+    def _validate_loaded_config(self, config: Dict):
+        """Validate that current instance configuration matches loaded config.
+
+        Args:
+            config: Loaded configuration dictionary
+        """
+        warnings = []
+
+        # Check critical mismatches
+        if config['rl_algorithm'] != self.rl_algorithm:
+            warnings.append(f"Algorithm mismatch: current={self.rl_algorithm}, saved={config['rl_algorithm']}")
+
+        if len(config['operators']) != len(self.operators):
+            warnings.append(f"Number of operators mismatch: current={len(self.operators)}, saved={len(config['operators'])}")
+
+        if config['operator_names'] != [op.name if hasattr(op, 'name') else type(op).__name__ for op in self.operators]:
+            warnings.append(f"Operator names mismatch!")
+            warnings.append(f"  Current: {[op.name if hasattr(op, 'name') else type(op).__name__ for op in self.operators]}")
+            warnings.append(f"  Saved: {config['operator_names']}")
+
+        if config['use_operator_attention'] != self.use_operator_attention:
+            warnings.append(f"Attention mechanism mismatch: current={self.use_operator_attention}, saved={config['use_operator_attention']}")
+
+        if warnings and self.verbose:
+            print("\nWARNINGS - Configuration mismatches detected:")
+            for warning in warnings:
+                print(f"  ! {warning}")
+            print("The loaded model may not work correctly with the current configuration!")
+
+    @classmethod
+    def load_from_checkpoint(cls, path: str, verbose: bool = True, device: Optional[str] = None) -> 'RLLocalSearch':
+        """Load a complete RLLocalSearch instance from saved checkpoint.
+
+        This class method reconstructs the entire RLLocalSearch object from saved files,
+        including operators and all hyperparameters. This is the recommended way to
+        load a trained model.
+
+        Args:
+            path: Path to the saved model checkpoint
+            verbose: Whether to print loading information
+            device: Override device ('cuda' or 'cpu'). If None, uses saved device.
+                    Use this when loading across different systems (e.g., train on GPU, load on CPU)
+
+        Returns:
+            RLLocalSearch instance with loaded weights and configuration
+
+        Example:
+            >>> # Load with same device as training
+            >>> rl_search = RLLocalSearch.load_from_checkpoint("models/my_model.pt")
+            >>>
+            >>> # Load model trained on GPU for CPU inference (cross-platform)
+            >>> rl_search = RLLocalSearch.load_from_checkpoint("models/my_model.pt", device="cpu")
+        """
+        import pickle
+
+        # Load configuration
+        config_path = path.replace('.pt', '_config.pkl')
+        try:
+            with open(config_path, 'rb') as f:
+                config = pickle.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Configuration file not found at {config_path}. "
+                "Cannot reconstruct RLLocalSearch instance without configuration. "
+                "If you saved the model with an older version, you'll need to manually "
+                "create the RLLocalSearch instance and use the load() method instead."
+            )
+
+        if verbose:
+            print(f"Loading RLLocalSearch from {path}...")
+            print(f"  - Algorithm: {config['rl_algorithm']}")
+            print(f"  - Operators: {config['operator_names']}")
+
+        # Determine device to use
+        saved_device = config['agent_config']['device']
+        use_device = device if device is not None else saved_device
+
+        if verbose and device is not None and device != saved_device:
+            print(f"  - Device override: {saved_device} -> {use_device}")
+        elif verbose:
+            print(f"  - Device: {use_device}")
+
+        # Reconstruct initialization arguments
+        init_kwargs = {
+            'operators': config['operators'],
+            'rl_algorithm': config['rl_algorithm'],
+            'acceptance_strategy': config['acceptance_strategy'],
+            'reward_strategy': config['reward_strategy'],
+            'type': config['type'],
+            'max_iterations': config['max_iterations'],
+            'batch_size': config['batch_size'],
+            'use_operator_attention': config['use_operator_attention'],
+            'verbose': verbose,  # Use provided verbose, not saved
+            'tracking': config['tracking'],
+            'alpha': config['env_config']['alpha'],
+        }
+
+        # Add agent config
+        agent_cfg = config['agent_config']
+        if agent_cfg.get('hidden_dims'):
+            init_kwargs['hidden_dims'] = agent_cfg['hidden_dims']
+        init_kwargs['learning_rate'] = agent_cfg['learning_rate']
+        init_kwargs['gamma'] = agent_cfg['gamma']
+        init_kwargs['device'] = use_device  # Use potentially overridden device
+
+        # Add algorithm-specific config
+        if config['rl_algorithm'] == 'dqn' and 'dqn_config' in config:
+            dqn_cfg = config['dqn_config']
+            init_kwargs.update({
+                'epsilon_start': dqn_cfg.get('epsilon', 1.0),
+                'epsilon_end': dqn_cfg.get('epsilon_end', 0.1),
+                'epsilon_decay': dqn_cfg.get('epsilon_decay', 0.995),
+                'target_update_interval': dqn_cfg.get('target_update_interval', 100),
+                'n_step': dqn_cfg.get('n_step', 3),
+                'use_prioritized_replay': dqn_cfg.get('use_prioritized_replay', True),
+                'replay_buffer_capacity': dqn_cfg.get('replay_buffer_capacity', 100000),
+            })
+        elif config['rl_algorithm'] == 'ppo' and 'ppo_config' in config:
+            ppo_cfg = config['ppo_config']
+            init_kwargs.update({
+                'ppo_clip_epsilon': ppo_cfg.get('clip_epsilon', 0.2),
+                'ppo_entropy_coef': ppo_cfg.get('entropy_coef', 0.01),
+                'ppo_value_coef': ppo_cfg.get('value_coef', 0.5),
+                'ppo_gae_lambda': ppo_cfg.get('gae_lambda', 0.95),
+                'ppo_max_grad_norm': ppo_cfg.get('max_grad_norm', 0.5),
+                'ppo_num_epochs': ppo_cfg.get('num_epochs', 2),
+                'ppo_num_minibatches': ppo_cfg.get('num_minibatches', 2),
+                'ppo_normalize_advantages': ppo_cfg.get('normalize_advantages', True),
+            })
+
+        # Create instance
+        instance = cls(**init_kwargs)
+
+        # Load weights and history
+        instance.agent.load(path)
+
+        # Load training history
+        history_path = path.replace('.pt', '_history.pkl')
+        try:
+            with open(history_path, 'rb') as f:
+                instance.training_history = pickle.load(f)
+            if verbose:
+                print(f"  - Loaded {len(instance.training_history.get('episode_rewards', []))} episodes of training history")
+        except FileNotFoundError:
+            if verbose:
+                print(f"  - Warning: Training history not found")
+
+        if verbose:
+            print("Model loaded successfully!")
+
+        return instance

@@ -20,20 +20,26 @@ from memetic.local_search.dummy_local_search import DummyLocalSearch
 from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.solution_operators.route_elimination import RouteEliminationOperator
 from memetic.solution_operators.flip import FlipOperator
+from memetic.solution_operators.merge import MergeOperator
 from memetic.solution_operators.swap_within import SwapWithinOperator
 from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
+from memetic.solution_operators.shift import ShiftOperator
+from memetic.solution_operators.two_opt import TwoOptOperator
+from memetic.solution_operators.two_opt_star import TwoOptStarOperator
 from memetic.solution_operators.cls_m1 import CLSM1Operator
 from memetic.solution_operators.cls_m2 import CLSM2Operator
 from memetic.solution_operators.cls_m3 import CLSM3Operator
 from memetic.solution_operators.cls_m4 import CLSM4Operator
-from memetic.solution_operators.two_opt import TwoOptOperator
+from memetic.solution_operators.request_shift_within import RequestShiftWithinOperator
+from memetic.solution_operators.node_swap_within import NodeSwapWithinOperator
 
 import time
 import json
 import csv
 import random
 import numpy as np
+import copy
 from pathlib import Path
 
 # ============================================================================
@@ -47,6 +53,9 @@ PROBLEM_SIZES = [100]
 POPULATION_SIZE = 10
 MAX_TIME_SECONDS = 60
 EVALUATION_INTERVAL = 5
+
+# Run parameters
+NUM_RUNS = 5
 
 # Output files
 RESULTS_BASE_DIR = "results"
@@ -64,17 +73,11 @@ def create_mutation_operators():
         list: List of operator instances to be used in mutation
     """
     return [
-        ReinsertOperator(),
-        RouteEliminationOperator(),
-        FlipOperator(),
-        SwapWithinOperator(),
+        RequestShiftWithinOperator(),
+        NodeSwapWithinOperator(),
         SwapBetweenOperator(),
-        TransferOperator(),
-        CLSM1Operator(),
-        CLSM2Operator(),
-        CLSM3Operator(),
-        CLSM4Operator(),
-        TwoOptOperator(),
+        SwapWithinOperator(),
+        ShiftOperator(),
     ]
 
 def create_local_search_operators():
@@ -156,9 +159,7 @@ def create_local_search_instances(local_search_operators):
 # Format: {'selection': idx, 'crossover': idx, 'mutation': idx, 'local_search': idx}
 COMBINATIONS = [
     {'selection': 0, 'crossover': 0, 'mutation': 0, 'local_search': 0},
-    {'selection': 0, 'crossover': 1, 'mutation': 0, 'local_search': 0},
     {'selection': 0, 'crossover': 0, 'mutation': 2, 'local_search': 0},
-    {'selection': 0, 'crossover': 0, 'mutation': 0, 'local_search': 3},
 ]
 
 # ============================================================================
@@ -270,28 +271,36 @@ def run_experiment():
                 # Restore original name
                 instance.name = original_name
 
-            # Run solver
-            run_start_time = time.time()
-            best_solution = solver.solve(instance)
-            run_elapsed_time = time.time() - run_start_time
+            best_results = None
+            
+            for i in range(NUM_RUNS):
+                print(f"    Run {i+1}/{NUM_RUNS}...")
+                
+                # Run solver
+                run_start_time = time.time()
+                best_solution = solver.solve(instance)
+                run_elapsed_time = time.time() - run_start_time
 
-            # Collect results
-            instance_results = {
-                'instance_name': instance_name,
-                'bks_fitness': bks_fitness,
-                'bks_num_vehicles': bks_num_vehicles,
-                'bks_total_distance': bks_total_distance,
-                'best_fitness': solver.fitness_function(instance, best_solution),
-                'best_num_vehicles': best_solution.num_vehicles_used,
-                'best_total_distance': best_solution.total_distance,
-                'is_feasible': best_solution.is_feasible,
-                'total_time': run_elapsed_time,
-                'convergence': solver.convergence,
-                'evaluations': solver.evaluations,
-                'final_evaluation': solver.final_evaluation
-            }
+                # Collect results 
+                instance_results = {
+                    'instance_name': instance_name,
+                    'bks_fitness': bks_fitness,
+                    'bks_num_vehicles': bks_num_vehicles,
+                    'bks_total_distance': bks_total_distance,
+                    'best_fitness': solver.fitness_function(instance, best_solution),
+                    'best_num_vehicles': best_solution.num_vehicles_used,
+                    'best_total_distance': best_solution.total_distance,
+                    'is_feasible': best_solution.is_feasible,
+                    'total_time': run_elapsed_time,
+                    'convergence': copy.deepcopy(solver.convergence),
+                    'evaluations': copy.deepcopy(solver.evaluations),
+                    'final_evaluation': copy.deepcopy(solver.final_evaluation)
+                }
+                
+                if best_results is None or instance_results['best_fitness'] < best_results['best_fitness']:
+                    best_results = copy.deepcopy(instance_results)
 
-            combination_results['instances'][instance_name] = instance_results
+            combination_results['instances'][instance_name] = best_results
 
             print(f"    Best fitness: {instance_results['best_fitness']:.2f}, "
                   f"Vehicles: {instance_results['best_num_vehicles']}, "
@@ -349,6 +358,7 @@ def save_summary_csv(results):
                 'Instance': instance_name,
                 'BKS_Fitness': instance_data['bks_fitness'],
                 'BKS_Vehicles': instance_data['bks_num_vehicles'],
+                'BKS_Distance': instance_data['bks_total_distance'],
                 'Best_Fitness': instance_data['best_fitness'],
                 'Best_Vehicles': instance_data['best_num_vehicles'],
                 'Best_Distance': instance_data['best_total_distance'],
