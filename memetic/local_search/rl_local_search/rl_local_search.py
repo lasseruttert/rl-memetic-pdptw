@@ -940,18 +940,19 @@ class RLLocalSearch(BaseLocalSearch):
                     best_solution = self.env.current_solution.clone()
                     best_fitness = step_info['fitness']
 
-                run_history[iteration] = {
-                        'time': time.time() - base_time,
-                        'action': action,
-                        'operator': step_info['operator'],
-                        'no_improvement_count': step_info['no_improvement_count'],
-                        'accepted': step_info['accepted'],
-                        'fitness': step_info['fitness'],
-                        'fitness_improvement': step_info['fitness_improvement'],
-                        'total_distance': best_solution.total_distance,
-                        'num_vehicles_used': best_solution.num_vehicles_used,
-                        'is_feasible': best_solution.is_feasible,
-                    }
+                if self.tracking:
+                    run_history[iteration] = {
+                            'time': time.time() - base_time,
+                            'action': action,
+                            'operator': step_info['operator'],
+                            'no_improvement_count': step_info['no_improvement_count'],
+                            'accepted': step_info['accepted'],
+                            'fitness': step_info['fitness'],
+                            'fitness_improvement': step_info['fitness_improvement'],
+                            'total_distance': best_solution.total_distance,
+                            'num_vehicles_used': best_solution.num_vehicles_used,
+                            'is_feasible': best_solution.is_feasible,
+                        }
 
                 # Move to next state
                 state = next_state
@@ -978,18 +979,19 @@ class RLLocalSearch(BaseLocalSearch):
                     next_state, reward, terminated, truncated, step_info = self.env.step(action)
                     state = next_state
                     
-                    run_history[iteration] = {
-                        'time': time.time() - base_time,
-                        'action': action,
-                        'operator': step_info['operator'],
-                        'no_improvement_count': step_info['no_improvement_count'],
-                        'accepted': step_info['accepted'],
-                        'fitness': step_info['fitness'],
-                        'fitness_improvement': step_info['fitness_improvement'],
-                        'total_distance': best_solution.total_distance,
-                        'num_vehicles_used': best_solution.num_vehicles_used,
-                        'is_feasible': best_solution.is_feasible
-                    }
+                    if self.tracking:
+                        run_history[iteration] = {
+                            'time': time.time() - base_time,
+                            'action': action,
+                            'operator': step_info['operator'],
+                            'no_improvement_count': step_info['no_improvement_count'],
+                            'accepted': step_info['accepted'],
+                            'fitness': step_info['fitness'],
+                            'fitness_improvement': step_info['fitness_improvement'],
+                            'total_distance': best_solution.total_distance,
+                            'num_vehicles_used': best_solution.num_vehicles_used,
+                            'is_feasible': best_solution.is_feasible
+                        }
 
                     # Check if this operator improved fitness
                     if step_info['fitness'] < best_fitness:
@@ -1019,18 +1021,19 @@ class RLLocalSearch(BaseLocalSearch):
                     next_state, reward, terminated, truncated, step_info = self.env.step(action)
                     state = next_state
                     
-                    run_history[iteration] = {
-                        'time': time.time() - base_time,
-                        'action': action,
-                        'operator': step_info['operator'],
-                        'no_improvement_count': step_info['no_improvement_count'],
-                        'accepted': step_info['accepted'],
-                        'fitness': step_info['fitness'],
-                        'fitness_improvement': step_info['fitness_improvement'],
-                        'total_distance': best_solution.total_distance,
-                        'num_vehicles_used': best_solution.num_vehicles_used,
-                        'is_feasible': best_solution.is_feasible
-                    }
+                    if self.tracking:
+                        run_history[iteration] = {
+                            'time': time.time() - base_time,
+                            'action': action,
+                            'operator': step_info['operator'],
+                            'no_improvement_count': step_info['no_improvement_count'],
+                            'accepted': step_info['accepted'],
+                            'fitness': step_info['fitness'],
+                            'fitness_improvement': step_info['fitness_improvement'],
+                            'total_distance': best_solution.total_distance,
+                            'num_vehicles_used': best_solution.num_vehicles_used,
+                            'is_feasible': best_solution.is_feasible
+                        }
 
                     # Check if this operator improved fitness
                     if step_info['fitness'] < best_fitness:

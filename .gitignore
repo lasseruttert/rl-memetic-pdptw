@@ -15,6 +15,7 @@ results/
 models/
 runs/
 logs/
+_logs/
 
 # ignore all .md except README.md
 *.md

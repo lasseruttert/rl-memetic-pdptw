@@ -26,7 +26,8 @@ class MutationEnv(gym.Env):
         acceptance_strategy: str = "greedy",
         reward_strategy: str = "binary",
         max_steps: int = 100,
-        max_no_improvement: Optional[int] = None
+        max_no_improvement: Optional[int] = None,
+        use_population_features: bool = True
     ):
         """Initialize the mutation environment.
 
@@ -37,6 +38,7 @@ class MutationEnv(gym.Env):
             reward_strategy: Strategy for calculating rewards (for future use)
             max_steps: Maximum number of steps per episode
             max_no_improvement: Early stopping after N steps without improvement (None to disable)
+            use_population_features: Whether to include population-level features in state representation (default: True)
         """
         super().__init__()
 
@@ -46,6 +48,7 @@ class MutationEnv(gym.Env):
         self.reward_strategy = reward_strategy
         self.max_steps = max_steps
         self.max_no_improvement = max_no_improvement
+        self.use_population_features = use_population_features
 
         # Action space: discrete selection of operators (including no-op if provided)
         self.action_space = spaces.Discrete(len(operators))
@@ -82,16 +85,22 @@ class MutationEnv(gym.Env):
         dummy_population = [dummy_solution.clone() for _ in range(3)]
 
         solution_features = self._get_solution_features(dummy_problem, dummy_solution)
-        population_features = self._get_population_features(
-            dummy_population,
-            [fitness(dummy_problem, s) for s in dummy_population],
-            [s.num_vehicles_used for s in dummy_population]
-        )
+
+        # Conditionally include population features
+        if self.use_population_features:
+            population_features = self._get_population_features(
+                dummy_population,
+                [fitness(dummy_problem, s) for s in dummy_population],
+                [s.num_vehicles_used for s in dummy_population]
+            )
+            self.population_feature_dim = len(population_features)
+        else:
+            self.population_feature_dim = 0
+
         operator_features = self._get_operator_features()
 
         # Store feature dimensions
         self.solution_feature_dim = len(solution_features)
-        self.population_feature_dim = len(population_features)
         self.operator_feature_dim_per_op = operator_features.shape[1]
 
         obs_dim = self.solution_feature_dim + self.population_feature_dim + len(operator_features.flatten())
@@ -917,21 +926,24 @@ class MutationEnv(gym.Env):
         """Get the current state representation.
 
         Returns:
-            np.ndarray: Combined feature vector of solution, population, and operators
+            np.ndarray: Combined feature vector of solution, population (if enabled), and operators
         """
         if self.problem is None or self.current_solution is None:
             raise RuntimeError("Environment must be reset before getting state")
 
         solution_features = self._get_solution_features(self.problem, self.current_solution)
-        population_features = self._get_population_features(
-            self.population,
-            self.population_fitnesses,
-            self.population_num_vehicles
-        )
         operator_features = self._get_operator_features().flatten()
 
-        # Combine features
-        state = np.concatenate([solution_features, population_features, operator_features])
+        # Conditionally include population features
+        if self.use_population_features:
+            population_features = self._get_population_features(
+                self.population,
+                self.population_fitnesses,
+                self.population_num_vehicles
+            )
+            state = np.concatenate([solution_features, population_features, operator_features])
+        else:
+            state = np.concatenate([solution_features, operator_features])
 
         return state
 
