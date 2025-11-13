@@ -224,7 +224,7 @@ def run_experiment():
             mutation_operator=mutation_instances[combination['mutation']],
             local_search_operator=local_search_instances[combination['local_search']],
             evaluation_interval=EVALUATION_INTERVAL,
-            verbose=True,
+            verbose=False,
             track_convergence=True
         )
 
@@ -304,7 +304,9 @@ def run_experiment():
 
             print(f"    Best fitness: {instance_results['best_fitness']:.2f}, "
                   f"Vehicles: {instance_results['best_num_vehicles']}, "
-                  f"Time: {run_elapsed_time:.2f}s")
+                  f"Time: {run_elapsed_time:.2f}s",
+                  f"Time to best: {instance_results['final_evaluation'].get('time_to_final_fitness', None)}s"
+                  )
 
         combo_elapsed = time.time() - combo_start_time
         print(f"\n  Combination completed in {combo_elapsed:.2f} seconds")
