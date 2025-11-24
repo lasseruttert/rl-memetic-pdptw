@@ -156,10 +156,10 @@ def create_local_search_instances(local_search_operators):
 # ============================================================================
 
 # Each combination specifies indices into the component lists
-# Format: {'selection': idx, 'crossover': idx, 'mutation': idx, 'local_search': idx}
+# Format: {'name': str, 'selection': idx, 'crossover': idx, 'mutation': idx, 'local_search': idx}
 COMBINATIONS = [
-    {'selection': 0, 'crossover': 0, 'mutation': 0, 'local_search': 0},
-    {'selection': 0, 'crossover': 0, 'mutation': 2, 'local_search': 0},
+    {'name': 'Baseline', 'selection': 0, 'crossover': 0, 'mutation': 0, 'local_search': 0},
+    {'name': 'No_Mutation', 'selection': 0, 'crossover': 0, 'mutation': 2, 'local_search': 0},
 ]
 
 # ============================================================================
@@ -208,7 +208,8 @@ def run_experiment():
     # For each combination
     for combo_idx, combination in enumerate(COMBINATIONS):
         combo_id = f"combo_{combo_idx}"
-        print(f"\n[{combo_idx+1}/{len(COMBINATIONS)}] Starting combination: {combo_id}")
+        combo_name = combination['name']
+        print(f"\n[{combo_idx+1}/{len(COMBINATIONS)}] Starting combination {combo_idx}: {combo_name}")
         print(f"  Selection: {combination['selection']}, Crossover: {combination['crossover']}, "
               f"Mutation: {combination['mutation']}, LocalSearch: {combination['local_search']}")
         print("-" * 80)
@@ -230,6 +231,7 @@ def run_experiment():
 
         combination_results = {
             'combination_id': combo_id,
+            'combination_name': combo_name,
             'selection_idx': combination['selection'],
             'crossover_idx': combination['crossover'],
             'mutation_idx': combination['mutation'],
@@ -353,6 +355,7 @@ def save_summary_csv(results):
         for instance_name, instance_data in combo_data['instances'].items():
             row = {
                 'Combination_ID': combo_id,
+                'Combination_Name': combo_data['combination_name'],
                 'Selection_Idx': combo_data['selection_idx'],
                 'Crossover_Idx': combo_data['crossover_idx'],
                 'Mutation_Idx': combo_data['mutation_idx'],

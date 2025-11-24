@@ -957,6 +957,40 @@ class RLMutation(BaseMutation):
 
         return config
 
+
+    def _calculate_route_metrics(self, solution: PDPTWSolution) -> Dict:
+        """Calculate route-level metrics.
+
+        Args:
+            solution: Solution to analyze
+
+        Returns:
+            Dictionary with route statistics
+        """
+        route_distances = []
+        route_loads = []
+        empty_routes = 0
+
+        for route in solution.routes:
+            if len(route) <= 2:  # Only depot nodes
+                empty_routes += 1
+                continue
+
+            # Calculate route distance
+            route_distance = 0.0
+            for i in range(len(route) - 1):
+                route_distance += solution.problem.distance_matrix[route[i]][route[i + 1]]
+            route_distances.append(route_distance)
+
+        metrics = {
+            'num_routes': len(solution.routes),
+            'empty_routes': empty_routes,
+            'avg_route_distance': np.mean(route_distances) if route_distances else 0.0,
+            'max_route_distance': np.max(route_distances) if route_distances else 0.0,
+        }
+
+        return metrics
+
     def mutate(self, problem: PDPTWProblem, solution: PDPTWSolution, population: List[PDPTWSolution]) -> PDPTWSolution:
         """Mutate the given solution using trained RL agent for operator selection.
 
@@ -966,7 +1000,16 @@ class RLMutation(BaseMutation):
             population: The current population (required for population-aware features)
 
         Returns:
-            The best solution found during mutation (not necessarily the final solution)
+            If tracking=True: Tuple of (best_solution, run_history)
+            If tracking=False: best_solution
+
+            run_history is a dictionary mapping step -> metrics dict with:
+                - Basic metrics: time, action, operator, accepted, fitness, etc.
+                - Agent metrics: q_values, value_estimate, state_features, epsilon_or_entropy
+                - Constraint violations: time_window_violations, capacity_violations, etc.
+                - Route metrics: num_routes, avg_route_distance, avg_route_load, etc.
+                - Population metrics: diversity scores, distances to population
+                - Trajectory metrics: cumulative_improvement, best_fitness_so_far
 
         Raises:
             ValueError: If population is None (RL mutation requires population awareness)
@@ -975,12 +1018,20 @@ class RLMutation(BaseMutation):
         if population is None:
             raise ValueError("RLMutation requires a population for state features. Population cannot be None.")
 
+        if self.tracking:
+            run_history = {}
+            base_time = time.time()
+
         # Calculate fitness values for population and input solution
         pop_fitnesses = [fitness(problem, sol) for sol in population]
         pop_num_vehicles = [sol.num_vehicles_used for sol in population]
 
         # Reset environment with problem, population, and solution
         state, info = self.env.reset(problem, population, pop_fitnesses, pop_num_vehicles, solution)
+
+        # Track initial fitness
+        initial_fitness = fitness(problem, solution)
+        best_fitness = initial_fitness
 
         # Run mutation loop for max_steps iterations
         for step in range(self.max_steps):
@@ -995,6 +1046,43 @@ class RLMutation(BaseMutation):
             # Apply selected operator through environment
             next_state, reward, terminated, truncated, step_info = self.env.step(action)
 
+            # Track if enabled
+            if self.tracking:
+                # Get Q-values and value estimate
+                q_values = self.agent.get_q_values(state, update_stats=False)
+
+                # Calculate constraint violations and route metrics
+                route_metrics = self._calculate_route_metrics(self.env.current_solution)
+
+                # Update best fitness
+                current_fitness = step_info['fitness']
+                if current_fitness < best_fitness:
+                    best_fitness = current_fitness
+
+                run_history[step] = {
+                    'time': time.time() - base_time,
+                    'action': action,
+                    'operator': step_info['operator'],
+                    'no_improvement_count': step_info['no_improvement_count'],
+                    'accepted': step_info['accepted'],
+                    'fitness': current_fitness,
+                    'fitness_improvement': step_info.get('fitness_improvement', 0.0),
+                    'total_distance': self.env.current_solution.total_distance,
+                    'num_vehicles_used': self.env.current_solution.num_vehicles_used,
+                    'is_feasible': self.env.current_solution.is_feasible,
+                    # Agent decision metrics
+                    'q_values': q_values.tolist() if hasattr(q_values, 'tolist') else list(q_values),
+                    'state_features': state.tolist() if hasattr(state, 'tolist') else list(state),
+                    # Route metrics
+                    'num_routes': route_metrics['num_routes'],
+                    'empty_routes': route_metrics['empty_routes'],
+                    'avg_route_distance': route_metrics['avg_route_distance'],
+                    'max_route_distance': route_metrics['max_route_distance'],
+                    # Trajectory metrics
+                    'cumulative_improvement': initial_fitness - best_fitness,
+                    'best_fitness_so_far': best_fitness,
+                }
+
             # Update state
             state = next_state
 
@@ -1004,4 +1092,8 @@ class RLMutation(BaseMutation):
 
         # Return best solution found during mutation
         best_solution, best_measures = self.env.get_best_solution()
-        return best_solution
+
+        if self.tracking:
+            return best_solution, run_history
+        else:
+            return best_solution

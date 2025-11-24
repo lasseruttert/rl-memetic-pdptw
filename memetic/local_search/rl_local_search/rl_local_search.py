@@ -826,7 +826,7 @@ class RLLocalSearch(BaseLocalSearch):
             # Save checkpoint
             if save_path and episode % save_interval == 0 and episode > 0:
                 checkpoint_path = f"{save_path}_episode_{episode}.pt"
-                self.agent.save(checkpoint_path)
+                self.save(checkpoint_path)
                 if self.verbose:
                     print(f"Saved checkpoint to {checkpoint_path}")
 
@@ -841,7 +841,7 @@ class RLLocalSearch(BaseLocalSearch):
         # Final save
         if save_path:
             final_path = f"{save_path}_final.pt"
-            self.agent.save(final_path)
+            self.save(final_path)
             if self.verbose:
                 print(f"Training completed! Saved final model to {final_path}")
 
@@ -866,6 +866,39 @@ class RLLocalSearch(BaseLocalSearch):
 
         return self.training_history
 
+    def _calculate_route_metrics(self, solution: PDPTWSolution) -> Dict:
+        """Calculate route-level metrics.
+
+        Args:
+            solution: Solution to analyze
+
+        Returns:
+            Dictionary with route statistics
+        """
+        route_distances = []
+        route_loads = []
+        empty_routes = 0
+
+        for route in solution.routes:
+            if len(route) <= 2:  # Only depot nodes
+                empty_routes += 1
+                continue
+
+            # Calculate route distance
+            route_distance = 0.0
+            for i in range(len(route) - 1):
+                route_distance += solution.problem.distance_matrix[route[i]][route[i + 1]]
+            route_distances.append(route_distance)
+
+        metrics = {
+            'num_routes': len(solution.routes),
+            'empty_routes': empty_routes,
+            'avg_route_distance': np.mean(route_distances) if route_distances else 0.0,
+            'max_route_distance': np.max(route_distances) if route_distances else 0.0,
+        }
+
+        return metrics
+
     def search(
         self,
         problem: PDPTWProblem,
@@ -874,7 +907,7 @@ class RLLocalSearch(BaseLocalSearch):
         epsilon: float = 0.0,
         deterministic_rng: bool = False,
         base_seed: int = 0
-    ) -> Tuple[PDPTWSolution, float]:
+    ):
         """Perform local search using trained RL policy (inference mode).
 
         This method is used during the memetic algorithm to improve solutions.
@@ -888,10 +921,19 @@ class RLLocalSearch(BaseLocalSearch):
             base_seed: Base seed for deterministic RNG (only used if deterministic_rng=True)
 
         Returns:
-            Tuple of (best_solution, best_fitness)
+            If tracking=True: Tuple of (best_solution, best_fitness, run_history)
+            If tracking=False: Tuple of (best_solution, best_fitness)
+
+            run_history is a dictionary mapping iteration -> metrics dict with:
+                - Basic metrics: time, action, operator, accepted, fitness, etc.
+                - Agent metrics: q_values, value_estimate, state_features, epsilon_or_entropy
+                - Constraint violations: time_window_violations, capacity_violations, etc.
+                - Route metrics: num_routes, avg_route_distance, avg_route_load, etc.
+                - Trajectory metrics: cumulative_improvement, best_fitness_so_far
         """
         if self.tracking:
             run_history = {}
+            initial_fitness = fitness(problem, solution)
         
         # Use provided max_iterations or default from init
         if max_iterations is None:
@@ -941,18 +983,31 @@ class RLLocalSearch(BaseLocalSearch):
                     best_fitness = step_info['fitness']
 
                 if self.tracking:
+                    # Calculate constraint violations and route metrics
+                    route_metrics = self._calculate_route_metrics(self.env.current_solution)
+
                     run_history[iteration] = {
-                            'time': time.time() - base_time,
-                            'action': action,
-                            'operator': step_info['operator'],
-                            'no_improvement_count': step_info['no_improvement_count'],
-                            'accepted': step_info['accepted'],
-                            'fitness': step_info['fitness'],
-                            'fitness_improvement': step_info['fitness_improvement'],
-                            'total_distance': best_solution.total_distance,
-                            'num_vehicles_used': best_solution.num_vehicles_used,
-                            'is_feasible': best_solution.is_feasible,
-                        }
+                        'time': time.time() - base_time,
+                        'action': action,
+                        'operator': step_info['operator'],
+                        'no_improvement_count': step_info['no_improvement_count'],
+                        'accepted': step_info['accepted'],
+                        'fitness': step_info['fitness'],
+                        'fitness_improvement': step_info['fitness_improvement'],
+                        'total_distance': best_solution.total_distance,
+                        'num_vehicles_used': best_solution.num_vehicles_used,
+                        'is_feasible': best_solution.is_feasible,
+                        # Agent decision metrics
+                        'state_features': state.tolist() if hasattr(state, 'tolist') else list(state),
+                        # Route metrics
+                        'num_routes': route_metrics['num_routes'],
+                        'empty_routes': route_metrics['empty_routes'],
+                        'avg_route_distance': route_metrics['avg_route_distance'],
+                        'max_route_distance': route_metrics['max_route_distance'],
+                        # Trajectory metrics
+                        'cumulative_improvement': initial_fitness - best_fitness,
+                        'best_fitness_so_far': best_fitness,
+                    }
 
                 # Move to next state
                 state = next_state
@@ -978,20 +1033,31 @@ class RLLocalSearch(BaseLocalSearch):
                     # Apply operator (environment handles state management)
                     next_state, reward, terminated, truncated, step_info = self.env.step(action)
                     state = next_state
-                    
-                    if self.tracking:
-                        run_history[iteration] = {
-                            'time': time.time() - base_time,
-                            'action': action,
-                            'operator': step_info['operator'],
-                            'no_improvement_count': step_info['no_improvement_count'],
-                            'accepted': step_info['accepted'],
-                            'fitness': step_info['fitness'],
-                            'fitness_improvement': step_info['fitness_improvement'],
-                            'total_distance': best_solution.total_distance,
-                            'num_vehicles_used': best_solution.num_vehicles_used,
-                            'is_feasible': best_solution.is_feasible
-                        }
+
+                    # Calculate constraint violations and route metrics
+                    route_metrics = self._calculate_route_metrics(self.env.current_solution)
+                    run_history[iteration] = {
+                        'time': time.time() - base_time,
+                        'action': action,
+                        'operator': step_info['operator'],
+                        'no_improvement_count': step_info['no_improvement_count'],
+                        'accepted': step_info['accepted'],
+                        'fitness': step_info['fitness'],
+                        'fitness_improvement': step_info['fitness_improvement'],
+                        'total_distance': best_solution.total_distance,
+                        'num_vehicles_used': best_solution.num_vehicles_used,
+                        'is_feasible': best_solution.is_feasible,
+                        # Agent decision metrics
+                        'state_features': state.tolist() if hasattr(state, 'tolist') else list(state),
+                        # Route metrics
+                        'num_routes': route_metrics['num_routes'],
+                        'empty_routes': route_metrics['empty_routes'],
+                        'avg_route_distance': route_metrics['avg_route_distance'],
+                        'max_route_distance': route_metrics['max_route_distance'],
+                        # Trajectory metrics
+                        'cumulative_improvement':initial_fitness - best_fitness,
+                        'best_fitness_so_far': best_fitness,
+                    }
 
                     # Check if this operator improved fitness
                     if step_info['fitness'] < best_fitness:
@@ -1020,8 +1086,11 @@ class RLLocalSearch(BaseLocalSearch):
                     # Apply operator (environment handles state management)
                     next_state, reward, terminated, truncated, step_info = self.env.step(action)
                     state = next_state
-                    
+
                     if self.tracking:
+                        # Calculate constraint violations and route metrics
+                        route_metrics = self._calculate_route_metrics(self.env.current_solution)
+
                         run_history[iteration] = {
                             'time': time.time() - base_time,
                             'action': action,
@@ -1032,7 +1101,18 @@ class RLLocalSearch(BaseLocalSearch):
                             'fitness_improvement': step_info['fitness_improvement'],
                             'total_distance': best_solution.total_distance,
                             'num_vehicles_used': best_solution.num_vehicles_used,
-                            'is_feasible': best_solution.is_feasible
+                            'is_feasible': best_solution.is_feasible,
+                            # Agent decision metrics
+                            'state_features': state.tolist() if hasattr(state, 'tolist') else list(state),
+                            # Constraint violations
+                            # Route metrics
+                            'num_routes': route_metrics['num_routes'],
+                            'empty_routes': route_metrics['empty_routes'],
+                            'avg_route_distance': route_metrics['avg_route_distance'],
+                            'max_route_distance': route_metrics['max_route_distance'],
+                            # Trajectory metrics
+                            'cumulative_improvement': initial_fitness - best_fitness,
+                            'best_fitness_so_far': best_fitness,
                         }
 
                     # Check if this operator improved fitness
@@ -1055,7 +1135,10 @@ class RLLocalSearch(BaseLocalSearch):
         self.env.max_steps = original_max_steps
         self.env.max_no_improvement = original_max_no_improvement
 
-        return best_solution, best_fitness
+        if self.tracking:
+            return best_solution, best_fitness, run_history
+        else:
+            return best_solution, best_fitness
 
     def save(self, path: str):
         """Save the RL agent, training history, and configuration.

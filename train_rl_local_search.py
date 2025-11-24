@@ -84,16 +84,16 @@ def create_operators():
     """
     return [
         ReinsertOperator(),
-        # ReinsertOperator(max_attempts=5,clustered=True),
-        # ReinsertOperator(force_same_vehicle=True),
-        # ReinsertOperator(allow_same_vehicle=False),
-        # ReinsertOperator(allow_same_vehicle=False, allow_new_vehicles=False),
+        ReinsertOperator(max_attempts=5,clustered=True),
+        ReinsertOperator(force_same_vehicle=True),
+        ReinsertOperator(allow_same_vehicle=False),
+        ReinsertOperator(allow_same_vehicle=False, allow_new_vehicles=False),
         
         RouteEliminationOperator(),
         
         # FlipOperator(),
         # FlipOperator(max_attempts=5),
-        FlipOperator(single_route=True),
+        # FlipOperator(single_route=True),
         
         SwapWithinOperator(),
         # SwapWithinOperator(max_attempts=5),
@@ -372,6 +372,10 @@ def main():
                         help="Use deterministic RNG during testing for reproducible results")
     parser.add_argument("--test_only", action="store_true",
                         help="Skip training and only run testing/evaluation on existing models")
+    parser.add_argument("--skip_validation", action="store_true",
+                        help="Skip validation during training (disables validation set creation)")
+    parser.add_argument("--skip_testing", action="store_true",
+                        help="Skip testing/evaluation phase after training")
 
     # PPO-specific arguments
     parser.add_argument("--ppo_batch_size", type=int, default=2048,
@@ -416,6 +420,14 @@ def main():
 
     print(f"Logging to: {log_filename}")
     print("=" * 80)
+
+    # Validate argument combinations
+    if args.test_only and args.skip_testing:
+        print("Error: Cannot use --test_only and --skip_testing together")
+        print("  --test_only means 'skip training, run testing only'")
+        print("  --skip_testing means 'skip testing phase'")
+        print("  These options are mutually exclusive.")
+        sys.exit(1)
 
     if args.test_only:
         print("\n*** TEST ONLY MODE - Skipping training ***\n")
@@ -489,26 +501,30 @@ def main():
     )
 
     if not args.test_only:
-        # Create validation set
-        instance_manager = LiLimInstanceManager()
-        validation_set = create_validation_set(
-            instance_manager=instance_manager,
-            solution_generator=create_solution_generator,
-            size=PROBLEM_SIZE,
-            mode=args.validation_mode,
-            num_instances=args.num_validation_instances,
-            seed=SEED if SEED is not None else 42,
-            problem_generator=problem_generator
-        )
+        # Create validation set (unless disabled)
+        if not args.skip_validation:
+            instance_manager = LiLimInstanceManager()
+            validation_set = create_validation_set(
+                instance_manager=instance_manager,
+                solution_generator=create_solution_generator,
+                size=PROBLEM_SIZE,
+                mode=args.validation_mode,
+                num_instances=args.num_validation_instances,
+                seed=SEED if SEED is not None else 42,
+                problem_generator=problem_generator
+            )
 
-        total_validation_runs = len(args.validation_seeds) * args.validation_runs_per_seed
-        print(f"\nValidation Set:")
-        print(f"  Mode: {args.validation_mode}")
-        print(f"  Instances: {len(validation_set)}")
-        print(f"  Seeds: {args.validation_seeds}")
-        print(f"  Runs per seed: {args.validation_runs_per_seed}")
-        print(f"  Total runs per instance: {total_validation_runs}")
-        print(f"  Interval: {args.validation_interval} episodes\n")
+            total_validation_runs = len(args.validation_seeds) * args.validation_runs_per_seed
+            print(f"\nValidation Set:")
+            print(f"  Mode: {args.validation_mode}")
+            print(f"  Instances: {len(validation_set)}")
+            print(f"  Seeds: {args.validation_seeds}")
+            print(f"  Runs per seed: {args.validation_runs_per_seed}")
+            print(f"  Total runs per instance: {total_validation_runs}")
+            print(f"  Interval: {args.validation_interval} episodes\n")
+        else:
+            validation_set = None
+            print(f"\nValidation: DISABLED (--skip_validation flag set)\n")
 
         # Train the RL agent
         print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
@@ -539,6 +555,14 @@ def main():
         print(f"Final average fitness: {sum(training_history['episode_best_fitness'][-100:]) / 100:.2f}")
     else:
         print("\nStarting evaluation on test instances...")
+
+    # Skip testing if requested
+    if args.skip_testing:
+        print("\n" + "="*80)
+        print("TESTING PHASE: SKIPPED (--skip_testing flag set)")
+        print("="*80)
+        print("\nTraining completed. Exiting without testing/evaluation.")
+        return
 
     # Create baseline methods with independent operator instances
     adaptive_local_search = AdaptiveLocalSearch(operators=create_operators(), max_no_improvement=50, max_iterations=200)
