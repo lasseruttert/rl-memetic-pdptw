@@ -1,0 +1,3146 @@
+Logging to: logs/training_rl_local_search_dqn_100_greedy_binary_attention_seed100_1760944965.log
+================================================================================
+Using Prioritized Replay Buffer (alpha=0.6, beta_start=0.4)
+Algorithm: DQN
+n-step returns: n=3
+Operator Attention: ENABLED
+  - Solution features: 14
+  - Operator features per operator: 3
+  - Number of operators: 8
+
+Validation Set:
+  Mode: fixed_benchmark
+  Instances: 10
+  Seeds: [42, 111, 222, 333, 444]
+  Runs per seed: 1
+  Total runs per instance: 5
+  Interval: 50 episodes
+
+Starting RL Local Search Training on size 100 instances...
+Algorithm: DQN
+Categories: ['lc1', 'lc2', 'lr1', 'lr2']
+Operator Attention: ENABLED
+Random seed set to 100
+PER beta will anneal from 0.4 to 1.0 over 200000 frames
+TensorBoard logging enabled: runs/rl_local_search_dqn_100_greedy_binary_attention_seed100_1760944965
+Starting RL Local Search training for 1000 episodes...
+State dim: 38, Action dim: 8
+Operators: ['Reinsert-greedy-Unclustered-Max1-AllowNewVehicles-AllowSameVehicle-NoForceSameVehicle', 'RouteElimination-greedy', 'Flip-Single-Unlimited', 'SwapWithin-random-All-MaxNone', 'SwapBetween-random', 'Transfer-All-Max1', 'Shift-random-All-Max3-Seg3-Dist5', 'TwoOpt']
+Episode 0: New instance generated (55 requests)
+Episode 0/1000 | Reward: -148.00 (avg: -148.00) | Fitness: 38504.21 (avg: 38504.21) | Steps: 200 | eps: 0.998 | Loss: 0.0000 | Time: 0.49s | Total: 0.52s
+Episode 5: New instance generated (51 requests)
+Episode 10: New instance generated (53 requests)
+Episode 10/1000 | Reward: -148.00 (avg: -138.60) | Fitness: 31919.49 (avg: 19628.12) | Steps: 200 | eps: 0.973 | Loss: 0.5378 | Time: 2.30s | Total: 8.70s
+Episode 15: New instance generated (52 requests)
+Episode 20: New instance generated (50 requests)
+Episode 20/1000 | Reward: -124.00 (avg: -126.80) | Fitness: 1721.72 (avg: 24065.74) | Steps: 200 | eps: 0.949 | Loss: 0.2894 | Time: 2.87s | Total: 29.93s
+Episode 25: New instance generated (50 requests)
+Episode 30: New instance generated (51 requests)
+Episode 30/1000 | Reward: -101.00 (avg: -126.10) | Fitness: 814.47 (avg: 2159.82) | Steps: 173 | eps: 0.925 | Loss: 0.2824 | Time: 2.09s | Total: 59.55s
+Episode 35: New instance generated (50 requests)
+Episode 40: New instance generated (50 requests)
+Episode 40/1000 | Reward: -128.00 (avg: -121.00) | Fitness: 1739.38 (avg: 6792.28) | Steps: 200 | eps: 0.902 | Loss: 0.2722 | Time: 2.94s | Total: 91.43s
+Episode 45: New instance generated (50 requests)
+Episode 50: New instance generated (52 requests)
+Episode 50/1000 | Reward: -150.00 (avg: -121.70) | Fitness: 26883.83 (avg: 13362.48) | Steps: 200 | eps: 0.880 | Loss: 0.2934 | Time: 2.34s | Total: 114.74s
+
+--- Running Validation (Episode 50) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 18524.85
+  Avg Improvement: 63.68%
+  Std Across Instances: 20200.37 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 1607.05 (policy stability)
+  Best Fitness: 833.75
+  Time: 21.26s
+
+Episode 55: New instance generated (52 requests)
+Episode 60: New instance generated (51 requests)
+Episode 60/1000 | Reward: -110.00 (avg: -115.90) | Fitness: 13179.26 (avg: 18175.00) | Steps: 200 | eps: 0.858 | Loss: 0.3100 | Time: 2.42s | Total: 156.33s
+Episode 65: New instance generated (52 requests)
+Episode 70: New instance generated (53 requests)
+Episode 70/1000 | Reward: -108.00 (avg: -117.40) | Fitness: 17566.00 (avg: 14471.60) | Steps: 200 | eps: 0.837 | Loss: 0.3009 | Time: 2.12s | Total: 179.42s
+Episode 75: New instance generated (53 requests)
+Episode 80: New instance generated (51 requests)
+Episode 80/1000 | Reward: -124.00 (avg: -112.40) | Fitness: 820.52 (avg: 14279.79) | Steps: 200 | eps: 0.816 | Loss: 0.3010 | Time: 2.48s | Total: 200.68s
+Episode 85: New instance generated (53 requests)
+Episode 90: New instance generated (53 requests)
+Episode 90/1000 | Reward: -122.00 (avg: -122.00) | Fitness: 16207.05 (avg: 18010.27) | Steps: 200 | eps: 0.796 | Loss: 0.2945 | Time: 2.27s | Total: 225.58s
+Episode 95: New instance generated (53 requests)
+Episode 100: New instance generated (51 requests)
+Episode 100/1000 | Reward: -89.00 (avg: -103.90) | Fitness: 11138.88 (avg: 15199.88) | Steps: 163 | eps: 0.777 | Loss: 0.2942 | Time: 2.19s | Total: 248.38s
+
+--- Running Validation (Episode 100) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 21758.97
+  Avg Improvement: 57.36%
+  Std Across Instances: 18921.25 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 3450.96 (policy stability)
+  Best Fitness: 662.54
+  Time: 23.19s
+
+Episode 105: New instance generated (51 requests)
+Episode 110: New instance generated (53 requests)
+Episode 110/1000 | Reward: -120.00 (avg: -111.60) | Fitness: 25613.31 (avg: 4836.22) | Steps: 200 | eps: 0.757 | Loss: 0.2977 | Time: 2.32s | Total: 300.69s
+Episode 115: New instance generated (52 requests)
+Episode 120: New instance generated (50 requests)
+Episode 120/1000 | Reward: -108.00 (avg: -115.60) | Fitness: 9145.53 (avg: 21722.40) | Steps: 200 | eps: 0.739 | Loss: 0.2933 | Time: 2.84s | Total: 323.55s
+Episode 125: New instance generated (53 requests)
+Episode 130: New instance generated (53 requests)
+Episode 130/1000 | Reward: -88.00 (avg: -117.40) | Fitness: 13468.88 (avg: 15551.14) | Steps: 200 | eps: 0.720 | Loss: 0.3004 | Time: 2.24s | Total: 349.33s
+Episode 135: New instance generated (52 requests)
+Episode 140: New instance generated (53 requests)
+Episode 140/1000 | Reward: -86.00 (avg: -98.80) | Fitness: 15884.61 (avg: 14846.45) | Steps: 200 | eps: 0.703 | Loss: 0.3044 | Time: 2.26s | Total: 371.81s
+Episode 145: New instance generated (53 requests)
+Episode 150: New instance generated (51 requests)
+Episode 150/1000 | Reward: -138.00 (avg: -110.10) | Fitness: 15365.16 (avg: 18372.84) | Steps: 200 | eps: 0.685 | Loss: 0.3006 | Time: 2.82s | Total: 396.84s
+
+--- Running Validation (Episode 150) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 10129.89
+  Avg Improvement: 79.60%
+  Std Across Instances: 13356.05 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 4626.35 (policy stability)
+  Best Fitness: 662.54
+  Time: 60.38s
+
+Episode 155: New instance generated (50 requests)
+Episode 160: New instance generated (53 requests)
+Episode 160/1000 | Reward: -110.00 (avg: -101.30) | Fitness: 22495.92 (avg: 4822.94) | Steps: 200 | eps: 0.668 | Loss: 0.2923 | Time: 2.49s | Total: 485.88s
+Episode 165: New instance generated (51 requests)
+Episode 170: New instance generated (53 requests)
+Episode 170/1000 | Reward: -78.00 (avg: -101.40) | Fitness: 12442.66 (avg: 8904.17) | Steps: 200 | eps: 0.652 | Loss: 0.2945 | Time: 2.33s | Total: 511.90s
+Episode 175: New instance generated (53 requests)
+Episode 180: New instance generated (51 requests)
+Episode 180/1000 | Reward: -118.00 (avg: -100.20) | Fitness: 1607.16 (avg: 12975.35) | Steps: 200 | eps: 0.636 | Loss: 0.2972 | Time: 2.64s | Total: 536.07s
+Episode 185: New instance generated (51 requests)
+Episode 190: New instance generated (53 requests)
+Episode 190/1000 | Reward: -100.00 (avg: -99.80) | Fitness: 14920.36 (avg: 2658.71) | Steps: 200 | eps: 0.620 | Loss: 0.3007 | Time: 2.18s | Total: 561.37s
+Episode 195: New instance generated (53 requests)
+Episode 200: New instance generated (53 requests)
+Episode 200/1000 | Reward: -100.00 (avg: -104.20) | Fitness: 14814.26 (avg: 17385.99) | Steps: 200 | eps: 0.605 | Loss: 0.2876 | Time: 2.45s | Total: 584.65s
+
+--- Running Validation (Episode 200) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 13794.19
+  Avg Improvement: 73.71%
+  Std Across Instances: 13040.97 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 3559.68 (policy stability)
+  Best Fitness: 662.54
+  Time: 51.55s
+
+Episode 205: New instance generated (51 requests)
+Episode 210: New instance generated (53 requests)
+Episode 210/1000 | Reward: -82.00 (avg: -86.60) | Fitness: 12279.88 (avg: 4408.39) | Steps: 200 | eps: 0.590 | Loss: 0.2891 | Time: 2.40s | Total: 661.65s
+Episode 215: New instance generated (53 requests)
+Episode 220: New instance generated (50 requests)
+Episode 220/1000 | Reward: -90.00 (avg: -86.80) | Fitness: 11710.29 (avg: 14527.99) | Steps: 200 | eps: 0.575 | Loss: 0.3020 | Time: 2.38s | Total: 685.32s
+Episode 225: New instance generated (50 requests)
+Episode 230: New instance generated (54 requests)
+Episode 230/1000 | Reward: -64.00 (avg: -86.20) | Fitness: 2872.62 (avg: 2863.97) | Steps: 200 | eps: 0.561 | Loss: 0.2895 | Time: 2.35s | Total: 712.92s
+Episode 235: New instance generated (51 requests)
+Episode 240: New instance generated (50 requests)
+Episode 240/1000 | Reward: -72.00 (avg: -85.00) | Fitness: 2249.92 (avg: 8094.96) | Steps: 200 | eps: 0.547 | Loss: 0.2920 | Time: 2.34s | Total: 738.93s
+Episode 245: New instance generated (52 requests)
+Episode 250: New instance generated (54 requests)
+Episode 250/1000 | Reward: -88.00 (avg: -73.40) | Fitness: 20953.42 (avg: 10076.78) | Steps: 200 | eps: 0.534 | Loss: 0.2863 | Time: 2.48s | Total: 762.38s
+
+--- Running Validation (Episode 250) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 11003.35
+  Avg Improvement: 79.11%
+  Std Across Instances: 10255.29 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 2590.57 (policy stability)
+  Best Fitness: 662.54
+  Time: 67.62s
+
+Episode 255: New instance generated (53 requests)
+Episode 260: New instance generated (51 requests)
+Episode 260/1000 | Reward: -88.00 (avg: -97.20) | Fitness: 895.06 (avg: 17379.96) | Steps: 200 | eps: 0.520 | Loss: 0.2937 | Time: 2.80s | Total: 854.16s
+Episode 265: New instance generated (50 requests)
+Episode 270: New instance generated (53 requests)
+Episode 270/1000 | Reward: -86.00 (avg: -96.40) | Fitness: 13576.85 (avg: 3331.67) | Steps: 200 | eps: 0.507 | Loss: 0.2798 | Time: 2.46s | Total: 884.14s
+Episode 275: New instance generated (53 requests)
+Episode 280: New instance generated (52 requests)
+Episode 280/1000 | Reward: -94.00 (avg: -78.60) | Fitness: 17326.05 (avg: 7282.16) | Steps: 200 | eps: 0.495 | Loss: 0.2745 | Time: 2.40s | Total: 908.29s
+Episode 285: New instance generated (51 requests)
+Episode 290: New instance generated (51 requests)
+Episode 290/1000 | Reward: -88.00 (avg: -83.80) | Fitness: 1426.68 (avg: 5073.47) | Steps: 200 | eps: 0.483 | Loss: 0.2877 | Time: 3.13s | Total: 934.93s
+Episode 295: New instance generated (50 requests)
+Episode 300: New instance generated (53 requests)
+Episode 300/1000 | Reward: -94.00 (avg: -90.20) | Fitness: 2313.33 (avg: 1433.02) | Steps: 200 | eps: 0.471 | Loss: 0.2868 | Time: 2.44s | Total: 965.35s
+
+--- Running Validation (Episode 300) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 13914.98
+  Avg Improvement: 72.78%
+  Std Across Instances: 12839.95 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 5384.18 (policy stability)
+  Best Fitness: 848.42
+  Time: 114.25s
+
+Episode 305: New instance generated (53 requests)
+Episode 310: New instance generated (52 requests)
+Episode 310/1000 | Reward: -94.00 (avg: -77.40) | Fitness: 1892.59 (avg: 7903.43) | Steps: 200 | eps: 0.459 | Loss: 0.2643 | Time: 2.43s | Total: 1103.52s
+Episode 315: New instance generated (52 requests)
+Episode 320: New instance generated (53 requests)
+Episode 320/1000 | Reward: -86.00 (avg: -85.00) | Fitness: 14111.66 (avg: 7785.87) | Steps: 200 | eps: 0.448 | Loss: 0.2800 | Time: 2.47s | Total: 1128.15s
+Episode 325: New instance generated (53 requests)
+Episode 330: New instance generated (51 requests)
+Episode 330/1000 | Reward: -84.00 (avg: -83.80) | Fitness: 1431.95 (avg: 5012.71) | Steps: 200 | eps: 0.437 | Loss: 0.2690 | Time: 2.67s | Total: 1152.69s
+Episode 335: New instance generated (51 requests)
+Episode 340: New instance generated (52 requests)
+Episode 340/1000 | Reward: -76.00 (avg: -81.10) | Fitness: 11703.67 (avg: 2688.51) | Steps: 200 | eps: 0.426 | Loss: 0.2619 | Time: 2.50s | Total: 1180.14s
+Episode 345: New instance generated (53 requests)
+Episode 350: New instance generated (51 requests)
+Episode 350/1000 | Reward: -104.00 (avg: -81.00) | Fitness: 1734.06 (avg: 8495.04) | Steps: 200 | eps: 0.415 | Loss: 0.2679 | Time: 2.74s | Total: 1205.07s
+
+--- Running Validation (Episode 350) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 9450.42
+  Avg Improvement: 80.75%
+  Std Across Instances: 13502.02 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 3142.26 (policy stability)
+  Best Fitness: 662.54
+  Time: 71.17s
+
+Episode 355: New instance generated (53 requests)
+Episode 360: New instance generated (51 requests)
+Episode 360/1000 | Reward: -62.00 (avg: -75.60) | Fitness: 1593.17 (avg: 3751.93) | Steps: 200 | eps: 0.405 | Loss: 0.2583 | Time: 3.19s | Total: 1302.83s
+Episode 365: New instance generated (51 requests)
+Episode 370: New instance generated (53 requests)
+Episode 370/1000 | Reward: -72.00 (avg: -99.40) | Fitness: 11567.83 (avg: 3124.19) | Steps: 200 | eps: 0.395 | Loss: 0.2627 | Time: 2.59s | Total: 1331.01s
+Episode 375: New instance generated (50 requests)
+Episode 380: New instance generated (53 requests)
+Episode 380/1000 | Reward: -64.00 (avg: -82.20) | Fitness: 2418.77 (avg: 3207.33) | Steps: 200 | eps: 0.385 | Loss: 0.2540 | Time: 2.56s | Total: 1359.20s
+Episode 385: New instance generated (51 requests)
+Episode 390: New instance generated (51 requests)
+Episode 390/1000 | Reward: -108.00 (avg: -69.00) | Fitness: 963.27 (avg: 3955.54) | Steps: 200 | eps: 0.376 | Loss: 0.2550 | Time: 2.73s | Total: 1384.00s
+Episode 395: New instance generated (53 requests)
+Episode 400: New instance generated (53 requests)
+Episode 400/1000 | Reward: -78.00 (avg: -78.40) | Fitness: 2668.69 (avg: 5423.11) | Steps: 200 | eps: 0.367 | Loss: 0.2443 | Time: 2.56s | Total: 1409.78s
+
+--- Running Validation (Episode 400) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 9095.93
+  Avg Improvement: 81.64%
+  Std Across Instances: 14091.26 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 2797.97 (policy stability)
+  Best Fitness: 752.23
+  Time: 69.72s
+
+Episode 405: New instance generated (54 requests)
+Episode 410: New instance generated (53 requests)
+Episode 410/1000 | Reward: -68.00 (avg: -73.20) | Fitness: 12567.26 (avg: 4436.51) | Steps: 200 | eps: 0.357 | Loss: 0.2595 | Time: 2.57s | Total: 1505.36s
+Episode 415: New instance generated (52 requests)
+Episode 420: New instance generated (52 requests)
+Episode 420/1000 | Reward: -70.00 (avg: -64.60) | Fitness: 3015.43 (avg: 4421.44) | Steps: 200 | eps: 0.349 | Loss: 0.2484 | Time: 2.60s | Total: 1530.76s
+Episode 425: New instance generated (52 requests)
+Episode 430: New instance generated (50 requests)
+Episode 430/1000 | Reward: -44.00 (avg: -62.60) | Fitness: 14973.70 (avg: 6804.49) | Steps: 122 | eps: 0.340 | Loss: 0.2631 | Time: 1.64s | Total: 1555.56s
+Episode 435: New instance generated (53 requests)
+Episode 440: New instance generated (53 requests)
+Episode 440/1000 | Reward: -82.00 (avg: -69.80) | Fitness: 2919.81 (avg: 2209.66) | Steps: 200 | eps: 0.332 | Loss: 0.2321 | Time: 2.56s | Total: 1581.28s
+Episode 445: New instance generated (50 requests)
+Episode 450: New instance generated (53 requests)
+Episode 450/1000 | Reward: -72.00 (avg: -80.20) | Fitness: 2662.05 (avg: 3167.22) | Steps: 200 | eps: 0.323 | Loss: 0.2449 | Time: 2.63s | Total: 1610.75s
+
+--- Running Validation (Episode 450) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 11603.85
+  Avg Improvement: 76.50%
+  Std Across Instances: 14085.53 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 4852.31 (policy stability)
+  Best Fitness: 752.23
+  Time: 111.76s
+
+Episode 455: New instance generated (53 requests)
+Episode 460: New instance generated (51 requests)
+Episode 460/1000 | Reward: -98.00 (avg: -86.60) | Fitness: 1567.77 (avg: 6741.90) | Steps: 200 | eps: 0.315 | Loss: 0.2529 | Time: 2.95s | Total: 1748.50s
+Episode 465: New instance generated (52 requests)
+Episode 470: New instance generated (54 requests)
+Episode 470/1000 | Reward: -56.00 (avg: -72.60) | Fitness: 2328.30 (avg: 3050.33) | Steps: 200 | eps: 0.308 | Loss: 0.2308 | Time: 2.62s | Total: 1775.23s
+Episode 475: New instance generated (55 requests)
+Episode 480: New instance generated (52 requests)
+Episode 480/1000 | Reward: -66.00 (avg: -62.30) | Fitness: 1923.34 (avg: 8741.46) | Steps: 200 | eps: 0.300 | Loss: 0.2355 | Time: 2.59s | Total: 1801.22s
+Episode 485: New instance generated (51 requests)
+Episode 490: New instance generated (52 requests)
+Episode 490/1000 | Reward: -82.00 (avg: -84.90) | Fitness: 2384.54 (avg: 4084.95) | Steps: 200 | eps: 0.293 | Loss: 0.2361 | Time: 2.60s | Total: 1827.48s
+Episode 495: New instance generated (52 requests)
+Episode 500: New instance generated (50 requests)
+Episode 500/1000 | Reward: -60.00 (avg: -64.60) | Fitness: 1990.57 (avg: 5789.35) | Steps: 200 | eps: 0.285 | Loss: 0.2210 | Time: 2.60s | Total: 1853.65s
+
+--- Running Validation (Episode 500) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 11506.06
+  Avg Improvement: 76.27%
+  Std Across Instances: 15199.38 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 2651.56 (policy stability)
+  Best Fitness: 1000.85
+  Time: 134.69s
+
+Episode 505: New instance generated (50 requests)
+Episode 510: New instance generated (55 requests)
+Episode 510/1000 | Reward: -80.00 (avg: -65.90) | Fitness: 15603.55 (avg: 6707.49) | Steps: 200 | eps: 0.278 | Loss: 0.2389 | Time: 2.69s | Total: 2013.63s
+Episode 515: New instance generated (50 requests)
+Episode 520: New instance generated (50 requests)
+Episode 520/1000 | Reward: -70.00 (avg: -67.40) | Fitness: 1922.76 (avg: 3751.90) | Steps: 200 | eps: 0.271 | Loss: 0.2333 | Time: 2.87s | Total: 2042.26s
+Episode 525: New instance generated (51 requests)
+Episode 530: New instance generated (53 requests)
+Episode 530/1000 | Reward: -72.00 (avg: -72.60) | Fitness: 2498.02 (avg: 2090.60) | Steps: 200 | eps: 0.265 | Loss: 0.2228 | Time: 2.56s | Total: 2070.62s
+Episode 535: New instance generated (51 requests)
+Episode 540: New instance generated (51 requests)
+Episode 540/1000 | Reward: -66.00 (avg: -77.70) | Fitness: 1082.25 (avg: 1634.05) | Steps: 200 | eps: 0.258 | Loss: 0.2296 | Time: 2.67s | Total: 2096.45s
+Episode 545: New instance generated (50 requests)
+Episode 550: New instance generated (54 requests)
+Episode 550/1000 | Reward: -42.00 (avg: -64.40) | Fitness: 2286.50 (avg: 3401.47) | Steps: 200 | eps: 0.252 | Loss: 0.2403 | Time: 2.62s | Total: 2121.07s
+
+--- Running Validation (Episode 550) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 10361.43
+  Avg Improvement: 78.59%
+  Std Across Instances: 14507.88 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 2436.03 (policy stability)
+  Best Fitness: 932.74
+  Time: 116.69s
+
+Episode 555: New instance generated (50 requests)
+Episode 560: New instance generated (50 requests)
+Episode 560/1000 | Reward: -102.00 (avg: -67.40) | Fitness: 1205.39 (avg: 4939.37) | Steps: 200 | eps: 0.246 | Loss: 0.2530 | Time: 2.76s | Total: 2265.50s
+Episode 565: New instance generated (51 requests)
+Episode 570: New instance generated (52 requests)
+Episode 570/1000 | Reward: -88.00 (avg: -88.70) | Fitness: 2861.70 (avg: 1264.44) | Steps: 200 | eps: 0.239 | Loss: 0.2372 | Time: 2.54s | Total: 2293.22s
+Episode 575: New instance generated (55 requests)
+Episode 580: New instance generated (51 requests)
+Episode 580/1000 | Reward: -58.00 (avg: -75.40) | Fitness: 1708.68 (avg: 6523.06) | Steps: 200 | eps: 0.234 | Loss: 0.2239 | Time: 2.75s | Total: 2319.10s
+Episode 585: New instance generated (50 requests)
+Episode 590: New instance generated (51 requests)
+Episode 590/1000 | Reward: -58.00 (avg: -70.00) | Fitness: 1213.26 (avg: 1732.29) | Steps: 200 | eps: 0.228 | Loss: 0.2339 | Time: 2.82s | Total: 2347.18s
+Episode 595: New instance generated (51 requests)
+Episode 600: New instance generated (51 requests)
+Episode 600/1000 | Reward: -94.00 (avg: -91.80) | Fitness: 1345.29 (avg: 1276.61) | Steps: 200 | eps: 0.222 | Loss: 0.2204 | Time: 3.14s | Total: 2378.24s
+
+--- Running Validation (Episode 600) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 13057.03
+  Avg Improvement: 73.59%
+  Std Across Instances: 18726.27 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 2133.60 (policy stability)
+  Best Fitness: 951.58
+  Time: 64.73s
+
+Episode 605: New instance generated (52 requests)
+Episode 610: New instance generated (50 requests)
+Episode 610/1000 | Reward: -74.00 (avg: -74.60) | Fitness: 1407.47 (avg: 1817.16) | Steps: 200 | eps: 0.217 | Loss: 0.2183 | Time: 2.81s | Total: 2471.92s
+Episode 615: New instance generated (53 requests)
+Episode 620: New instance generated (53 requests)
+Episode 620/1000 | Reward: -58.00 (avg: -79.20) | Fitness: 1752.32 (avg: 4921.05) | Steps: 200 | eps: 0.211 | Loss: 0.2220 | Time: 2.73s | Total: 2499.28s
+Episode 625: New instance generated (53 requests)
+Episode 630: New instance generated (51 requests)
+Episode 630/1000 | Reward: -64.00 (avg: -72.40) | Fitness: 1031.80 (avg: 4027.25) | Steps: 200 | eps: 0.206 | Loss: 0.2215 | Time: 2.78s | Total: 2526.23s
+Episode 635: New instance generated (50 requests)
+Episode 640: New instance generated (53 requests)
+Episode 640/1000 | Reward: -82.00 (avg: -68.80) | Fitness: 14965.06 (avg: 3395.75) | Steps: 200 | eps: 0.201 | Loss: 0.2174 | Time: 2.70s | Total: 2554.44s
+Episode 645: New instance generated (53 requests)
+Episode 650: New instance generated (53 requests)
+Episode 650/1000 | Reward: -60.00 (avg: -72.00) | Fitness: 2176.37 (avg: 6625.36) | Steps: 200 | eps: 0.196 | Loss: 0.2151 | Time: 2.67s | Total: 2581.04s
+
+--- Running Validation (Episode 650) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 8557.82
+  Avg Improvement: 82.48%
+  Std Across Instances: 14014.57 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 1798.90 (policy stability)
+  Best Fitness: 800.90
+  Time: 57.81s
+
+Episode 655: New instance generated (51 requests)
+Episode 660: New instance generated (50 requests)
+Episode 660/1000 | Reward: -62.00 (avg: -77.20) | Fitness: 1903.73 (avg: 1682.03) | Steps: 200 | eps: 0.191 | Loss: 0.2237 | Time: 2.74s | Total: 2666.64s
+Episode 665: New instance generated (51 requests)
+Episode 670: New instance generated (51 requests)
+Episode 670/1000 | Reward: -88.00 (avg: -77.20) | Fitness: 978.87 (avg: 1610.26) | Steps: 200 | eps: 0.186 | Loss: 0.2156 | Time: 2.70s | Total: 2695.20s
+Episode 675: New instance generated (51 requests)
+Episode 680: New instance generated (52 requests)
+Episode 680/1000 | Reward: -52.00 (avg: -71.40) | Fitness: 2011.81 (avg: 1489.32) | Steps: 200 | eps: 0.182 | Loss: 0.2067 | Time: 2.74s | Total: 2723.39s
+Episode 685: New instance generated (51 requests)
+Episode 690: New instance generated (50 requests)
+Episode 690/1000 | Reward: -86.00 (avg: -67.00) | Fitness: 1911.66 (avg: 2421.53) | Steps: 200 | eps: 0.177 | Loss: 0.2066 | Time: 2.93s | Total: 2750.27s
+Episode 695: New instance generated (51 requests)
+Episode 700: New instance generated (51 requests)
+Episode 700/1000 | Reward: -80.00 (avg: -71.00) | Fitness: 1568.34 (avg: 1414.90) | Steps: 200 | eps: 0.173 | Loss: 0.2002 | Time: 2.83s | Total: 2778.28s
+
+--- Running Validation (Episode 700) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 9531.82
+  Avg Improvement: 80.62%
+  Std Across Instances: 14042.68 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 3372.87 (policy stability)
+  Best Fitness: 745.49
+  Time: 59.88s
+
+Episode 705: New instance generated (52 requests)
+Episode 710: New instance generated (51 requests)
+Episode 710/1000 | Reward: -64.00 (avg: -64.80) | Fitness: 701.31 (avg: 2645.29) | Steps: 200 | eps: 0.169 | Loss: 0.2125 | Time: 2.82s | Total: 2866.13s
+Episode 715: New instance generated (51 requests)
+Episode 720: New instance generated (51 requests)
+Episode 720/1000 | Reward: -66.00 (avg: -79.90) | Fitness: 1128.39 (avg: 941.00) | Steps: 200 | eps: 0.165 | Loss: 0.2004 | Time: 2.82s | Total: 2894.14s
+Episode 725: New instance generated (51 requests)
+Episode 730: New instance generated (52 requests)
+Episode 730/1000 | Reward: -78.00 (avg: -76.60) | Fitness: 2355.42 (avg: 1097.68) | Steps: 200 | eps: 0.160 | Loss: 0.2031 | Time: 2.68s | Total: 2921.31s
+Episode 735: New instance generated (52 requests)
+Episode 740: New instance generated (53 requests)
+Episode 740/1000 | Reward: -84.00 (avg: -58.80) | Fitness: 1783.14 (avg: 3053.45) | Steps: 200 | eps: 0.156 | Loss: 0.1848 | Time: 2.66s | Total: 2948.23s
+Episode 745: New instance generated (53 requests)
+Episode 750: New instance generated (50 requests)
+Episode 750/1000 | Reward: -46.00 (avg: -65.50) | Fitness: 1996.38 (avg: 2956.14) | Steps: 200 | eps: 0.153 | Loss: 0.1908 | Time: 2.64s | Total: 2974.73s
+
+--- Running Validation (Episode 750) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 14415.38
+  Avg Improvement: 72.25%
+  Std Across Instances: 19333.45 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 3177.61 (policy stability)
+  Best Fitness: 662.54
+  Time: 63.49s
+
+Episode 755: New instance generated (53 requests)
+Episode 760: New instance generated (51 requests)
+Episode 760/1000 | Reward: -40.00 (avg: -62.60) | Fitness: 1716.19 (avg: 3316.75) | Steps: 200 | eps: 0.149 | Loss: 0.1914 | Time: 2.62s | Total: 3065.07s
+Episode 765: New instance generated (51 requests)
+Episode 770: New instance generated (51 requests)
+Episode 770/1000 | Reward: -52.00 (avg: -76.60) | Fitness: 1688.56 (avg: 1304.68) | Steps: 200 | eps: 0.145 | Loss: 0.1952 | Time: 2.80s | Total: 3092.07s
+Episode 775: New instance generated (51 requests)
+Episode 780: New instance generated (50 requests)
+Episode 780/1000 | Reward: -60.00 (avg: -69.80) | Fitness: 2355.62 (avg: 1351.62) | Steps: 200 | eps: 0.142 | Loss: 0.1850 | Time: 2.59s | Total: 3119.48s
+Episode 785: New instance generated (53 requests)
+Episode 790: New instance generated (50 requests)
+Episode 790/1000 | Reward: -78.00 (avg: -57.20) | Fitness: 1399.03 (avg: 1891.84) | Steps: 200 | eps: 0.138 | Loss: 0.1858 | Time: 2.94s | Total: 3145.85s
+Episode 795: New instance generated (52 requests)
+Episode 800: New instance generated (53 requests)
+Episode 800/1000 | Reward: -76.00 (avg: -66.40) | Fitness: 2824.29 (avg: 3182.10) | Steps: 200 | eps: 0.135 | Loss: 0.1836 | Time: 2.71s | Total: 3174.04s
+
+--- Running Validation (Episode 800) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 12769.36
+  Avg Improvement: 74.36%
+  Std Across Instances: 18899.38 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 1439.82 (policy stability)
+  Best Fitness: 662.54
+  Time: 63.85s
+
+Episode 805: New instance generated (53 requests)
+Episode 810: New instance generated (51 requests)
+Episode 810/1000 | Reward: -116.00 (avg: -79.30) | Fitness: 1134.59 (avg: 3543.08) | Steps: 200 | eps: 0.131 | Loss: 0.1882 | Time: 2.80s | Total: 3264.97s
+Episode 815: New instance generated (52 requests)
+Episode 820: New instance generated (54 requests)
+Episode 820/1000 | Reward: -58.00 (avg: -62.10) | Fitness: 2327.93 (avg: 5570.37) | Steps: 200 | eps: 0.128 | Loss: 0.1830 | Time: 2.73s | Total: 3292.40s
+Episode 825: New instance generated (50 requests)
+Episode 830: New instance generated (50 requests)
+Episode 830/1000 | Reward: -94.00 (avg: -69.40) | Fitness: 1712.02 (avg: 1675.22) | Steps: 200 | eps: 0.125 | Loss: 0.1851 | Time: 3.18s | Total: 3333.10s
+Episode 835: New instance generated (50 requests)
+Episode 840: New instance generated (53 requests)
+Episode 840/1000 | Reward: -68.00 (avg: -79.40) | Fitness: 1755.90 (avg: 1564.15) | Steps: 200 | eps: 0.122 | Loss: 0.1849 | Time: 2.68s | Total: 3363.44s
+Episode 845: New instance generated (53 requests)
+Episode 850: New instance generated (50 requests)
+Episode 850/1000 | Reward: -38.00 (avg: -62.60) | Fitness: 2156.28 (avg: 3890.83) | Steps: 200 | eps: 0.119 | Loss: 0.1770 | Time: 2.67s | Total: 3389.86s
+
+--- Running Validation (Episode 850) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 11084.16
+  Avg Improvement: 78.85%
+  Std Across Instances: 15176.07 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 5087.94 (policy stability)
+  Best Fitness: 662.54
+  Time: 33.58s
+
+Episode 855: New instance generated (53 requests)
+Episode 860: New instance generated (53 requests)
+Episode 860/1000 | Reward: -44.00 (avg: -60.20) | Fitness: 1671.47 (avg: 1949.41) | Steps: 200 | eps: 0.116 | Loss: 0.1753 | Time: 2.73s | Total: 3450.06s
+Episode 865: New instance generated (53 requests)
+Episode 870: New instance generated (50 requests)
+Episode 870/1000 | Reward: -66.00 (avg: -70.90) | Fitness: 1157.09 (avg: 6528.34) | Steps: 200 | eps: 0.113 | Loss: 0.1772 | Time: 2.88s | Total: 3476.05s
+Episode 875: New instance generated (51 requests)
+Episode 880: New instance generated (51 requests)
+Episode 880/1000 | Reward: -78.00 (avg: -72.00) | Fitness: 2030.63 (avg: 1647.93) | Steps: 200 | eps: 0.110 | Loss: 0.1659 | Time: 2.72s | Total: 3504.75s
+Episode 885: New instance generated (53 requests)
+Episode 890: New instance generated (53 requests)
+Episode 890/1000 | Reward: -74.00 (avg: -71.50) | Fitness: 11982.44 (avg: 4108.76) | Steps: 200 | eps: 0.107 | Loss: 0.1755 | Time: 2.64s | Total: 3531.39s
+Episode 895: New instance generated (51 requests)
+Episode 900: New instance generated (50 requests)
+Episode 900/1000 | Reward: -44.00 (avg: -68.60) | Fitness: 1362.62 (avg: 1571.30) | Steps: 200 | eps: 0.105 | Loss: 0.1705 | Time: 2.84s | Total: 3559.00s
+
+--- Running Validation (Episode 900) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 2697.81
+  Avg Improvement: 94.44%
+  Std Across Instances: 1765.57 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 1273.48 (policy stability)
+  Best Fitness: 662.54
+  Time: 24.06s
+
+Episode 905: New instance generated (53 requests)
+Episode 910: New instance generated (50 requests)
+Episode 910/1000 | Reward: -44.00 (avg: -68.10) | Fitness: 1391.80 (avg: 1842.65) | Steps: 200 | eps: 0.102 | Loss: 0.1616 | Time: 2.85s | Total: 3610.51s
+Episode 915: New instance generated (53 requests)
+Episode 920: New instance generated (53 requests)
+Episode 920/1000 | Reward: -76.00 (avg: -66.40) | Fitness: 2884.02 (avg: 2071.98) | Steps: 200 | eps: 0.100 | Loss: 0.1649 | Time: 2.71s | Total: 3639.28s
+Episode 925: New instance generated (52 requests)
+Episode 930: New instance generated (53 requests)
+Episode 930/1000 | Reward: -60.00 (avg: -70.80) | Fitness: 2305.05 (avg: 3789.02) | Steps: 200 | eps: 0.097 | Loss: 0.1718 | Time: 2.71s | Total: 3666.24s
+Episode 935: New instance generated (53 requests)
+Episode 940: New instance generated (51 requests)
+Episode 940/1000 | Reward: -46.00 (avg: -54.80) | Fitness: 959.13 (avg: 1825.83) | Steps: 200 | eps: 0.095 | Loss: 0.1605 | Time: 2.68s | Total: 3692.96s
+Episode 945: New instance generated (52 requests)
+Episode 950: New instance generated (51 requests)
+Episode 950/1000 | Reward: -74.00 (avg: -70.90) | Fitness: 1658.85 (avg: 2734.04) | Steps: 200 | eps: 0.093 | Loss: 0.1762 | Time: 2.70s | Total: 3718.85s
+
+--- Running Validation (Episode 950) ---
+Validation Results (5 seeds × 1 runs = 5 total runs per instance):
+  Avg Fitness: 2954.23
+  Avg Improvement: 93.95%
+  Std Across Instances: 2911.81 (generalization)
+  Avg Std Within Seeds: 0.00 (determinism check - should be ~0)
+  Avg Std Across Seeds: 1141.69 (policy stability)
+  Best Fitness: 662.54
+  Time: 22.93s
+
+Episode 955: New instance generated (53 requests)
+Episode 960: New instance generated (50 requests)
+Episode 960/1000 | Reward: -92.00 (avg: -65.40) | Fitness: 1519.26 (avg: 1861.09) | Steps: 200 | eps: 0.090 | Loss: 0.1639 | Time: 2.83s | Total: 3768.02s
+Episode 965: New instance generated (50 requests)
+Episode 970: New instance generated (51 requests)
+Episode 970/1000 | Reward: -43.00 (avg: -69.30) | Fitness: 1020.37 (avg: 1272.98) | Steps: 119 | eps: 0.088 | Loss: 0.1513 | Time: 1.61s | Total: 3796.31s
+Episode 975: New instance generated (51 requests)
+Episode 980: New instance generated (51 requests)
+Episode 980/1000 | Reward: -82.00 (avg: -78.50) | Fitness: 1410.05 (avg: 1355.96) | Steps: 200 | eps: 0.086 | Loss: 0.1582 | Time: 2.81s | Total: 3821.70s
+Episode 985: New instance generated (52 requests)
+Episode 990: New instance generated (53 requests)
+Episode 990/1000 | Reward: -58.00 (avg: -55.00) | Fitness: 2097.88 (avg: 1981.69) | Steps: 200 | eps: 0.084 | Loss: 0.1572 | Time: 2.70s | Total: 3848.96s
+Episode 995: New instance generated (53 requests)
+Episode 999/1000 | Reward: -52.00 (avg: -60.60) | Fitness: 2532.65 (avg: 2074.00) | Steps: 200 | eps: 0.082 | Loss: 0.1510 | Time: 2.70s | Total: 3873.10s
+Training completed! Saved final model to models/rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt
+
+Training Summary:
+Total episodes: 1000
+Total time: 3873.24s (3.87s per episode)
+Final epsilon: 0.082
+Replay buffer size: 100000
+TensorBoard logs saved to runs/rl_local_search_dqn_100_greedy_binary_attention_seed100_1760944965
+
+Training completed!
+Final average reward: -65.84
+Final average fitness: 2073.57
+Detected model architecture (DQN, with attention): models/rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt
+Loaded RL models (OneShot + Roulette + Ranking) from models/rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt
+
+--- Comparing RL models vs Naive/Random Local Search ---
+Testing across 5 seeds with 50 tests per seed
+Seeds: [42, 422, 100, 200, 300]
+
+================================================================================
+SEED 1/5: 42
+================================================================================
+
+Test 1/50
+Initial fitness: 53536.56
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2268.15 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2228.02 (time: 1.87s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1708.35 (time: 1.75s)
+Adaptive: best fitness: 14647.92 (time: 0.29s)
+Naive: best fitness: 1947.25 (time: 1.46s)
+Naive (best improvement): best fitness: 1327.67 (time: 1.74s)
+Random: best fitness: 41688.37 (time: 0.32s)
+
+Test 2/50
+Initial fitness: 52500.89
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 11418.25 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2127.37 (time: 1.82s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2015.79 (time: 1.57s)
+Adaptive: best fitness: 18986.62 (time: 0.28s)
+Naive: best fitness: 2965.23 (time: 1.43s)
+Naive (best improvement): best fitness: 1803.55 (time: 1.86s)
+Random: best fitness: 40082.61 (time: 0.23s)
+
+Test 3/50
+Initial fitness: 30230.54
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1470.43 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1284.92 (time: 22.59s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1723.27 (time: 7.95s)
+Adaptive: best fitness: 1516.09 (time: 1.33s)
+Naive: best fitness: 1596.67 (time: 11.82s)
+Naive (best improvement): best fitness: 1536.80 (time: 8.95s)
+Random: best fitness: 11119.80 (time: 0.65s)
+
+Test 4/50
+Initial fitness: 44364.86
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2237.28 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2170.07 (time: 1.75s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2019.61 (time: 1.59s)
+Adaptive: best fitness: 11918.97 (time: 0.23s)
+Naive: best fitness: 2239.07 (time: 1.31s)
+Naive (best improvement): best fitness: 2000.52 (time: 1.67s)
+Random: best fitness: 32428.21 (time: 0.21s)
+
+Test 5/50
+Initial fitness: 55785.03
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2006.39 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2553.07 (time: 1.86s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1626.21 (time: 1.73s)
+Adaptive: best fitness: 14765.70 (time: 0.33s)
+Naive: best fitness: 2835.56 (time: 1.45s)
+Naive (best improvement): best fitness: 2674.60 (time: 2.24s)
+Random: best fitness: 34865.16 (time: 0.38s)
+
+Test 6/50
+Initial fitness: 50614.10
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 3055.59 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2930.67 (time: 1.85s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 3002.60 (time: 1.72s)
+Adaptive: best fitness: 15267.86 (time: 0.49s)
+Naive: best fitness: 3162.41 (time: 1.40s)
+Naive (best improvement): best fitness: 2839.88 (time: 2.22s)
+Random: best fitness: 41492.98 (time: 0.51s)
+
+Test 7/50
+Initial fitness: 41869.30
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2564.41 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2440.67 (time: 1.69s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2730.91 (time: 1.64s)
+Adaptive: best fitness: 2712.49 (time: 0.17s)
+Naive: best fitness: 13058.38 (time: 1.33s)
+Naive (best improvement): best fitness: 2529.08 (time: 1.54s)
+Random: best fitness: 31833.79 (time: 0.38s)
+
+Test 8/50
+Initial fitness: 53121.21
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1807.36 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1885.38 (time: 1.84s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 3277.93 (time: 1.97s)
+Adaptive: best fitness: 14116.22 (time: 0.24s)
+Naive: best fitness: 2747.63 (time: 1.52s)
+Naive (best improvement): best fitness: 1813.20 (time: 1.88s)
+Random: best fitness: 32084.21 (time: 0.51s)
+
+Test 9/50
+Initial fitness: 32902.16
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2199.47 (time: 0.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2060.04 (time: 7.21s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1854.40 (time: 9.40s)
+Adaptive: best fitness: 9402.80 (time: 0.71s)
+Naive: best fitness: 1656.86 (time: 7.64s)
+Naive (best improvement): best fitness: 1754.83 (time: 8.82s)
+Random: best fitness: 14353.22 (time: 0.75s)
+
+Test 10/50
+Initial fitness: 35177.87
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 995.27 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 898.58 (time: 6.64s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1363.53 (time: 10.68s)
+Adaptive: best fitness: 1873.85 (time: 1.39s)
+Naive: best fitness: 1559.21 (time: 7.98s)
+Naive (best improvement): best fitness: 1356.89 (time: 10.71s)
+Random: best fitness: 12693.76 (time: 0.84s)
+
+Test 11/50
+Initial fitness: 53937.84
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 31091.64 (time: 0.50s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 3096.15 (time: 1.62s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 14506.63 (time: 1.44s)
+Adaptive: best fitness: 39228.27 (time: 0.26s)
+Naive: best fitness: 16852.53 (time: 1.25s)
+Naive (best improvement): best fitness: 13047.45 (time: 1.41s)
+Random: best fitness: 42677.30 (time: 0.19s)
+
+Test 12/50
+Initial fitness: 39652.46
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 883.84 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1156.61 (time: 10.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 793.84 (time: 7.89s)
+Adaptive: best fitness: 1595.00 (time: 1.61s)
+Naive: best fitness: 662.62 (time: 4.33s)
+Naive (best improvement): best fitness: 676.75 (time: 9.08s)
+Random: best fitness: 1046.47 (time: 0.33s)
+
+Test 13/50
+Initial fitness: 50288.91
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 975.79 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1532.35 (time: 6.35s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1307.99 (time: 7.43s)
+Adaptive: best fitness: 1883.06 (time: 0.83s)
+Naive: best fitness: 1066.72 (time: 5.56s)
+Naive (best improvement): best fitness: 1469.63 (time: 10.14s)
+Random: best fitness: 29035.00 (time: 0.37s)
+
+Test 14/50
+Initial fitness: 34327.73
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1731.42 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1918.75 (time: 1.99s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1639.32 (time: 1.77s)
+Adaptive: best fitness: 2270.14 (time: 0.29s)
+Naive: best fitness: 2179.13 (time: 1.58s)
+Naive (best improvement): best fitness: 1764.07 (time: 1.76s)
+Random: best fitness: 20726.00 (time: 0.17s)
+
+Test 15/50
+Initial fitness: 53245.27
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2136.59 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1962.46 (time: 1.95s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2717.79 (time: 1.83s)
+Adaptive: best fitness: 13826.84 (time: 0.37s)
+Naive: best fitness: 2142.97 (time: 1.45s)
+Naive (best improvement): best fitness: 2271.76 (time: 2.02s)
+Random: best fitness: 32896.23 (time: 0.39s)
+
+Test 16/50
+Initial fitness: 49858.54
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1897.65 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1895.95 (time: 1.83s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2325.36 (time: 1.59s)
+Adaptive: best fitness: 12331.61 (time: 0.22s)
+Naive: best fitness: 2276.05 (time: 1.32s)
+Naive (best improvement): best fitness: 1709.70 (time: 1.67s)
+Random: best fitness: 34017.19 (time: 0.15s)
+
+Test 17/50
+Initial fitness: 26087.58
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1444.89 (time: 0.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1128.59 (time: 6.86s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1074.24 (time: 7.01s)
+Adaptive: best fitness: 1297.06 (time: 1.52s)
+Naive: best fitness: 1413.40 (time: 4.61s)
+Naive (best improvement): best fitness: 1079.76 (time: 7.10s)
+Random: best fitness: 1825.68 (time: 0.87s)
+
+Test 18/50
+Initial fitness: 41029.44
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 764.95 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 789.45 (time: 6.68s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 810.80 (time: 6.45s)
+Adaptive: best fitness: 1750.70 (time: 1.40s)
+Naive: best fitness: 971.06 (time: 7.55s)
+Naive (best improvement): best fitness: 1283.71 (time: 15.12s)
+Random: best fitness: 20268.13 (time: 0.70s)
+
+Test 19/50
+Initial fitness: 51120.19
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2582.02 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2920.70 (time: 1.83s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2525.84 (time: 1.81s)
+Adaptive: best fitness: 17346.76 (time: 0.28s)
+Naive: best fitness: 2738.01 (time: 1.31s)
+Naive (best improvement): best fitness: 2526.03 (time: 2.36s)
+Random: best fitness: 40131.83 (time: 0.35s)
+
+Test 20/50
+Initial fitness: 27059.89
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1329.02 (time: 0.50s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1484.60 (time: 9.02s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1483.61 (time: 10.69s)
+Adaptive: best fitness: 1743.99 (time: 0.25s)
+Naive: best fitness: 1551.35 (time: 6.89s)
+Naive (best improvement): best fitness: 1536.76 (time: 12.26s)
+Random: best fitness: 9599.73 (time: 1.24s)
+
+Test 21/50
+Initial fitness: 42041.02
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 901.59 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 785.38 (time: 6.13s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1442.90 (time: 7.33s)
+Adaptive: best fitness: 2455.72 (time: 1.14s)
+Naive: best fitness: 790.10 (time: 3.35s)
+Naive (best improvement): best fitness: 1763.76 (time: 14.25s)
+Random: best fitness: 27781.31 (time: 0.57s)
+
+Test 22/50
+Initial fitness: 16127.64
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1361.71 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1315.39 (time: 9.53s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1157.09 (time: 7.86s)
+Adaptive: best fitness: 1404.59 (time: 1.15s)
+Naive: best fitness: 1091.40 (time: 14.20s)
+Naive (best improvement): best fitness: 1191.53 (time: 8.35s)
+Random: best fitness: 1456.08 (time: 1.74s)
+
+Test 23/50
+Initial fitness: 30470.81
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2142.30 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1756.21 (time: 11.10s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1840.33 (time: 14.40s)
+Adaptive: best fitness: 2191.53 (time: 1.05s)
+Naive: best fitness: 1802.44 (time: 6.90s)
+Naive (best improvement): best fitness: 1620.01 (time: 9.28s)
+Random: best fitness: 12830.93 (time: 0.36s)
+
+Test 24/50
+Initial fitness: 38132.91
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1624.25 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1945.52 (time: 7.53s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1558.40 (time: 6.30s)
+Adaptive: best fitness: 1788.52 (time: 0.73s)
+Naive: best fitness: 1723.94 (time: 8.79s)
+Naive (best improvement): best fitness: 1770.82 (time: 9.39s)
+Random: best fitness: 17978.41 (time: 0.59s)
+
+Test 25/50
+Initial fitness: 51212.04
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1671.86 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2478.58 (time: 1.83s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1510.39 (time: 1.67s)
+Adaptive: best fitness: 15452.80 (time: 0.23s)
+Naive: best fitness: 2396.77 (time: 1.31s)
+Naive (best improvement): best fitness: 1834.37 (time: 1.79s)
+Random: best fitness: 39387.09 (time: 0.27s)
+
+Test 26/50
+Initial fitness: 51241.83
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1698.27 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2309.26 (time: 1.77s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1736.08 (time: 1.85s)
+Adaptive: best fitness: 12932.62 (time: 0.26s)
+Naive: best fitness: 1802.65 (time: 1.41s)
+Naive (best improvement): best fitness: 12795.17 (time: 1.77s)
+Random: best fitness: 35896.20 (time: 0.21s)
+
+Test 27/50
+Initial fitness: 30109.16
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1334.54 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1696.61 (time: 9.24s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1287.67 (time: 7.39s)
+Adaptive: best fitness: 1682.93 (time: 0.62s)
+Naive: best fitness: 1324.75 (time: 6.38s)
+Naive (best improvement): best fitness: 1642.23 (time: 5.80s)
+Random: best fitness: 16316.93 (time: 0.58s)
+
+Test 28/50
+Initial fitness: 50605.83
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1519.50 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1338.20 (time: 1.78s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1869.03 (time: 1.69s)
+Adaptive: best fitness: 25628.74 (time: 0.27s)
+Naive: best fitness: 2047.41 (time: 1.53s)
+Naive (best improvement): best fitness: 1897.50 (time: 1.95s)
+Random: best fitness: 38925.05 (time: 0.23s)
+
+Test 29/50
+Initial fitness: 54075.60
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2032.48 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2716.72 (time: 1.84s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1602.54 (time: 1.68s)
+Adaptive: best fitness: 2817.20 (time: 0.19s)
+Naive: best fitness: 2570.37 (time: 1.35s)
+Naive (best improvement): best fitness: 1930.83 (time: 1.59s)
+Random: best fitness: 30480.65 (time: 0.19s)
+
+Test 30/50
+Initial fitness: 48992.06
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2381.17 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2573.81 (time: 1.61s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2344.19 (time: 1.83s)
+Adaptive: best fitness: 35343.72 (time: 0.21s)
+Naive: best fitness: 2991.09 (time: 1.43s)
+Naive (best improvement): best fitness: 2680.82 (time: 1.85s)
+Random: best fitness: 34747.47 (time: 0.23s)
+
+Test 31/50
+Initial fitness: 43174.82
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2082.95 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2075.74 (time: 1.75s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1922.79 (time: 1.87s)
+Adaptive: best fitness: 3224.07 (time: 0.23s)
+Naive: best fitness: 2490.22 (time: 1.40s)
+Naive (best improvement): best fitness: 2143.88 (time: 1.65s)
+Random: best fitness: 27002.97 (time: 0.25s)
+
+Test 32/50
+Initial fitness: 51973.45
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 27195.00 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2905.27 (time: 1.68s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2787.42 (time: 1.53s)
+Adaptive: best fitness: 34797.55 (time: 0.34s)
+Naive: best fitness: 16417.81 (time: 1.25s)
+Naive (best improvement): best fitness: 2713.05 (time: 1.55s)
+Random: best fitness: 37359.89 (time: 0.25s)
+
+Test 33/50
+Initial fitness: 52842.65
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2208.42 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2229.95 (time: 1.86s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2222.35 (time: 1.79s)
+Adaptive: best fitness: 43279.50 (time: 0.17s)
+Naive: best fitness: 2629.18 (time: 1.44s)
+Naive (best improvement): best fitness: 2179.08 (time: 2.51s)
+Random: best fitness: 31520.89 (time: 0.38s)
+
+Test 34/50
+Initial fitness: 30183.29
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1645.39 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1317.06 (time: 6.54s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1535.91 (time: 9.44s)
+Adaptive: best fitness: 1981.08 (time: 0.66s)
+Naive: best fitness: 1390.01 (time: 7.09s)
+Naive (best improvement): best fitness: 1570.49 (time: 12.58s)
+Random: best fitness: 12062.92 (time: 0.52s)
+
+Test 35/50
+Initial fitness: 34902.61
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2335.95 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2101.20 (time: 1.85s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2278.75 (time: 1.62s)
+Adaptive: best fitness: 2083.86 (time: 0.20s)
+Naive: best fitness: 2144.36 (time: 1.33s)
+Naive (best improvement): best fitness: 1799.98 (time: 1.60s)
+Random: best fitness: 22871.52 (time: 0.14s)
+
+Test 36/50
+Initial fitness: 47625.37
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2379.48 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2595.86 (time: 1.58s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2695.21 (time: 1.56s)
+Adaptive: best fitness: 15107.62 (time: 0.21s)
+Naive: best fitness: 2724.58 (time: 1.22s)
+Naive (best improvement): best fitness: 2467.09 (time: 1.66s)
+Random: best fitness: 25846.90 (time: 0.21s)
+
+Test 37/50
+Initial fitness: 41149.17
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 792.53 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1191.07 (time: 9.82s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1119.41 (time: 9.00s)
+Adaptive: best fitness: 1123.39 (time: 0.75s)
+Naive: best fitness: 1440.86 (time: 7.49s)
+Naive (best improvement): best fitness: 1274.54 (time: 18.05s)
+Random: best fitness: 19003.66 (time: 1.14s)
+
+Test 38/50
+Initial fitness: 47634.68
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1093.81 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 909.90 (time: 5.10s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 967.39 (time: 4.89s)
+Adaptive: best fitness: 979.57 (time: 0.61s)
+Naive: best fitness: 1184.81 (time: 4.59s)
+Naive (best improvement): best fitness: 961.56 (time: 5.18s)
+Random: best fitness: 930.24 (time: 0.77s)
+
+Test 39/50
+Initial fitness: 41554.70
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2286.13 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2162.08 (time: 1.97s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2178.44 (time: 1.64s)
+Adaptive: best fitness: 14567.44 (time: 0.25s)
+Naive: best fitness: 2013.09 (time: 1.39s)
+Naive (best improvement): best fitness: 2153.54 (time: 1.67s)
+Random: best fitness: 27310.96 (time: 0.23s)
+
+Test 40/50
+Initial fitness: 25549.83
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1515.02 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1516.49 (time: 8.08s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1594.28 (time: 7.75s)
+Adaptive: best fitness: 2011.24 (time: 1.49s)
+Naive: best fitness: 1868.52 (time: 12.99s)
+Naive (best improvement): best fitness: 1693.30 (time: 8.84s)
+Random: best fitness: 2066.24 (time: 1.67s)
+
+Test 41/50
+Initial fitness: 43245.62
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 666.06 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 933.95 (time: 5.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 805.34 (time: 11.50s)
+Adaptive: best fitness: 1995.87 (time: 1.33s)
+Naive: best fitness: 1239.07 (time: 7.28s)
+Naive (best improvement): best fitness: 1436.91 (time: 14.71s)
+Random: best fitness: 18296.06 (time: 0.80s)
+
+Test 42/50
+Initial fitness: 20102.03
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1094.06 (time: 0.61s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1193.18 (time: 15.92s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1122.36 (time: 28.38s)
+Adaptive: best fitness: 1338.90 (time: 0.97s)
+Naive: best fitness: 1233.36 (time: 10.60s)
+Naive (best improvement): best fitness: 1146.46 (time: 21.03s)
+Random: best fitness: 1188.45 (time: 0.87s)
+
+Test 43/50
+Initial fitness: 54538.75
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 3909.44 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 3150.47 (time: 1.71s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 3150.47 (time: 1.62s)
+Adaptive: best fitness: 24050.18 (time: 0.25s)
+Naive: best fitness: 32781.92 (time: 3.08s)
+Naive (best improvement): best fitness: 3274.51 (time: 1.43s)
+Random: best fitness: 36801.44 (time: 0.30s)
+
+Test 44/50
+Initial fitness: 44577.27
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 736.02 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 662.54 (time: 8.21s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 959.53 (time: 5.90s)
+Adaptive: best fitness: 10058.76 (time: 1.69s)
+Naive: best fitness: 712.44 (time: 10.47s)
+Naive (best improvement): best fitness: 1408.94 (time: 9.00s)
+Random: best fitness: 24194.92 (time: 1.06s)
+
+Test 45/50
+Initial fitness: 42243.55
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1490.93 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1926.68 (time: 2.12s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1840.92 (time: 2.04s)
+Adaptive: best fitness: 2598.48 (time: 0.23s)
+Naive: best fitness: 2075.81 (time: 1.47s)
+Naive (best improvement): best fitness: 1960.41 (time: 2.33s)
+Random: best fitness: 27308.08 (time: 0.32s)
+
+Test 46/50
+Initial fitness: 26086.54
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 987.25 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1219.79 (time: 6.18s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 975.74 (time: 8.94s)
+Adaptive: best fitness: 1625.00 (time: 1.03s)
+Naive: best fitness: 1327.99 (time: 7.05s)
+Naive (best improvement): best fitness: 1170.72 (time: 7.29s)
+Random: best fitness: 1951.95 (time: 1.18s)
+
+Test 47/50
+Initial fitness: 21413.90
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1580.09 (time: 0.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1482.15 (time: 25.18s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1356.35 (time: 16.95s)
+Adaptive: best fitness: 1504.00 (time: 2.40s)
+Naive: best fitness: 1616.88 (time: 6.92s)
+Naive (best improvement): best fitness: 1309.11 (time: 20.36s)
+Random: best fitness: 10281.74 (time: 0.69s)
+
+Test 48/50
+Initial fitness: 51635.46
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2072.00 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1631.54 (time: 1.87s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1434.58 (time: 1.82s)
+Adaptive: best fitness: 2909.89 (time: 0.21s)
+Naive: best fitness: 2514.87 (time: 1.29s)
+Naive (best improvement): best fitness: 1880.49 (time: 1.73s)
+Random: best fitness: 35391.48 (time: 0.35s)
+
+Test 49/50
+Initial fitness: 43863.88
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 900.54 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 662.54 (time: 7.28s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 662.54 (time: 10.30s)
+Adaptive: best fitness: 1335.98 (time: 1.19s)
+Naive: best fitness: 925.32 (time: 5.04s)
+Naive (best improvement): best fitness: 937.81 (time: 6.54s)
+Random: best fitness: 14588.96 (time: 0.96s)
+
+Test 50/50
+Initial fitness: 42078.77
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2098.34 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2390.09 (time: 1.84s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1878.46 (time: 1.82s)
+Adaptive: best fitness: 2316.28 (time: 0.27s)
+Naive: best fitness: 1745.75 (time: 1.41s)
+Naive (best improvement): best fitness: 1998.80 (time: 2.12s)
+Random: best fitness: 26916.09 (time: 0.62s)
+
+--- Summary for Seed 42 ---
+Average initial fitness: 41921.91
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): Avg best fitness: 3011.95 (avg time: 0.46s)
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): Avg best fitness: 1832.75 (avg time: 5.32s)
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): Avg best fitness: 2006.90 (avg time: 5.41s)
+Adaptive: Avg best fitness: 9381.38 (avg time: 0.66s)
+Naive: Avg best fitness: 3292.80 (avg time: 4.29s)
+Naive (best improvement): Avg best fitness: 2232.21 (avg time: 6.05s)
+Random: Avg best fitness: 23671.22 (avg time: 0.54s)
+
+================================================================================
+SEED 2/5: 422
+================================================================================
+
+Test 1/50
+Initial fitness: 32634.80
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1874.22 (time: 0.56s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1581.09 (time: 12.56s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1464.65 (time: 5.50s)
+Adaptive: best fitness: 1865.88 (time: 1.09s)
+Naive: best fitness: 1681.47 (time: 9.34s)
+Naive (best improvement): best fitness: 2012.53 (time: 11.94s)
+Random: best fitness: 10514.65 (time: 0.56s)
+
+Test 2/50
+Initial fitness: 41000.58
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2579.69 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2970.68 (time: 1.77s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2498.46 (time: 1.55s)
+Adaptive: best fitness: 13352.87 (time: 0.24s)
+Naive: best fitness: 2893.39 (time: 1.50s)
+Naive (best improvement): best fitness: 3023.86 (time: 1.76s)
+Random: best fitness: 34703.46 (time: 0.12s)
+
+Test 3/50
+Initial fitness: 28875.85
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1338.09 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1245.39 (time: 6.87s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1223.36 (time: 4.89s)
+Adaptive: best fitness: 10274.95 (time: 0.75s)
+Naive: best fitness: 1286.10 (time: 16.86s)
+Naive (best improvement): best fitness: 1374.51 (time: 15.30s)
+Random: best fitness: 1633.35 (time: 1.47s)
+
+Test 4/50
+Initial fitness: 33639.40
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1639.72 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1950.35 (time: 7.56s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1679.99 (time: 5.97s)
+Adaptive: best fitness: 2141.54 (time: 0.63s)
+Naive: best fitness: 1975.23 (time: 7.87s)
+Naive (best improvement): best fitness: 1995.11 (time: 8.68s)
+Random: best fitness: 14669.23 (time: 0.54s)
+
+Test 5/50
+Initial fitness: 42825.77
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 788.88 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 659.11 (time: 7.68s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1143.23 (time: 10.08s)
+Adaptive: best fitness: 1767.76 (time: 1.40s)
+Naive: best fitness: 659.11 (time: 5.12s)
+Naive (best improvement): best fitness: 659.11 (time: 12.72s)
+Random: best fitness: 18659.11 (time: 0.75s)
+
+Test 6/50
+Initial fitness: 43107.47
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1139.06 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1116.63 (time: 6.51s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 909.62 (time: 5.52s)
+Adaptive: best fitness: 1003.20 (time: 0.69s)
+Naive: best fitness: 868.72 (time: 4.98s)
+Naive (best improvement): best fitness: 1332.16 (time: 8.59s)
+Random: best fitness: 14633.54 (time: 0.71s)
+
+Test 7/50
+Initial fitness: 49962.69
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 23487.71 (time: 0.50s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 13964.68 (time: 2.05s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 3160.60 (time: 1.63s)
+Adaptive: best fitness: 34279.47 (time: 0.28s)
+Naive: best fitness: 15430.03 (time: 1.31s)
+Naive (best improvement): best fitness: 3853.14 (time: 1.90s)
+Random: best fitness: 39889.83 (time: 0.25s)
+
+Test 8/50
+Initial fitness: 53908.94
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2180.92 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1577.16 (time: 1.77s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1910.65 (time: 1.71s)
+Adaptive: best fitness: 15273.63 (time: 0.22s)
+Naive: best fitness: 1890.16 (time: 1.31s)
+Naive (best improvement): best fitness: 1508.58 (time: 1.65s)
+Random: best fitness: 43251.89 (time: 0.30s)
+
+Test 9/50
+Initial fitness: 45114.64
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2509.53 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2199.63 (time: 1.67s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2239.78 (time: 1.59s)
+Adaptive: best fitness: 19591.24 (time: 0.23s)
+Naive: best fitness: 2184.22 (time: 1.45s)
+Naive (best improvement): best fitness: 1850.91 (time: 1.76s)
+Random: best fitness: 32458.67 (time: 0.23s)
+
+Test 10/50
+Initial fitness: 50479.34
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 3568.40 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 36373.54 (time: 7.32s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 14146.09 (time: 1.91s)
+Adaptive: best fitness: 42206.73 (time: 0.59s)
+Naive: best fitness: 16647.76 (time: 1.27s)
+Naive (best improvement): best fitness: 3495.21 (time: 1.76s)
+Random: best fitness: 43517.07 (time: 0.22s)
+
+Test 11/50
+Initial fitness: 28480.03
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2251.90 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2155.92 (time: 10.99s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1867.47 (time: 8.76s)
+Adaptive: best fitness: 2444.02 (time: 0.63s)
+Naive: best fitness: 2023.90 (time: 8.13s)
+Naive (best improvement): best fitness: 2063.48 (time: 10.72s)
+Random: best fitness: 13375.72 (time: 0.25s)
+
+Test 12/50
+Initial fitness: 39481.67
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1111.21 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1000.52 (time: 6.14s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 859.61 (time: 4.94s)
+Adaptive: best fitness: 935.46 (time: 1.20s)
+Naive: best fitness: 729.33 (time: 4.66s)
+Naive (best improvement): best fitness: 1378.53 (time: 7.24s)
+Random: best fitness: 1339.35 (time: 0.45s)
+
+Test 13/50
+Initial fitness: 51060.60
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 14136.28 (time: 0.51s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 3191.63 (time: 1.77s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2741.08 (time: 1.47s)
+Adaptive: best fitness: 14973.36 (time: 0.28s)
+Naive: best fitness: 14761.15 (time: 3.24s)
+Naive (best improvement): best fitness: 15905.24 (time: 1.71s)
+Random: best fitness: 38747.73 (time: 0.26s)
+
+Test 14/50
+Initial fitness: 44563.07
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 781.95 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1481.45 (time: 7.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1042.78 (time: 6.48s)
+Adaptive: best fitness: 1236.95 (time: 0.55s)
+Naive: best fitness: 903.42 (time: 6.05s)
+Naive (best improvement): best fitness: 1639.23 (time: 9.50s)
+Random: best fitness: 15071.58 (time: 0.39s)
+
+Test 15/50
+Initial fitness: 22199.40
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1486.18 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1102.77 (time: 11.22s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1196.28 (time: 13.72s)
+Adaptive: best fitness: 1284.25 (time: 0.56s)
+Naive: best fitness: 1167.43 (time: 18.44s)
+Naive (best improvement): best fitness: 1108.20 (time: 22.68s)
+Random: best fitness: 1772.59 (time: 0.62s)
+
+Test 16/50
+Initial fitness: 51769.77
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 14239.40 (time: 0.56s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 13350.73 (time: 1.74s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 13942.04 (time: 1.75s)
+Adaptive: best fitness: 18614.47 (time: 0.30s)
+Naive: best fitness: 3140.63 (time: 1.39s)
+Naive (best improvement): best fitness: 3204.60 (time: 1.70s)
+Random: best fitness: 40756.22 (time: 0.35s)
+
+Test 17/50
+Initial fitness: 42453.29
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1564.46 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1005.87 (time: 14.11s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1843.04 (time: 10.02s)
+Adaptive: best fitness: 1483.14 (time: 0.61s)
+Naive: best fitness: 1485.98 (time: 14.44s)
+Naive (best improvement): best fitness: 854.90 (time: 7.62s)
+Random: best fitness: 19025.50 (time: 0.94s)
+
+Test 18/50
+Initial fitness: 24113.64
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1366.72 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1719.95 (time: 11.73s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1685.23 (time: 21.89s)
+Adaptive: best fitness: 1641.35 (time: 1.33s)
+Naive: best fitness: 1589.15 (time: 9.40s)
+Naive (best improvement): best fitness: 1747.66 (time: 24.37s)
+Random: best fitness: 9411.63 (time: 0.74s)
+
+Test 19/50
+Initial fitness: 49539.81
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1562.46 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1835.40 (time: 1.83s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2366.68 (time: 1.69s)
+Adaptive: best fitness: 18190.10 (time: 0.23s)
+Naive: best fitness: 2037.26 (time: 1.36s)
+Naive (best improvement): best fitness: 2631.10 (time: 1.82s)
+Random: best fitness: 38284.37 (time: 0.17s)
+
+Test 20/50
+Initial fitness: 46001.59
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 784.31 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 971.29 (time: 5.51s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 997.28 (time: 5.30s)
+Adaptive: best fitness: 1759.86 (time: 0.88s)
+Naive: best fitness: 1299.83 (time: 7.13s)
+Naive (best improvement): best fitness: 1242.68 (time: 12.89s)
+Random: best fitness: 26932.21 (time: 0.39s)
+
+Test 21/50
+Initial fitness: 35443.62
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2115.97 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1774.38 (time: 1.75s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2056.73 (time: 1.72s)
+Adaptive: best fitness: 2109.24 (time: 0.20s)
+Naive: best fitness: 1977.62 (time: 1.21s)
+Naive (best improvement): best fitness: 2143.04 (time: 1.71s)
+Random: best fitness: 23298.25 (time: 0.20s)
+
+Test 22/50
+Initial fitness: 47840.46
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 774.61 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1493.56 (time: 13.50s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 662.54 (time: 7.98s)
+Adaptive: best fitness: 2797.19 (time: 1.19s)
+Naive: best fitness: 1138.14 (time: 6.64s)
+Naive (best improvement): best fitness: 810.35 (time: 6.36s)
+Random: best fitness: 17592.51 (time: 0.69s)
+
+Test 23/50
+Initial fitness: 50345.80
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2674.79 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2538.50 (time: 1.74s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2766.59 (time: 1.63s)
+Adaptive: best fitness: 2708.39 (time: 0.19s)
+Naive: best fitness: 2797.94 (time: 1.31s)
+Naive (best improvement): best fitness: 2446.55 (time: 1.86s)
+Random: best fitness: 39039.72 (time: 0.26s)
+
+Test 24/50
+Initial fitness: 21947.94
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1584.71 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1186.66 (time: 9.71s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1239.50 (time: 15.34s)
+Adaptive: best fitness: 1662.98 (time: 1.61s)
+Naive: best fitness: 1538.10 (time: 11.58s)
+Naive (best improvement): best fitness: 1291.26 (time: 18.22s)
+Random: best fitness: 8468.09 (time: 3.39s)
+
+Test 25/50
+Initial fitness: 34929.25
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1506.18 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1497.03 (time: 6.94s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1302.28 (time: 11.43s)
+Adaptive: best fitness: 1625.59 (time: 0.95s)
+Naive: best fitness: 1303.20 (time: 7.71s)
+Naive (best improvement): best fitness: 1350.79 (time: 9.45s)
+Random: best fitness: 8306.89 (time: 0.51s)
+
+Test 26/50
+Initial fitness: 26950.88
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1420.55 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1304.79 (time: 14.15s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1495.00 (time: 12.91s)
+Adaptive: best fitness: 1660.94 (time: 1.80s)
+Naive: best fitness: 1277.11 (time: 6.70s)
+Naive (best improvement): best fitness: 1331.98 (time: 21.77s)
+Random: best fitness: 11191.17 (time: 0.49s)
+
+Test 27/50
+Initial fitness: 34540.43
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2029.76 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1788.62 (time: 1.95s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2167.92 (time: 1.94s)
+Adaptive: best fitness: 2158.78 (time: 0.22s)
+Naive: best fitness: 2237.87 (time: 1.02s)
+Naive (best improvement): best fitness: 1991.57 (time: 1.57s)
+Random: best fitness: 20229.37 (time: 0.20s)
+
+Test 28/50
+Initial fitness: 27497.56
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1245.46 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1307.68 (time: 7.89s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1278.89 (time: 6.88s)
+Adaptive: best fitness: 1532.69 (time: 1.24s)
+Naive: best fitness: 1174.36 (time: 7.43s)
+Naive (best improvement): best fitness: 1463.30 (time: 7.48s)
+Random: best fitness: 12035.37 (time: 1.71s)
+
+Test 29/50
+Initial fitness: 50972.60
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1787.17 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2661.20 (time: 1.64s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1768.39 (time: 1.75s)
+Adaptive: best fitness: 2721.75 (time: 0.25s)
+Naive: best fitness: 12438.94 (time: 1.40s)
+Naive (best improvement): best fitness: 1171.80 (time: 1.83s)
+Random: best fitness: 32219.37 (time: 0.25s)
+
+Test 30/50
+Initial fitness: 39674.19
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1992.92 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2066.97 (time: 1.69s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1843.31 (time: 1.52s)
+Adaptive: best fitness: 3087.35 (time: 0.21s)
+Naive: best fitness: 2472.18 (time: 1.37s)
+Naive (best improvement): best fitness: 2479.89 (time: 1.63s)
+Random: best fitness: 23601.41 (time: 0.25s)
+
+Test 31/50
+Initial fitness: 46997.73
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2907.96 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2541.83 (time: 1.80s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2440.01 (time: 1.74s)
+Adaptive: best fitness: 17979.71 (time: 0.22s)
+Naive: best fitness: 2266.40 (time: 1.63s)
+Naive (best improvement): best fitness: 2432.07 (time: 1.75s)
+Random: best fitness: 33037.12 (time: 0.26s)
+
+Test 32/50
+Initial fitness: 41716.02
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 882.53 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1380.16 (time: 9.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1163.63 (time: 5.48s)
+Adaptive: best fitness: 2184.74 (time: 1.59s)
+Naive: best fitness: 914.67 (time: 9.18s)
+Naive (best improvement): best fitness: 1629.51 (time: 11.66s)
+Random: best fitness: 10529.78 (time: 1.14s)
+
+Test 33/50
+Initial fitness: 41831.95
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2255.28 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2429.95 (time: 1.67s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2494.10 (time: 1.58s)
+Adaptive: best fitness: 2644.87 (time: 0.22s)
+Naive: best fitness: 2192.52 (time: 1.35s)
+Naive (best improvement): best fitness: 2504.92 (time: 1.47s)
+Random: best fitness: 25134.03 (time: 0.23s)
+
+Test 34/50
+Initial fitness: 50224.83
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1937.33 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2911.75 (time: 2.14s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2136.74 (time: 1.71s)
+Adaptive: best fitness: 14031.76 (time: 0.39s)
+Naive: best fitness: 12876.24 (time: 1.64s)
+Naive (best improvement): best fitness: 2774.76 (time: 2.16s)
+Random: best fitness: 36611.34 (time: 0.31s)
+
+Test 35/50
+Initial fitness: 16257.80
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1609.19 (time: 0.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1047.22 (time: 9.11s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1265.78 (time: 15.74s)
+Adaptive: best fitness: 1329.39 (time: 2.06s)
+Naive: best fitness: 1115.28 (time: 17.59s)
+Naive (best improvement): best fitness: 1099.86 (time: 15.04s)
+Random: best fitness: 1234.88 (time: 1.68s)
+
+Test 36/50
+Initial fitness: 44414.17
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1336.46 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1328.39 (time: 9.22s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1940.23 (time: 11.22s)
+Adaptive: best fitness: 2072.96 (time: 1.76s)
+Naive: best fitness: 1080.82 (time: 7.96s)
+Naive (best improvement): best fitness: 1045.63 (time: 10.71s)
+Random: best fitness: 19033.76 (time: 0.69s)
+
+Test 37/50
+Initial fitness: 42456.36
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1778.47 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2423.01 (time: 2.13s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1945.36 (time: 1.82s)
+Adaptive: best fitness: 16297.94 (time: 0.35s)
+Naive: best fitness: 1962.73 (time: 1.53s)
+Naive (best improvement): best fitness: 2208.09 (time: 2.22s)
+Random: best fitness: 26568.29 (time: 0.37s)
+
+Test 38/50
+Initial fitness: 41826.22
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 818.10 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 658.88 (time: 8.12s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 728.30 (time: 4.54s)
+Adaptive: best fitness: 672.17 (time: 0.84s)
+Naive: best fitness: 662.74 (time: 6.77s)
+Naive (best improvement): best fitness: 1364.15 (time: 8.94s)
+Random: best fitness: 1315.52 (time: 0.77s)
+
+Test 39/50
+Initial fitness: 42527.51
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1932.38 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2087.97 (time: 1.79s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2167.81 (time: 1.60s)
+Adaptive: best fitness: 16484.06 (time: 0.50s)
+Naive: best fitness: 2079.43 (time: 1.56s)
+Naive (best improvement): best fitness: 2155.75 (time: 2.12s)
+Random: best fitness: 30659.13 (time: 0.33s)
+
+Test 40/50
+Initial fitness: 52221.26
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2993.48 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2910.47 (time: 1.64s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 3150.81 (time: 1.55s)
+Adaptive: best fitness: 36930.12 (time: 0.31s)
+Naive: best fitness: 3012.30 (time: 1.20s)
+Naive (best improvement): best fitness: 13271.61 (time: 2.60s)
+Random: best fitness: 36395.88 (time: 0.24s)
+
+Test 41/50
+Initial fitness: 53116.41
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1406.42 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1949.08 (time: 1.95s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1582.88 (time: 1.67s)
+Adaptive: best fitness: 3346.51 (time: 0.25s)
+Naive: best fitness: 2605.12 (time: 1.49s)
+Naive (best improvement): best fitness: 1931.58 (time: 1.83s)
+Random: best fitness: 39244.56 (time: 0.18s)
+
+Test 42/50
+Initial fitness: 44716.30
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 809.03 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 974.22 (time: 5.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 662.62 (time: 7.52s)
+Adaptive: best fitness: 1432.81 (time: 1.02s)
+Naive: best fitness: 854.40 (time: 6.15s)
+Naive (best improvement): best fitness: 1766.76 (time: 9.87s)
+Random: best fitness: 19885.07 (time: 0.63s)
+
+Test 43/50
+Initial fitness: 41171.29
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2471.26 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2498.31 (time: 1.65s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2839.45 (time: 1.56s)
+Adaptive: best fitness: 13049.50 (time: 0.21s)
+Naive: best fitness: 2540.38 (time: 1.32s)
+Naive (best improvement): best fitness: 2526.61 (time: 1.81s)
+Random: best fitness: 32440.97 (time: 0.27s)
+
+Test 44/50
+Initial fitness: 29356.64
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1053.32 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1247.92 (time: 7.29s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 824.45 (time: 11.74s)
+Adaptive: best fitness: 1419.89 (time: 1.26s)
+Naive: best fitness: 1054.82 (time: 6.74s)
+Naive (best improvement): best fitness: 1105.33 (time: 7.67s)
+Random: best fitness: 9710.59 (time: 0.19s)
+
+Test 45/50
+Initial fitness: 45624.64
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1398.11 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1656.17 (time: 1.63s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1650.06 (time: 1.68s)
+Adaptive: best fitness: 2313.07 (time: 0.18s)
+Naive: best fitness: 1704.38 (time: 1.30s)
+Naive (best improvement): best fitness: 2416.14 (time: 1.63s)
+Random: best fitness: 31098.74 (time: 0.23s)
+
+Test 46/50
+Initial fitness: 37368.05
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1794.28 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1893.34 (time: 1.66s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1799.65 (time: 1.74s)
+Adaptive: best fitness: 2372.58 (time: 0.21s)
+Naive: best fitness: 1920.52 (time: 1.31s)
+Naive (best improvement): best fitness: 2168.94 (time: 1.56s)
+Random: best fitness: 26242.77 (time: 0.11s)
+
+Test 47/50
+Initial fitness: 43256.42
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 662.74 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1048.94 (time: 8.05s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 666.48 (time: 11.68s)
+Adaptive: best fitness: 1973.14 (time: 1.16s)
+Naive: best fitness: 1238.89 (time: 6.75s)
+Naive (best improvement): best fitness: 1246.72 (time: 8.72s)
+Random: best fitness: 13677.49 (time: 0.53s)
+
+Test 48/50
+Initial fitness: 50623.37
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2804.03 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2664.91 (time: 1.90s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2925.56 (time: 1.49s)
+Adaptive: best fitness: 15034.19 (time: 0.19s)
+Naive: best fitness: 2945.96 (time: 1.24s)
+Naive (best improvement): best fitness: 2915.37 (time: 1.60s)
+Random: best fitness: 39797.28 (time: 0.26s)
+
+Test 49/50
+Initial fitness: 48214.35
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2173.26 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1632.75 (time: 1.87s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1447.72 (time: 1.83s)
+Adaptive: best fitness: 2343.10 (time: 0.19s)
+Naive: best fitness: 2354.32 (time: 1.73s)
+Naive (best improvement): best fitness: 1779.82 (time: 2.29s)
+Random: best fitness: 31966.63 (time: 0.33s)
+
+Test 50/50
+Initial fitness: 50554.96
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1620.63 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1693.78 (time: 1.89s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1734.17 (time: 1.68s)
+Adaptive: best fitness: 3470.42 (time: 0.20s)
+Naive: best fitness: 2888.45 (time: 1.38s)
+Naive (best improvement): best fitness: 2339.56 (time: 1.62s)
+Random: best fitness: 26311.63 (time: 0.21s)
+
+--- Summary for Seed 422 ---
+Average initial fitness: 41116.63
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): Avg best fitness: 2643.35 (avg time: 0.46s)
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): Avg best fitness: 2921.04 (avg time: 5.39s)
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): Avg best fitness: 2221.30 (avg time: 5.38s)
+Adaptive: Avg best fitness: 7675.36 (avg time: 0.67s)
+Naive: Avg best fitness: 3025.60 (avg time: 5.03s)
+Naive (best improvement): Avg best fitness: 2400.89 (avg time: 6.71s)
+Random: Avg best fitness: 22910.51 (avg time: 0.53s)
+
+================================================================================
+SEED 3/5: 100
+================================================================================
+
+Test 1/50
+Initial fitness: 40589.50
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 733.41 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 918.28 (time: 4.82s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 662.36 (time: 9.76s)
+Adaptive: best fitness: 1579.50 (time: 1.08s)
+Naive: best fitness: 666.06 (time: 5.67s)
+Naive (best improvement): best fitness: 662.62 (time: 3.43s)
+Random: best fitness: 798.70 (time: 0.54s)
+
+Test 2/50
+Initial fitness: 43333.98
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 878.11 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 729.95 (time: 6.21s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 682.00 (time: 10.34s)
+Adaptive: best fitness: 863.21 (time: 0.96s)
+Naive: best fitness: 687.72 (time: 8.14s)
+Naive (best improvement): best fitness: 1664.72 (time: 15.11s)
+Random: best fitness: 21056.64 (time: 0.34s)
+
+Test 3/50
+Initial fitness: 44158.18
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 661.67 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1043.12 (time: 9.24s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 659.11 (time: 6.75s)
+Adaptive: best fitness: 1768.72 (time: 1.46s)
+Naive: best fitness: 1327.06 (time: 10.82s)
+Naive (best improvement): best fitness: 1318.19 (time: 11.79s)
+Random: best fitness: 19737.74 (time: 0.51s)
+
+Test 4/50
+Initial fitness: 20725.36
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1767.91 (time: 0.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1358.33 (time: 10.28s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1281.63 (time: 22.19s)
+Adaptive: best fitness: 1382.29 (time: 2.58s)
+Naive: best fitness: 1409.24 (time: 17.68s)
+Naive (best improvement): best fitness: 1375.11 (time: 17.31s)
+Random: best fitness: 8304.74 (time: 0.66s)
+
+Test 5/50
+Initial fitness: 33450.64
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1904.80 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1721.72 (time: 1.91s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1628.75 (time: 1.59s)
+Adaptive: best fitness: 2767.44 (time: 0.24s)
+Naive: best fitness: 1651.95 (time: 1.65s)
+Naive (best improvement): best fitness: 2206.84 (time: 1.87s)
+Random: best fitness: 17790.34 (time: 0.24s)
+
+Test 6/50
+Initial fitness: 43912.04
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 10768.42 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2183.89 (time: 1.89s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2391.07 (time: 1.80s)
+Adaptive: best fitness: 14525.33 (time: 0.25s)
+Naive: best fitness: 2376.93 (time: 1.64s)
+Naive (best improvement): best fitness: 2074.17 (time: 1.89s)
+Random: best fitness: 27032.30 (time: 0.28s)
+
+Test 7/50
+Initial fitness: 36113.10
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1762.68 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2255.97 (time: 5.74s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2114.40 (time: 6.80s)
+Adaptive: best fitness: 2358.48 (time: 0.54s)
+Naive: best fitness: 1744.54 (time: 9.29s)
+Naive (best improvement): best fitness: 2140.38 (time: 8.42s)
+Random: best fitness: 14326.01 (time: 0.36s)
+
+Test 8/50
+Initial fitness: 46496.17
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1018.86 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1123.04 (time: 15.50s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1161.36 (time: 10.25s)
+Adaptive: best fitness: 2154.47 (time: 1.08s)
+Naive: best fitness: 1032.11 (time: 6.28s)
+Naive (best improvement): best fitness: 723.98 (time: 7.79s)
+Random: best fitness: 20408.41 (time: 1.84s)
+
+Test 9/50
+Initial fitness: 43285.48
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 815.63 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1281.80 (time: 7.14s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1284.01 (time: 7.29s)
+Adaptive: best fitness: 12002.88 (time: 0.69s)
+Naive: best fitness: 1993.67 (time: 13.83s)
+Naive (best improvement): best fitness: 1309.51 (time: 8.94s)
+Random: best fitness: 23184.15 (time: 1.39s)
+
+Test 10/50
+Initial fitness: 38430.18
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2200.71 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1977.32 (time: 1.65s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1898.20 (time: 1.54s)
+Adaptive: best fitness: 2700.21 (time: 0.23s)
+Naive: best fitness: 2053.19 (time: 1.39s)
+Naive (best improvement): best fitness: 2111.43 (time: 1.57s)
+Random: best fitness: 24434.73 (time: 0.19s)
+
+Test 11/50
+Initial fitness: 25391.49
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1556.09 (time: 0.50s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1341.34 (time: 8.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1768.75 (time: 5.06s)
+Adaptive: best fitness: 2013.59 (time: 1.49s)
+Naive: best fitness: 1469.22 (time: 5.50s)
+Naive (best improvement): best fitness: 1649.66 (time: 12.09s)
+Random: best fitness: 13317.15 (time: 0.26s)
+
+Test 12/50
+Initial fitness: 46858.80
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1258.09 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1775.24 (time: 11.90s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1435.98 (time: 5.57s)
+Adaptive: best fitness: 2378.32 (time: 1.76s)
+Naive: best fitness: 800.85 (time: 9.10s)
+Naive (best improvement): best fitness: 1721.91 (time: 14.69s)
+Random: best fitness: 21541.20 (time: 0.67s)
+
+Test 13/50
+Initial fitness: 20852.16
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1193.40 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1604.30 (time: 15.01s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1280.20 (time: 11.62s)
+Adaptive: best fitness: 1273.63 (time: 3.45s)
+Naive: best fitness: 1421.51 (time: 7.77s)
+Naive (best improvement): best fitness: 1465.48 (time: 16.81s)
+Random: best fitness: 8991.00 (time: 1.32s)
+
+Test 14/50
+Initial fitness: 53358.54
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 12675.16 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 13676.41 (time: 2.29s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2552.39 (time: 1.78s)
+Adaptive: best fitness: 29712.53 (time: 0.32s)
+Naive: best fitness: 12497.21 (time: 1.34s)
+Naive (best improvement): best fitness: 1931.35 (time: 2.71s)
+Random: best fitness: 37641.72 (time: 0.30s)
+
+Test 15/50
+Initial fitness: 42133.97
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 970.42 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1505.41 (time: 13.79s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 662.54 (time: 13.82s)
+Adaptive: best fitness: 1237.64 (time: 0.70s)
+Naive: best fitness: 662.54 (time: 10.30s)
+Naive (best improvement): best fitness: 1301.79 (time: 7.79s)
+Random: best fitness: 21796.73 (time: 0.43s)
+
+Test 16/50
+Initial fitness: 41856.55
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2028.27 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2032.05 (time: 1.67s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2035.44 (time: 1.61s)
+Adaptive: best fitness: 13955.39 (time: 0.22s)
+Naive: best fitness: 2286.44 (time: 1.25s)
+Naive (best improvement): best fitness: 2144.58 (time: 1.76s)
+Random: best fitness: 23245.91 (time: 0.21s)
+
+Test 17/50
+Initial fitness: 54812.76
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 3338.02 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 3135.53 (time: 1.61s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 3451.89 (time: 1.51s)
+Adaptive: best fitness: 35926.13 (time: 0.21s)
+Naive: best fitness: 3503.30 (time: 1.13s)
+Naive (best improvement): best fitness: 3411.93 (time: 1.42s)
+Random: best fitness: 43135.95 (time: 0.24s)
+
+Test 18/50
+Initial fitness: 35272.23
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 850.56 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 662.11 (time: 6.58s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 728.87 (time: 6.02s)
+Adaptive: best fitness: 1564.27 (time: 1.28s)
+Naive: best fitness: 1311.16 (time: 7.00s)
+Naive (best improvement): best fitness: 1236.45 (time: 11.54s)
+Random: best fitness: 10285.78 (time: 1.48s)
+
+Test 19/50
+Initial fitness: 45451.62
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 828.85 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 659.54 (time: 6.56s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1170.75 (time: 6.31s)
+Adaptive: best fitness: 2111.92 (time: 1.08s)
+Naive: best fitness: 659.54 (time: 6.10s)
+Naive (best improvement): best fitness: 1893.18 (time: 11.20s)
+Random: best fitness: 13829.47 (time: 1.00s)
+
+Test 20/50
+Initial fitness: 45929.30
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2838.90 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2329.60 (time: 1.70s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2551.90 (time: 1.59s)
+Adaptive: best fitness: 13784.98 (time: 0.20s)
+Naive: best fitness: 2624.85 (time: 1.12s)
+Naive (best improvement): best fitness: 2417.43 (time: 1.54s)
+Random: best fitness: 29708.48 (time: 0.18s)
+
+Test 21/50
+Initial fitness: 28854.35
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1018.94 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1339.35 (time: 6.87s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 893.54 (time: 5.75s)
+Adaptive: best fitness: 10106.94 (time: 0.30s)
+Naive: best fitness: 1504.05 (time: 7.27s)
+Naive (best improvement): best fitness: 890.66 (time: 6.30s)
+Random: best fitness: 1327.35 (time: 1.17s)
+
+Test 22/50
+Initial fitness: 38379.09
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1721.52 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2307.37 (time: 1.86s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1807.62 (time: 1.72s)
+Adaptive: best fitness: 13054.23 (time: 0.47s)
+Naive: best fitness: 2552.23 (time: 1.47s)
+Naive (best improvement): best fitness: 2026.14 (time: 2.54s)
+Random: best fitness: 23707.28 (time: 0.19s)
+
+Test 23/50
+Initial fitness: 43496.02
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 781.71 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 727.61 (time: 9.69s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 727.61 (time: 7.47s)
+Adaptive: best fitness: 1628.12 (time: 1.49s)
+Naive: best fitness: 659.54 (time: 2.33s)
+Naive (best improvement): best fitness: 896.12 (time: 8.01s)
+Random: best fitness: 17526.91 (time: 0.50s)
+
+Test 24/50
+Initial fitness: 52990.46
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1819.01 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2862.93 (time: 1.93s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2259.17 (time: 1.71s)
+Adaptive: best fitness: 40465.15 (time: 0.25s)
+Naive: best fitness: 1337.19 (time: 1.35s)
+Naive (best improvement): best fitness: 2437.96 (time: 1.65s)
+Random: best fitness: 42862.74 (time: 0.24s)
+
+Test 25/50
+Initial fitness: 49820.02
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2999.74 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2456.49 (time: 1.78s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2871.31 (time: 1.52s)
+Adaptive: best fitness: 2506.88 (time: 0.21s)
+Naive: best fitness: 2742.45 (time: 1.29s)
+Naive (best improvement): best fitness: 2571.00 (time: 1.76s)
+Random: best fitness: 29984.79 (time: 0.22s)
+
+Test 26/50
+Initial fitness: 23077.88
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1008.21 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1190.72 (time: 5.71s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1189.48 (time: 6.43s)
+Adaptive: best fitness: 1610.74 (time: 1.28s)
+Naive: best fitness: 1329.82 (time: 7.90s)
+Naive (best improvement): best fitness: 1074.75 (time: 7.26s)
+Random: best fitness: 1956.80 (time: 0.76s)
+
+Test 27/50
+Initial fitness: 55426.85
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2184.66 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2612.02 (time: 1.70s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2630.04 (time: 1.68s)
+Adaptive: best fitness: 19176.86 (time: 0.24s)
+Naive: best fitness: 2737.89 (time: 1.19s)
+Naive (best improvement): best fitness: 1709.03 (time: 1.69s)
+Random: best fitness: 31065.33 (time: 0.28s)
+
+Test 28/50
+Initial fitness: 46404.93
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1818.51 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1504.70 (time: 1.96s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2163.79 (time: 1.67s)
+Adaptive: best fitness: 18992.95 (time: 0.25s)
+Naive: best fitness: 1324.70 (time: 1.45s)
+Naive (best improvement): best fitness: 2374.80 (time: 1.90s)
+Random: best fitness: 32009.42 (time: 0.27s)
+
+Test 29/50
+Initial fitness: 46028.60
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 658.88 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1223.66 (time: 8.78s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 658.88 (time: 7.45s)
+Adaptive: best fitness: 9984.65 (time: 1.00s)
+Naive: best fitness: 835.16 (time: 5.78s)
+Naive (best improvement): best fitness: 1341.23 (time: 11.40s)
+Random: best fitness: 22079.44 (time: 0.65s)
+
+Test 30/50
+Initial fitness: 50659.67
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 3476.76 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 3292.48 (time: 1.71s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 3271.24 (time: 1.60s)
+Adaptive: best fitness: 18729.54 (time: 0.25s)
+Naive: best fitness: 3555.15 (time: 1.11s)
+Naive (best improvement): best fitness: 3393.47 (time: 1.46s)
+Random: best fitness: 41194.67 (time: 0.18s)
+
+Test 31/50
+Initial fitness: 34472.69
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1470.35 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1913.25 (time: 10.79s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1555.12 (time: 7.25s)
+Adaptive: best fitness: 2018.79 (time: 1.44s)
+Naive: best fitness: 1642.84 (time: 10.74s)
+Naive (best improvement): best fitness: 1586.72 (time: 9.18s)
+Random: best fitness: 12037.83 (time: 0.55s)
+
+Test 32/50
+Initial fitness: 45340.47
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2635.67 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 12046.26 (time: 1.71s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2592.88 (time: 1.41s)
+Adaptive: best fitness: 13247.74 (time: 0.20s)
+Naive: best fitness: 11177.93 (time: 1.36s)
+Naive (best improvement): best fitness: 12985.96 (time: 1.63s)
+Random: best fitness: 34112.30 (time: 0.21s)
+
+Test 33/50
+Initial fitness: 29165.35
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1741.15 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1496.70 (time: 8.68s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1748.84 (time: 4.63s)
+Adaptive: best fitness: 2200.58 (time: 1.41s)
+Naive: best fitness: 1573.60 (time: 8.79s)
+Naive (best improvement): best fitness: 1859.54 (time: 15.25s)
+Random: best fitness: 16329.74 (time: 1.12s)
+
+Test 34/50
+Initial fitness: 27282.36
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1696.77 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1684.36 (time: 8.22s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1559.71 (time: 10.14s)
+Adaptive: best fitness: 1993.63 (time: 0.94s)
+Naive: best fitness: 1704.90 (time: 6.02s)
+Naive (best improvement): best fitness: 1735.48 (time: 10.30s)
+Random: best fitness: 1636.35 (time: 1.35s)
+
+Test 35/50
+Initial fitness: 25586.22
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1340.27 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1329.82 (time: 8.60s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1617.55 (time: 8.51s)
+Adaptive: best fitness: 1806.04 (time: 1.25s)
+Naive: best fitness: 1515.36 (time: 7.54s)
+Naive (best improvement): best fitness: 1388.46 (time: 8.74s)
+Random: best fitness: 9035.26 (time: 0.75s)
+
+Test 36/50
+Initial fitness: 45353.78
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2619.27 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 11711.47 (time: 2.00s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2301.83 (time: 1.85s)
+Adaptive: best fitness: 21463.24 (time: 0.61s)
+Naive: best fitness: 13201.43 (time: 2.20s)
+Naive (best improvement): best fitness: 23267.50 (time: 3.46s)
+Random: best fitness: 30510.49 (time: 1.49s)
+
+Test 37/50
+Initial fitness: 31285.45
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1487.19 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1549.06 (time: 6.76s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1219.21 (time: 9.31s)
+Adaptive: best fitness: 1429.91 (time: 1.29s)
+Naive: best fitness: 1616.24 (time: 11.09s)
+Naive (best improvement): best fitness: 1733.73 (time: 9.17s)
+Random: best fitness: 13088.39 (time: 0.79s)
+
+Test 38/50
+Initial fitness: 46069.20
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2246.25 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2922.65 (time: 2.14s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1704.33 (time: 1.54s)
+Adaptive: best fitness: 21731.56 (time: 0.32s)
+Naive: best fitness: 2145.73 (time: 1.31s)
+Naive (best improvement): best fitness: 2153.82 (time: 1.82s)
+Random: best fitness: 33432.46 (time: 0.32s)
+
+Test 39/50
+Initial fitness: 44731.44
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 824.98 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1370.69 (time: 5.89s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1315.08 (time: 7.85s)
+Adaptive: best fitness: 1239.48 (time: 1.34s)
+Naive: best fitness: 1662.33 (time: 8.47s)
+Naive (best improvement): best fitness: 1127.17 (time: 6.68s)
+Random: best fitness: 12264.07 (time: 0.40s)
+
+Test 40/50
+Initial fitness: 44431.98
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1851.74 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1919.42 (time: 1.87s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2062.05 (time: 1.54s)
+Adaptive: best fitness: 2378.78 (time: 0.33s)
+Naive: best fitness: 12464.09 (time: 1.49s)
+Naive (best improvement): best fitness: 1890.06 (time: 1.95s)
+Random: best fitness: 31332.80 (time: 0.30s)
+
+Test 41/50
+Initial fitness: 55654.18
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1748.60 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1877.19 (time: 1.75s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1440.40 (time: 1.64s)
+Adaptive: best fitness: 20985.17 (time: 0.19s)
+Naive: best fitness: 1160.51 (time: 1.26s)
+Naive (best improvement): best fitness: 1474.12 (time: 1.84s)
+Random: best fitness: 37068.22 (time: 0.28s)
+
+Test 42/50
+Initial fitness: 47052.99
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2137.19 (time: 0.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2100.66 (time: 1.94s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1923.26 (time: 1.71s)
+Adaptive: best fitness: 2384.23 (time: 0.18s)
+Naive: best fitness: 1785.00 (time: 1.57s)
+Naive (best improvement): best fitness: 2350.32 (time: 1.74s)
+Random: best fitness: 25037.97 (time: 0.22s)
+
+Test 43/50
+Initial fitness: 31187.85
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1247.74 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1464.99 (time: 14.01s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1186.65 (time: 10.49s)
+Adaptive: best fitness: 1907.76 (time: 0.96s)
+Naive: best fitness: 1310.70 (time: 17.04s)
+Naive (best improvement): best fitness: 1681.96 (time: 8.56s)
+Random: best fitness: 1552.32 (time: 1.18s)
+
+Test 44/50
+Initial fitness: 50062.89
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1023.81 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 662.54 (time: 9.35s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 662.54 (time: 9.14s)
+Adaptive: best fitness: 1323.43 (time: 0.99s)
+Naive: best fitness: 851.75 (time: 6.29s)
+Naive (best improvement): best fitness: 1713.13 (time: 12.13s)
+Random: best fitness: 2210.00 (time: 0.82s)
+
+Test 45/50
+Initial fitness: 39026.56
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1836.72 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2336.21 (time: 5.97s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1827.97 (time: 9.23s)
+Adaptive: best fitness: 2469.82 (time: 1.01s)
+Naive: best fitness: 2350.00 (time: 8.59s)
+Naive (best improvement): best fitness: 1656.77 (time: 9.97s)
+Random: best fitness: 19634.52 (time: 0.60s)
+
+Test 46/50
+Initial fitness: 28801.26
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1450.92 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1353.02 (time: 8.10s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1421.53 (time: 13.23s)
+Adaptive: best fitness: 1637.91 (time: 1.48s)
+Naive: best fitness: 1294.50 (time: 14.20s)
+Naive (best improvement): best fitness: 1709.47 (time: 7.60s)
+Random: best fitness: 9146.77 (time: 0.71s)
+
+Test 47/50
+Initial fitness: 36756.22
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1097.05 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 883.77 (time: 6.52s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1079.16 (time: 10.32s)
+Adaptive: best fitness: 22891.31 (time: 0.26s)
+Naive: best fitness: 982.55 (time: 8.16s)
+Naive (best improvement): best fitness: 1095.51 (time: 12.92s)
+Random: best fitness: 2202.63 (time: 0.80s)
+
+Test 48/50
+Initial fitness: 39588.63
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 810.43 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1181.01 (time: 7.11s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 664.63 (time: 6.66s)
+Adaptive: best fitness: 664.61 (time: 1.32s)
+Naive: best fitness: 1077.73 (time: 5.27s)
+Naive (best improvement): best fitness: 883.46 (time: 5.96s)
+Random: best fitness: 14223.30 (time: 0.43s)
+
+Test 49/50
+Initial fitness: 20990.66
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1357.22 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1346.71 (time: 9.98s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1425.09 (time: 6.11s)
+Adaptive: best fitness: 1831.74 (time: 1.37s)
+Naive: best fitness: 1386.19 (time: 21.71s)
+Naive (best improvement): best fitness: 1267.62 (time: 21.53s)
+Random: best fitness: 1552.26 (time: 0.54s)
+
+Test 50/50
+Initial fitness: 48828.77
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2165.99 (time: 0.53s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2069.81 (time: 1.92s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1886.41 (time: 1.80s)
+Adaptive: best fitness: 27832.17 (time: 0.32s)
+Naive: best fitness: 2185.45 (time: 1.90s)
+Naive (best improvement): best fitness: 1815.00 (time: 1.75s)
+Random: best fitness: 34835.24 (time: 0.27s)
+
+--- Summary for Seed 100 ---
+Average initial fitness: 40184.38
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): Avg best fitness: 2006.54 (avg time: 0.46s)
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): Avg best fitness: 2321.04 (avg time: 5.99s)
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): Avg best fitness: 1621.37 (avg time: 5.89s)
+Adaptive: Avg best fitness: 8715.10 (avg time: 0.86s)
+Naive: Avg best fitness: 2476.92 (avg time: 6.06s)
+Naive (best improvement): Avg best fitness: 2377.03 (avg time: 7.12s)
+Random: Avg best fitness: 19710.50 (avg time: 0.60s)
+
+================================================================================
+SEED 4/5: 200
+================================================================================
+
+Test 1/50
+Initial fitness: 33157.40
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1820.38 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2162.44 (time: 1.73s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2144.19 (time: 1.96s)
+Adaptive: best fitness: 2655.06 (time: 0.28s)
+Naive: best fitness: 2141.36 (time: 1.53s)
+Naive (best improvement): best fitness: 1838.89 (time: 2.33s)
+Random: best fitness: 18315.40 (time: 0.24s)
+
+Test 2/50
+Initial fitness: 52982.93
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2557.83 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2972.28 (time: 1.71s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2324.34 (time: 1.63s)
+Adaptive: best fitness: 15769.52 (time: 0.21s)
+Naive: best fitness: 1824.09 (time: 1.29s)
+Naive (best improvement): best fitness: 2001.03 (time: 1.72s)
+Random: best fitness: 28127.88 (time: 0.23s)
+
+Test 3/50
+Initial fitness: 22325.81
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1339.20 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1148.48 (time: 11.19s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1231.12 (time: 10.64s)
+Adaptive: best fitness: 1355.38 (time: 2.59s)
+Naive: best fitness: 1412.67 (time: 5.21s)
+Naive (best improvement): best fitness: 1278.44 (time: 15.86s)
+Random: best fitness: 9180.97 (time: 1.05s)
+
+Test 4/50
+Initial fitness: 55213.38
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1805.99 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1769.34 (time: 1.60s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1700.73 (time: 1.55s)
+Adaptive: best fitness: 13159.99 (time: 0.18s)
+Naive: best fitness: 1617.96 (time: 1.37s)
+Naive (best improvement): best fitness: 1755.66 (time: 1.68s)
+Random: best fitness: 41101.66 (time: 0.33s)
+
+Test 5/50
+Initial fitness: 30857.30
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1791.92 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1781.13 (time: 7.87s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1740.85 (time: 8.69s)
+Adaptive: best fitness: 10459.02 (time: 1.01s)
+Naive: best fitness: 2149.16 (time: 10.63s)
+Naive (best improvement): best fitness: 2016.98 (time: 10.30s)
+Random: best fitness: 14796.05 (time: 0.50s)
+
+Test 6/50
+Initial fitness: 15785.76
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1549.32 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1155.91 (time: 21.27s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1295.02 (time: 9.46s)
+Adaptive: best fitness: 1262.38 (time: 2.00s)
+Naive: best fitness: 904.09 (time: 9.37s)
+Naive (best improvement): best fitness: 1217.58 (time: 25.05s)
+Random: best fitness: 1631.06 (time: 0.81s)
+
+Test 7/50
+Initial fitness: 48504.14
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1486.59 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2347.50 (time: 1.94s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2174.27 (time: 1.69s)
+Adaptive: best fitness: 16722.31 (time: 0.25s)
+Naive: best fitness: 2646.23 (time: 1.46s)
+Naive (best improvement): best fitness: 1396.85 (time: 2.67s)
+Random: best fitness: 34501.01 (time: 0.80s)
+
+Test 8/50
+Initial fitness: 32412.88
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1195.11 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1532.22 (time: 12.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 925.83 (time: 9.27s)
+Adaptive: best fitness: 1669.59 (time: 1.05s)
+Naive: best fitness: 1179.62 (time: 6.97s)
+Naive (best improvement): best fitness: 1272.83 (time: 9.78s)
+Random: best fitness: 11222.21 (time: 0.47s)
+
+Test 9/50
+Initial fitness: 50096.45
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2680.95 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2622.86 (time: 1.75s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2293.47 (time: 1.69s)
+Adaptive: best fitness: 12442.42 (time: 0.25s)
+Naive: best fitness: 2561.91 (time: 1.24s)
+Naive (best improvement): best fitness: 2377.04 (time: 1.59s)
+Random: best fitness: 33093.12 (time: 0.23s)
+
+Test 10/50
+Initial fitness: 44456.87
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1906.73 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2010.92 (time: 1.77s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2904.94 (time: 1.62s)
+Adaptive: best fitness: 12806.89 (time: 0.26s)
+Naive: best fitness: 2081.26 (time: 1.44s)
+Naive (best improvement): best fitness: 2558.32 (time: 2.00s)
+Random: best fitness: 25814.19 (time: 0.16s)
+
+Test 11/50
+Initial fitness: 43124.93
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 9580.20 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1678.89 (time: 10.56s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2023.18 (time: 7.16s)
+Adaptive: best fitness: 2472.61 (time: 0.55s)
+Naive: best fitness: 2216.16 (time: 8.06s)
+Naive (best improvement): best fitness: 1754.25 (time: 8.23s)
+Random: best fitness: 24238.46 (time: 0.38s)
+
+Test 12/50
+Initial fitness: 41284.28
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1925.78 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1966.05 (time: 1.89s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2136.36 (time: 1.77s)
+Adaptive: best fitness: 11719.89 (time: 0.24s)
+Naive: best fitness: 2134.88 (time: 1.61s)
+Naive (best improvement): best fitness: 2020.74 (time: 1.77s)
+Random: best fitness: 24715.50 (time: 0.31s)
+
+Test 13/50
+Initial fitness: 30844.86
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1646.99 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1697.23 (time: 5.81s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1573.51 (time: 7.97s)
+Adaptive: best fitness: 1657.92 (time: 1.30s)
+Naive: best fitness: 1647.90 (time: 7.65s)
+Naive (best improvement): best fitness: 1764.19 (time: 7.85s)
+Random: best fitness: 14121.52 (time: 0.43s)
+
+Test 14/50
+Initial fitness: 42300.78
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1339.19 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1041.37 (time: 6.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1092.59 (time: 5.16s)
+Adaptive: best fitness: 2188.34 (time: 0.83s)
+Naive: best fitness: 1489.89 (time: 8.56s)
+Naive (best improvement): best fitness: 1276.83 (time: 9.86s)
+Random: best fitness: 22748.20 (time: 0.55s)
+
+Test 15/50
+Initial fitness: 43576.18
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2246.11 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2080.42 (time: 1.72s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1779.16 (time: 1.70s)
+Adaptive: best fitness: 12421.47 (time: 0.21s)
+Naive: best fitness: 10995.14 (time: 1.42s)
+Naive (best improvement): best fitness: 2526.02 (time: 1.71s)
+Random: best fitness: 34218.69 (time: 0.15s)
+
+Test 16/50
+Initial fitness: 49605.76
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2103.31 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2089.43 (time: 1.94s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2531.47 (time: 1.63s)
+Adaptive: best fitness: 13332.58 (time: 0.32s)
+Naive: best fitness: 2199.33 (time: 1.51s)
+Naive (best improvement): best fitness: 2098.23 (time: 2.47s)
+Random: best fitness: 37596.20 (time: 0.21s)
+
+Test 17/50
+Initial fitness: 32382.28
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1256.81 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1032.27 (time: 4.63s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1416.17 (time: 10.20s)
+Adaptive: best fitness: 1238.17 (time: 0.84s)
+Naive: best fitness: 1230.35 (time: 10.43s)
+Naive (best improvement): best fitness: 662.11 (time: 14.17s)
+Random: best fitness: 14060.99 (time: 0.58s)
+
+Test 18/50
+Initial fitness: 39909.65
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1741.03 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1876.99 (time: 1.65s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1798.26 (time: 1.52s)
+Adaptive: best fitness: 2699.24 (time: 0.22s)
+Naive: best fitness: 1655.34 (time: 1.44s)
+Naive (best improvement): best fitness: 2268.45 (time: 1.58s)
+Random: best fitness: 26473.83 (time: 0.22s)
+
+Test 19/50
+Initial fitness: 39837.17
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2788.07 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2908.79 (time: 1.67s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2457.05 (time: 1.77s)
+Adaptive: best fitness: 12519.29 (time: 0.33s)
+Naive: best fitness: 13691.11 (time: 1.44s)
+Naive (best improvement): best fitness: 2564.60 (time: 1.91s)
+Random: best fitness: 29741.04 (time: 0.34s)
+
+Test 20/50
+Initial fitness: 48726.75
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2524.39 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 3363.47 (time: 2.67s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2625.64 (time: 1.55s)
+Adaptive: best fitness: 15103.87 (time: 0.26s)
+Naive: best fitness: 2655.22 (time: 1.27s)
+Naive (best improvement): best fitness: 24922.70 (time: 2.69s)
+Random: best fitness: 36545.85 (time: 0.14s)
+
+Test 21/50
+Initial fitness: 24546.77
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1041.79 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1284.34 (time: 7.85s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 883.46 (time: 4.48s)
+Adaptive: best fitness: 1449.30 (time: 0.78s)
+Naive: best fitness: 927.72 (time: 8.71s)
+Naive (best improvement): best fitness: 1455.78 (time: 11.87s)
+Random: best fitness: 10749.75 (time: 1.01s)
+
+Test 22/50
+Initial fitness: 47146.82
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 940.11 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1548.46 (time: 6.23s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1142.35 (time: 4.56s)
+Adaptive: best fitness: 1817.81 (time: 1.07s)
+Naive: best fitness: 1205.58 (time: 4.45s)
+Naive (best improvement): best fitness: 1094.93 (time: 7.41s)
+Random: best fitness: 21094.28 (time: 0.77s)
+
+Test 23/50
+Initial fitness: 33033.42
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2027.80 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2284.83 (time: 2.08s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1926.88 (time: 1.63s)
+Adaptive: best fitness: 12461.06 (time: 0.23s)
+Naive: best fitness: 2154.03 (time: 1.77s)
+Naive (best improvement): best fitness: 2582.59 (time: 1.85s)
+Random: best fitness: 20180.00 (time: 0.20s)
+
+Test 24/50
+Initial fitness: 44923.49
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 13116.17 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 3018.34 (time: 1.80s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2803.90 (time: 1.80s)
+Adaptive: best fitness: 19411.66 (time: 0.35s)
+Naive: best fitness: 2578.37 (time: 1.72s)
+Naive (best improvement): best fitness: 2656.98 (time: 1.91s)
+Random: best fitness: 35808.18 (time: 0.32s)
+
+Test 25/50
+Initial fitness: 32581.87
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1810.10 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2222.46 (time: 1.87s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1880.02 (time: 2.04s)
+Adaptive: best fitness: 2556.33 (time: 0.19s)
+Naive: best fitness: 2568.96 (time: 1.56s)
+Naive (best improvement): best fitness: 2132.42 (time: 2.00s)
+Random: best fitness: 16438.09 (time: 0.32s)
+
+Test 26/50
+Initial fitness: 36711.13
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 764.18 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 959.59 (time: 10.56s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 831.84 (time: 10.94s)
+Adaptive: best fitness: 12004.69 (time: 0.72s)
+Naive: best fitness: 1434.03 (time: 6.69s)
+Naive (best improvement): best fitness: 1328.73 (time: 8.86s)
+Random: best fitness: 15806.13 (time: 0.42s)
+
+Test 27/50
+Initial fitness: 36936.13
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1714.46 (time: 0.50s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2329.91 (time: 7.17s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1844.78 (time: 10.15s)
+Adaptive: best fitness: 2086.68 (time: 0.48s)
+Naive: best fitness: 1844.12 (time: 6.66s)
+Naive (best improvement): best fitness: 2151.30 (time: 9.77s)
+Random: best fitness: 13111.52 (time: 0.88s)
+
+Test 28/50
+Initial fitness: 21650.44
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1386.90 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1277.92 (time: 10.90s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1168.82 (time: 7.67s)
+Adaptive: best fitness: 1314.37 (time: 4.43s)
+Naive: best fitness: 1192.65 (time: 5.83s)
+Naive (best improvement): best fitness: 1465.35 (time: 23.13s)
+Random: best fitness: 8715.10 (time: 0.56s)
+
+Test 29/50
+Initial fitness: 23812.45
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1018.94 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1194.64 (time: 5.59s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1201.89 (time: 9.46s)
+Adaptive: best fitness: 1684.41 (time: 1.22s)
+Naive: best fitness: 992.72 (time: 10.41s)
+Naive (best improvement): best fitness: 1482.45 (time: 13.87s)
+Random: best fitness: 1808.08 (time: 0.55s)
+
+Test 30/50
+Initial fitness: 23372.48
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1129.27 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1017.52 (time: 6.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 911.65 (time: 6.52s)
+Adaptive: best fitness: 2228.72 (time: 0.47s)
+Naive: best fitness: 880.37 (time: 5.80s)
+Naive (best improvement): best fitness: 1155.34 (time: 6.75s)
+Random: best fitness: 1581.29 (time: 1.10s)
+
+Test 31/50
+Initial fitness: 49607.92
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 867.46 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1898.24 (time: 12.08s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 740.53 (time: 4.69s)
+Adaptive: best fitness: 2072.49 (time: 1.21s)
+Naive: best fitness: 1756.70 (time: 11.27s)
+Naive (best improvement): best fitness: 1749.64 (time: 12.96s)
+Random: best fitness: 25472.01 (time: 1.00s)
+
+Test 32/50
+Initial fitness: 43745.68
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2011.54 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2247.10 (time: 1.64s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2280.37 (time: 1.77s)
+Adaptive: best fitness: 3166.60 (time: 0.27s)
+Naive: best fitness: 1735.33 (time: 1.47s)
+Naive (best improvement): best fitness: 2770.57 (time: 1.95s)
+Random: best fitness: 25792.55 (time: 0.26s)
+
+Test 33/50
+Initial fitness: 50552.04
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 3093.48 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2751.33 (time: 1.68s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2939.35 (time: 1.50s)
+Adaptive: best fitness: 14537.91 (time: 0.21s)
+Naive: best fitness: 14155.04 (time: 1.25s)
+Naive (best improvement): best fitness: 2674.58 (time: 1.51s)
+Random: best fitness: 37379.39 (time: 0.25s)
+
+Test 34/50
+Initial fitness: 30780.12
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1224.26 (time: 0.50s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 944.41 (time: 7.31s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1163.85 (time: 6.41s)
+Adaptive: best fitness: 10580.09 (time: 1.72s)
+Naive: best fitness: 1017.69 (time: 9.15s)
+Naive (best improvement): best fitness: 1657.53 (time: 12.66s)
+Random: best fitness: 15592.16 (time: 0.96s)
+
+Test 35/50
+Initial fitness: 52682.76
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 3088.72 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2785.89 (time: 1.70s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 3078.75 (time: 1.57s)
+Adaptive: best fitness: 18344.19 (time: 0.21s)
+Naive: best fitness: 2667.90 (time: 1.34s)
+Naive (best improvement): best fitness: 2572.83 (time: 1.53s)
+Random: best fitness: 37906.16 (time: 0.24s)
+
+Test 36/50
+Initial fitness: 41751.84
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1945.64 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2140.08 (time: 1.73s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2043.25 (time: 1.71s)
+Adaptive: best fitness: 13945.27 (time: 0.22s)
+Naive: best fitness: 2181.64 (time: 1.05s)
+Naive (best improvement): best fitness: 2094.27 (time: 1.59s)
+Random: best fitness: 24125.07 (time: 0.17s)
+
+Test 37/50
+Initial fitness: 39810.85
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1894.99 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1716.04 (time: 1.95s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1839.78 (time: 1.65s)
+Adaptive: best fitness: 22316.71 (time: 0.41s)
+Naive: best fitness: 1804.59 (time: 1.40s)
+Naive (best improvement): best fitness: 10187.80 (time: 1.80s)
+Random: best fitness: 28428.33 (time: 0.36s)
+
+Test 38/50
+Initial fitness: 31353.65
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1443.36 (time: 0.51s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1560.03 (time: 6.75s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1522.49 (time: 9.53s)
+Adaptive: best fitness: 1630.12 (time: 1.25s)
+Naive: best fitness: 1891.81 (time: 11.76s)
+Naive (best improvement): best fitness: 1461.07 (time: 11.92s)
+Random: best fitness: 14009.15 (time: 0.17s)
+
+Test 39/50
+Initial fitness: 54051.05
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2887.74 (time: 0.53s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 3246.22 (time: 1.74s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 3348.48 (time: 1.61s)
+Adaptive: best fitness: 20864.82 (time: 0.23s)
+Naive: best fitness: 3214.50 (time: 1.37s)
+Naive (best improvement): best fitness: 3080.76 (time: 1.61s)
+Random: best fitness: 38905.62 (time: 0.23s)
+
+Test 40/50
+Initial fitness: 31211.67
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1808.35 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2139.27 (time: 1.73s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2021.04 (time: 1.80s)
+Adaptive: best fitness: 2629.02 (time: 0.31s)
+Naive: best fitness: 2133.50 (time: 1.51s)
+Naive (best improvement): best fitness: 1907.89 (time: 1.96s)
+Random: best fitness: 16846.16 (time: 0.21s)
+
+Test 41/50
+Initial fitness: 55979.99
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2081.53 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 20727.84 (time: 2.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1387.35 (time: 1.58s)
+Adaptive: best fitness: 22103.74 (time: 0.38s)
+Naive: best fitness: 14583.84 (time: 1.92s)
+Naive (best improvement): best fitness: 2070.54 (time: 1.76s)
+Random: best fitness: 42371.37 (time: 0.27s)
+
+Test 42/50
+Initial fitness: 53564.56
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2258.43 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2894.84 (time: 1.82s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2458.24 (time: 1.67s)
+Adaptive: best fitness: 35247.80 (time: 0.32s)
+Naive: best fitness: 1932.98 (time: 1.36s)
+Naive (best improvement): best fitness: 2998.03 (time: 1.66s)
+Random: best fitness: 36832.20 (time: 0.24s)
+
+Test 43/50
+Initial fitness: 51342.71
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 3535.15 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 33906.94 (time: 2.78s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 36906.99 (time: 3.19s)
+Adaptive: best fitness: 44796.60 (time: 0.27s)
+Naive: best fitness: 3477.93 (time: 1.22s)
+Naive (best improvement): best fitness: 36726.99 (time: 2.95s)
+Random: best fitness: 44208.57 (time: 0.23s)
+
+Test 44/50
+Initial fitness: 44556.13
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2390.78 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2276.98 (time: 1.65s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2252.71 (time: 1.61s)
+Adaptive: best fitness: 2620.25 (time: 0.25s)
+Naive: best fitness: 2192.97 (time: 1.28s)
+Naive (best improvement): best fitness: 2426.87 (time: 1.78s)
+Random: best fitness: 29560.16 (time: 0.28s)
+
+Test 45/50
+Initial fitness: 19519.31
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1778.97 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1239.47 (time: 8.04s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1459.01 (time: 12.30s)
+Adaptive: best fitness: 1620.45 (time: 2.86s)
+Naive: best fitness: 1286.50 (time: 13.50s)
+Naive (best improvement): best fitness: 1553.69 (time: 16.14s)
+Random: best fitness: 1554.10 (time: 2.22s)
+
+Test 46/50
+Initial fitness: 48441.79
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1125.67 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1550.68 (time: 8.52s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1232.80 (time: 7.74s)
+Adaptive: best fitness: 2121.54 (time: 2.00s)
+Naive: best fitness: 1237.83 (time: 6.65s)
+Naive (best improvement): best fitness: 1448.91 (time: 12.51s)
+Random: best fitness: 19843.15 (time: 0.63s)
+
+Test 47/50
+Initial fitness: 47268.03
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1835.89 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1870.90 (time: 1.89s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2509.03 (time: 1.74s)
+Adaptive: best fitness: 11506.23 (time: 0.26s)
+Naive: best fitness: 2206.62 (time: 1.50s)
+Naive (best improvement): best fitness: 2137.97 (time: 1.82s)
+Random: best fitness: 32777.90 (time: 0.79s)
+
+Test 48/50
+Initial fitness: 31222.25
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1845.48 (time: 0.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1687.21 (time: 11.91s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1765.38 (time: 10.55s)
+Adaptive: best fitness: 2183.08 (time: 1.18s)
+Naive: best fitness: 1530.28 (time: 14.48s)
+Naive (best improvement): best fitness: 1624.28 (time: 18.65s)
+Random: best fitness: 14230.31 (time: 1.24s)
+
+Test 49/50
+Initial fitness: 17491.45
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1255.22 (time: 0.58s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1107.67 (time: 8.83s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1133.22 (time: 14.18s)
+Adaptive: best fitness: 1228.46 (time: 1.63s)
+Naive: best fitness: 1263.17 (time: 9.53s)
+Naive (best improvement): best fitness: 1333.65 (time: 20.88s)
+Random: best fitness: 8171.48 (time: 0.43s)
+
+Test 50/50
+Initial fitness: 41659.99
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 11841.06 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 12489.20 (time: 2.12s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2064.48 (time: 1.69s)
+Adaptive: best fitness: 17520.55 (time: 0.27s)
+Naive: best fitness: 2035.20 (time: 1.34s)
+Naive (best improvement): best fitness: 2403.61 (time: 2.49s)
+Random: best fitness: 31537.50 (time: 0.32s)
+
+--- Summary for Seed 200 ---
+Average initial fitness: 39173.89
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): Avg best fitness: 2408.99 (avg time: 0.46s)
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): Avg best fitness: 3151.13 (avg time: 5.02s)
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): Avg best fitness: 2538.22 (avg time: 4.73s)
+Adaptive: Avg best fitness: 9434.14 (avg time: 0.77s)
+Naive: Avg best fitness: 2770.36 (avg time: 4.64s)
+Naive (best improvement): Avg best fitness: 3239.18 (avg time: 6.86s)
+Random: Avg best fitness: 23061.59 (avg time: 0.49s)
+
+================================================================================
+SEED 5/5: 300
+================================================================================
+
+Test 1/50
+Initial fitness: 46925.96
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2375.75 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2557.77 (time: 2.18s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2438.37 (time: 1.72s)
+Adaptive: best fitness: 15192.36 (time: 0.45s)
+Naive: best fitness: 11430.43 (time: 2.19s)
+Naive (best improvement): best fitness: 2589.72 (time: 2.17s)
+Random: best fitness: 32046.78 (time: 0.61s)
+
+Test 2/50
+Initial fitness: 19912.37
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1269.23 (time: 0.54s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1358.73 (time: 29.36s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1168.17 (time: 19.12s)
+Adaptive: best fitness: 1400.35 (time: 0.73s)
+Naive: best fitness: 1269.10 (time: 13.13s)
+Naive (best improvement): best fitness: 1367.39 (time: 11.26s)
+Random: best fitness: 1434.46 (time: 1.13s)
+
+Test 3/50
+Initial fitness: 16044.11
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1538.47 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1083.89 (time: 31.97s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1355.92 (time: 23.25s)
+Adaptive: best fitness: 1465.95 (time: 1.55s)
+Naive: best fitness: 1109.86 (time: 7.44s)
+Naive (best improvement): best fitness: 1198.18 (time: 18.04s)
+Random: best fitness: 1588.94 (time: 1.22s)
+
+Test 4/50
+Initial fitness: 34731.44
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1919.00 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2381.04 (time: 1.98s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2140.62 (time: 1.50s)
+Adaptive: best fitness: 2485.61 (time: 0.27s)
+Naive: best fitness: 1971.28 (time: 1.59s)
+Naive (best improvement): best fitness: 1854.61 (time: 2.11s)
+Random: best fitness: 17478.42 (time: 0.22s)
+
+Test 5/50
+Initial fitness: 27910.61
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1443.44 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 974.13 (time: 6.21s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1555.67 (time: 9.86s)
+Adaptive: best fitness: 17987.73 (time: 0.68s)
+Naive: best fitness: 999.95 (time: 9.90s)
+Naive (best improvement): best fitness: 907.61 (time: 13.65s)
+Random: best fitness: 11221.52 (time: 1.28s)
+
+Test 6/50
+Initial fitness: 40872.33
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1181.07 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1375.74 (time: 5.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1432.51 (time: 12.00s)
+Adaptive: best fitness: 1983.81 (time: 1.39s)
+Naive: best fitness: 984.38 (time: 5.36s)
+Naive (best improvement): best fitness: 961.61 (time: 6.17s)
+Random: best fitness: 11568.44 (time: 0.49s)
+
+Test 7/50
+Initial fitness: 26731.76
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1584.36 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1636.46 (time: 7.16s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1434.75 (time: 5.59s)
+Adaptive: best fitness: 1824.89 (time: 0.50s)
+Naive: best fitness: 1794.68 (time: 8.07s)
+Naive (best improvement): best fitness: 1416.30 (time: 14.50s)
+Random: best fitness: 11732.99 (time: 0.69s)
+
+Test 8/50
+Initial fitness: 41510.01
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2385.67 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 11763.15 (time: 1.97s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2445.75 (time: 1.73s)
+Adaptive: best fitness: 15798.77 (time: 0.45s)
+Naive: best fitness: 2278.42 (time: 1.46s)
+Naive (best improvement): best fitness: 2261.07 (time: 1.96s)
+Random: best fitness: 25130.91 (time: 0.43s)
+
+Test 9/50
+Initial fitness: 39084.24
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1340.30 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1010.50 (time: 6.54s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1636.97 (time: 9.13s)
+Adaptive: best fitness: 1993.55 (time: 1.00s)
+Naive: best fitness: 944.01 (time: 6.77s)
+Naive (best improvement): best fitness: 1293.29 (time: 12.39s)
+Random: best fitness: 14313.88 (time: 0.94s)
+
+Test 10/50
+Initial fitness: 51045.72
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2060.52 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2561.69 (time: 3.13s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2439.74 (time: 1.97s)
+Adaptive: best fitness: 32321.98 (time: 0.56s)
+Naive: best fitness: 2390.05 (time: 1.67s)
+Naive (best improvement): best fitness: 2108.62 (time: 5.50s)
+Random: best fitness: 35376.35 (time: 0.53s)
+
+Test 11/50
+Initial fitness: 33872.52
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1873.44 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1813.85 (time: 1.91s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2002.50 (time: 2.06s)
+Adaptive: best fitness: 11463.41 (time: 0.25s)
+Naive: best fitness: 1961.22 (time: 1.54s)
+Naive (best improvement): best fitness: 2106.67 (time: 1.98s)
+Random: best fitness: 19473.20 (time: 0.31s)
+
+Test 12/50
+Initial fitness: 48711.61
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2397.75 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2465.50 (time: 1.91s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2370.28 (time: 1.94s)
+Adaptive: best fitness: 16480.92 (time: 0.19s)
+Naive: best fitness: 3089.50 (time: 1.30s)
+Naive (best improvement): best fitness: 3074.31 (time: 2.66s)
+Random: best fitness: 40185.15 (time: 0.15s)
+
+Test 13/50
+Initial fitness: 42744.73
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1227.01 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1564.39 (time: 7.61s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 977.88 (time: 11.71s)
+Adaptive: best fitness: 1885.36 (time: 1.80s)
+Naive: best fitness: 964.97 (time: 7.23s)
+Naive (best improvement): best fitness: 1158.75 (time: 10.45s)
+Random: best fitness: 22664.36 (time: 0.75s)
+
+Test 14/50
+Initial fitness: 42186.97
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 667.44 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 811.49 (time: 6.73s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 675.59 (time: 10.02s)
+Adaptive: best fitness: 1012.70 (time: 1.22s)
+Naive: best fitness: 1681.76 (time: 9.34s)
+Naive (best improvement): best fitness: 1648.67 (time: 9.22s)
+Random: best fitness: 1854.76 (time: 0.58s)
+
+Test 15/50
+Initial fitness: 42769.60
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 658.92 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1886.17 (time: 8.56s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 883.78 (time: 4.84s)
+Adaptive: best fitness: 2031.45 (time: 1.24s)
+Naive: best fitness: 1201.74 (time: 5.85s)
+Naive (best improvement): best fitness: 1087.77 (time: 7.45s)
+Random: best fitness: 18004.83 (time: 0.44s)
+
+Test 16/50
+Initial fitness: 25104.71
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1438.64 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1332.77 (time: 9.58s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1552.06 (time: 8.12s)
+Adaptive: best fitness: 1426.11 (time: 2.29s)
+Naive: best fitness: 1467.61 (time: 17.22s)
+Naive (best improvement): best fitness: 1488.96 (time: 26.55s)
+Random: best fitness: 1960.99 (time: 1.93s)
+
+Test 17/50
+Initial fitness: 57183.19
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1160.51 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1827.22 (time: 1.63s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1367.77 (time: 1.74s)
+Adaptive: best fitness: 12888.23 (time: 0.25s)
+Naive: best fitness: 1842.50 (time: 1.21s)
+Naive (best improvement): best fitness: 1400.45 (time: 1.70s)
+Random: best fitness: 36577.82 (time: 0.25s)
+
+Test 18/50
+Initial fitness: 39572.98
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2068.35 (time: 0.61s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1984.03 (time: 4.76s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1967.83 (time: 6.32s)
+Adaptive: best fitness: 2456.43 (time: 0.71s)
+Naive: best fitness: 2025.54 (time: 9.23s)
+Naive (best improvement): best fitness: 2478.36 (time: 9.91s)
+Random: best fitness: 17346.71 (time: 0.90s)
+
+Test 19/50
+Initial fitness: 53258.28
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2101.88 (time: 0.50s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2806.29 (time: 2.17s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2726.91 (time: 1.84s)
+Adaptive: best fitness: 13751.45 (time: 0.21s)
+Naive: best fitness: 2786.37 (time: 1.63s)
+Naive (best improvement): best fitness: 2147.40 (time: 1.86s)
+Random: best fitness: 31833.61 (time: 0.26s)
+
+Test 20/50
+Initial fitness: 47175.84
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 662.54 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1728.64 (time: 9.86s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 662.54 (time: 8.29s)
+Adaptive: best fitness: 2048.82 (time: 1.30s)
+Naive: best fitness: 1918.10 (time: 15.82s)
+Naive (best improvement): best fitness: 662.54 (time: 8.16s)
+Random: best fitness: 17579.13 (time: 0.88s)
+
+Test 21/50
+Initial fitness: 27353.35
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1246.07 (time: 0.50s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1505.90 (time: 8.19s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1314.50 (time: 8.61s)
+Adaptive: best fitness: 1500.58 (time: 2.01s)
+Naive: best fitness: 1630.66 (time: 5.56s)
+Naive (best improvement): best fitness: 1483.66 (time: 12.42s)
+Random: best fitness: 11987.65 (time: 0.24s)
+
+Test 22/50
+Initial fitness: 43639.16
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2262.29 (time: 0.49s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1866.67 (time: 2.07s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1855.79 (time: 1.80s)
+Adaptive: best fitness: 11017.55 (time: 0.29s)
+Naive: best fitness: 1896.74 (time: 1.42s)
+Naive (best improvement): best fitness: 1966.05 (time: 1.89s)
+Random: best fitness: 27878.28 (time: 0.33s)
+
+Test 23/50
+Initial fitness: 23465.57
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1750.70 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1590.32 (time: 8.02s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1506.12 (time: 7.51s)
+Adaptive: best fitness: 1828.17 (time: 1.46s)
+Naive: best fitness: 1840.94 (time: 6.29s)
+Naive (best improvement): best fitness: 1546.45 (time: 8.79s)
+Random: best fitness: 10551.33 (time: 0.76s)
+
+Test 24/50
+Initial fitness: 41483.86
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1956.36 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2055.70 (time: 1.61s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2269.45 (time: 1.74s)
+Adaptive: best fitness: 2484.60 (time: 0.21s)
+Naive: best fitness: 2186.29 (time: 1.40s)
+Naive (best improvement): best fitness: 2067.04 (time: 1.81s)
+Random: best fitness: 25256.11 (time: 0.24s)
+
+Test 25/50
+Initial fitness: 41375.45
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 931.79 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1611.89 (time: 7.74s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1267.81 (time: 5.24s)
+Adaptive: best fitness: 1682.62 (time: 0.93s)
+Naive: best fitness: 1748.17 (time: 9.81s)
+Naive (best improvement): best fitness: 1480.68 (time: 7.35s)
+Random: best fitness: 2452.33 (time: 0.93s)
+
+Test 26/50
+Initial fitness: 40543.65
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 764.90 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 662.54 (time: 8.27s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 662.54 (time: 9.37s)
+Adaptive: best fitness: 2421.16 (time: 0.46s)
+Naive: best fitness: 998.70 (time: 11.68s)
+Naive (best improvement): best fitness: 662.54 (time: 8.74s)
+Random: best fitness: 12439.81 (time: 0.79s)
+
+Test 27/50
+Initial fitness: 48786.66
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 3046.24 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2529.05 (time: 1.80s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1603.31 (time: 1.65s)
+Adaptive: best fitness: 17685.82 (time: 0.31s)
+Naive: best fitness: 2804.00 (time: 1.54s)
+Naive (best improvement): best fitness: 2434.69 (time: 1.77s)
+Random: best fitness: 32287.00 (time: 0.39s)
+
+Test 28/50
+Initial fitness: 43112.91
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1709.44 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2329.66 (time: 1.79s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2009.35 (time: 1.72s)
+Adaptive: best fitness: 2592.09 (time: 0.23s)
+Naive: best fitness: 2075.03 (time: 1.38s)
+Naive (best improvement): best fitness: 1938.42 (time: 1.50s)
+Random: best fitness: 23147.42 (time: 0.32s)
+
+Test 29/50
+Initial fitness: 35229.53
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2023.72 (time: 0.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2104.63 (time: 1.89s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1788.90 (time: 1.65s)
+Adaptive: best fitness: 11649.55 (time: 0.29s)
+Naive: best fitness: 1909.45 (time: 1.51s)
+Naive (best improvement): best fitness: 2093.91 (time: 1.82s)
+Random: best fitness: 23371.43 (time: 0.30s)
+
+Test 30/50
+Initial fitness: 38916.13
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1689.70 (time: 0.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1645.11 (time: 9.24s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1681.26 (time: 9.46s)
+Adaptive: best fitness: 2018.38 (time: 0.75s)
+Naive: best fitness: 1581.34 (time: 7.42s)
+Naive (best improvement): best fitness: 1656.45 (time: 9.62s)
+Random: best fitness: 12197.26 (time: 0.93s)
+
+Test 31/50
+Initial fitness: 56183.75
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1764.29 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2369.83 (time: 1.70s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1322.96 (time: 1.61s)
+Adaptive: best fitness: 16246.75 (time: 0.21s)
+Naive: best fitness: 2018.59 (time: 1.23s)
+Naive (best improvement): best fitness: 1861.27 (time: 1.57s)
+Random: best fitness: 37698.43 (time: 0.21s)
+
+Test 32/50
+Initial fitness: 44479.22
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2535.22 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 12375.73 (time: 1.99s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2423.72 (time: 1.49s)
+Adaptive: best fitness: 15717.67 (time: 0.24s)
+Naive: best fitness: 3229.99 (time: 1.17s)
+Naive (best improvement): best fitness: 2313.26 (time: 1.90s)
+Random: best fitness: 33767.97 (time: 0.24s)
+
+Test 33/50
+Initial fitness: 45341.78
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 777.41 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1151.43 (time: 8.87s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1142.31 (time: 8.42s)
+Adaptive: best fitness: 1063.26 (time: 2.27s)
+Naive: best fitness: 1166.43 (time: 7.84s)
+Naive (best improvement): best fitness: 810.32 (time: 7.71s)
+Random: best fitness: 1408.82 (time: 0.59s)
+
+Test 34/50
+Initial fitness: 46769.73
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2499.85 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2306.15 (time: 1.59s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2581.37 (time: 1.46s)
+Adaptive: best fitness: 14127.48 (time: 0.23s)
+Naive: best fitness: 2434.97 (time: 1.25s)
+Naive (best improvement): best fitness: 2208.02 (time: 1.56s)
+Random: best fitness: 31175.25 (time: 0.25s)
+
+Test 35/50
+Initial fitness: 41073.52
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 659.90 (time: 0.47s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 905.62 (time: 7.66s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 659.90 (time: 8.06s)
+Adaptive: best fitness: 15849.31 (time: 0.41s)
+Naive: best fitness: 658.88 (time: 3.92s)
+Naive (best improvement): best fitness: 660.33 (time: 5.25s)
+Random: best fitness: 19784.08 (time: 0.46s)
+
+Test 36/50
+Initial fitness: 50354.40
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 778.72 (time: 0.48s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 662.54 (time: 8.99s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 662.54 (time: 8.01s)
+Adaptive: best fitness: 13590.07 (time: 0.82s)
+Naive: best fitness: 940.73 (time: 7.27s)
+Naive (best improvement): best fitness: 662.54 (time: 10.39s)
+Random: best fitness: 23529.68 (time: 0.71s)
+
+Test 37/50
+Initial fitness: 49313.10
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1865.41 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1678.70 (time: 1.91s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2124.56 (time: 1.81s)
+Adaptive: best fitness: 2433.41 (time: 0.23s)
+Naive: best fitness: 1683.33 (time: 1.33s)
+Naive (best improvement): best fitness: 2113.40 (time: 1.69s)
+Random: best fitness: 23152.74 (time: 0.20s)
+
+Test 38/50
+Initial fitness: 43755.68
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1215.71 (time: 0.45s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1143.77 (time: 6.38s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1748.21 (time: 5.80s)
+Adaptive: best fitness: 2303.98 (time: 1.41s)
+Naive: best fitness: 1101.95 (time: 5.84s)
+Naive (best improvement): best fitness: 1269.86 (time: 6.88s)
+Random: best fitness: 22313.92 (time: 0.28s)
+
+Test 39/50
+Initial fitness: 49758.57
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2172.91 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 3062.40 (time: 2.05s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2855.44 (time: 1.77s)
+Adaptive: best fitness: 13210.31 (time: 0.18s)
+Naive: best fitness: 2542.53 (time: 1.46s)
+Naive (best improvement): best fitness: 2596.94 (time: 2.22s)
+Random: best fitness: 35730.29 (time: 0.50s)
+
+Test 40/50
+Initial fitness: 30421.95
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 874.84 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 831.31 (time: 10.78s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 831.31 (time: 9.94s)
+Adaptive: best fitness: 1306.44 (time: 0.38s)
+Naive: best fitness: 1319.41 (time: 10.27s)
+Naive (best improvement): best fitness: 672.46 (time: 9.50s)
+Random: best fitness: 10767.33 (time: 0.39s)
+
+Test 41/50
+Initial fitness: 31906.76
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1717.65 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1631.80 (time: 8.10s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1691.85 (time: 9.35s)
+Adaptive: best fitness: 1814.16 (time: 0.69s)
+Naive: best fitness: 1462.46 (time: 9.17s)
+Naive (best improvement): best fitness: 1294.20 (time: 14.27s)
+Random: best fitness: 2201.65 (time: 0.84s)
+
+Test 42/50
+Initial fitness: 44327.56
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2349.16 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2317.27 (time: 1.77s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2303.42 (time: 1.68s)
+Adaptive: best fitness: 2313.19 (time: 0.21s)
+Naive: best fitness: 10626.15 (time: 1.52s)
+Naive (best improvement): best fitness: 2182.92 (time: 1.65s)
+Random: best fitness: 33419.36 (time: 0.19s)
+
+Test 43/50
+Initial fitness: 32162.71
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1805.96 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2307.16 (time: 1.89s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2065.24 (time: 2.05s)
+Adaptive: best fitness: 2833.98 (time: 0.30s)
+Naive: best fitness: 2221.35 (time: 1.82s)
+Naive (best improvement): best fitness: 1960.89 (time: 2.13s)
+Random: best fitness: 20309.99 (time: 0.19s)
+
+Test 44/50
+Initial fitness: 42313.87
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 901.99 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1527.29 (time: 8.13s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1538.49 (time: 5.68s)
+Adaptive: best fitness: 1837.58 (time: 0.83s)
+Naive: best fitness: 1235.33 (time: 6.55s)
+Naive (best improvement): best fitness: 1214.99 (time: 7.64s)
+Random: best fitness: 13905.81 (time: 0.37s)
+
+Test 45/50
+Initial fitness: 20538.42
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2019.50 (time: 0.43s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1227.26 (time: 9.38s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1119.40 (time: 7.64s)
+Adaptive: best fitness: 1613.46 (time: 1.69s)
+Naive: best fitness: 1319.54 (time: 22.52s)
+Naive (best improvement): best fitness: 1257.80 (time: 21.80s)
+Random: best fitness: 1466.58 (time: 1.21s)
+
+Test 46/50
+Initial fitness: 50110.95
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 14850.26 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 3176.67 (time: 1.63s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 3255.93 (time: 1.51s)
+Adaptive: best fitness: 39404.63 (time: 0.34s)
+Naive: best fitness: 28525.94 (time: 2.26s)
+Naive (best improvement): best fitness: 32038.33 (time: 2.07s)
+Random: best fitness: 44218.82 (time: 0.29s)
+
+Test 47/50
+Initial fitness: 44601.78
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 782.05 (time: 0.46s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 662.54 (time: 6.54s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 662.54 (time: 10.69s)
+Adaptive: best fitness: 2904.13 (time: 0.84s)
+Naive: best fitness: 783.52 (time: 13.17s)
+Naive (best improvement): best fitness: 1001.54 (time: 12.13s)
+Random: best fitness: 23174.26 (time: 0.69s)
+
+Test 48/50
+Initial fitness: 40122.80
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2539.13 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2292.39 (time: 1.91s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2242.89 (time: 1.70s)
+Adaptive: best fitness: 12274.69 (time: 0.24s)
+Naive: best fitness: 2175.96 (time: 1.24s)
+Naive (best improvement): best fitness: 2536.45 (time: 1.74s)
+Random: best fitness: 26950.87 (time: 0.21s)
+
+Test 49/50
+Initial fitness: 45528.52
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 2552.41 (time: 0.44s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 2645.67 (time: 1.67s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 2214.84 (time: 1.53s)
+Adaptive: best fitness: 18761.20 (time: 0.23s)
+Naive: best fitness: 2256.51 (time: 1.31s)
+Naive (best improvement): best fitness: 2160.90 (time: 1.57s)
+Random: best fitness: 28850.00 (time: 0.21s)
+
+Test 50/50
+Initial fitness: 27429.65
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): best fitness: 1340.81 (time: 0.51s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): best fitness: 1518.44 (time: 6.55s)
+rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): best fitness: 1168.89 (time: 6.03s)
+Adaptive: best fitness: 1659.49 (time: 0.73s)
+Naive: best fitness: 1648.97 (time: 9.03s)
+Naive (best improvement): best fitness: 1497.67 (time: 14.47s)
+Random: best fitness: 10048.66 (time: 0.38s)
+
+--- Summary for Seed 300 ---
+Average initial fitness: 39955.00
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): Avg best fitness: 1894.77 (avg time: 0.46s)
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): Avg best fitness: 2172.38 (avg time: 6.02s)
+Model rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): Avg best fitness: 1676.21 (avg time: 5.76s)
+Adaptive: Avg best fitness: 7880.91 (avg time: 0.73s)
+Naive: Avg best fitness: 2642.71 (avg time: 5.72s)
+Naive (best improvement): Avg best fitness: 2257.13 (avg time: 7.03s)
+Random: Avg best fitness: 19896.33 (avg time: 0.55s)
+
+================================================================================
+OVERALL SUMMARY ACROSS ALL SEEDS
+================================================================================
+Total tests: 250 (5 seeds × 50 tests per seed)
+
+Average initial fitness: 40470.36
+
+RL Models:
+  rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (OneShot): Avg best: 2393.12 ± 3492.97 (avg time: 0.46s)
+  rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Roulette): Avg best: 2479.67 ± 3754.58 (avg time: 5.55s)
+  rl_local_search_dqn_100_greedy_binary_attention_100_o_final.pt (Ranking): Avg best: 2012.80 ± 2678.07 (avg time: 5.43s)
+
+Baseline Methods:
+  Adaptive: Avg best: 8617.38 ± 9757.21 (avg time: 0.74s)
+  Naive: Avg best: 2841.68 ± 4019.96 (avg time: 5.15s)
+  Naive (best improvement): Avg best: 2501.29 ± 3934.65 (avg time: 6.75s)
+  Random: Avg best: 21850.03 ± 12257.25 (avg time: 0.54s)
+
+================================================================================

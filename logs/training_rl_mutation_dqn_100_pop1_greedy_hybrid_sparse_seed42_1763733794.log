@@ -1,0 +1,716 @@
+Logging to: logs/training_rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_seed42_1763733794.log
+================================================================================
+Using Standard Replay Buffer
+Algorithm: DQN
+n-step returns: n=3
+
+Train/Test Split (ratio=0.8):
+  lc1:
+    Train (7): ['lc101', 'lc102', 'lc103', 'lc104', 'lc105', 'lc106', 'lc107']
+    Test  (2): ['lc108', 'lc109']
+  lc2:
+    Train (6): ['lc201', 'lc202', 'lc203', 'lc204', 'lc205', 'lc206']
+    Test  (2): ['lc207', 'lc208']
+  lr1:
+    Train (9): ['lr101', 'lr102', 'lr103', 'lr104', 'lr105', 'lr106', 'lr107', 'lr108', 'lr109']
+    Test  (3): ['lr110', 'lr111', 'lr112']
+  lr2:
+    Train (8): ['lr201', 'lr202', 'lr203', 'lr204', 'lr205', 'lr206', 'lr207', 'lr208']
+    Test  (3): ['lr209', 'lr210', 'lr211']
+
+Starting RL Mutation Training on size 100 instances...
+Algorithm: DQN
+Categories: ['lc1', 'lc2', 'lr1', 'lr2']
+Population size: 1
+Population features: ENABLED
+Include NoOp: False
+Operators: ['Reinsert-nC-Max1-NewV-SameV-nF_SameV', 'RouteElimination', 'Flip-Single-Unlimited', 'SwapWithin-random-A-MaxNone', 'SwapBetween-random', 'Transfer-A-Max1', 'Shift-random-A-Max3-Seg3-Dist5', 'TwoOpt']
+Random seed set to 42
+TensorBoard logging enabled: runs/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_seed42_1763733794
+Starting RL Mutation training for 1500 episodes...
+State dim: 54, Action dim: 8
+Population features: ENABLED
+Operators: ['Reinsert-nC-Max1-NewV-SameV-nF_SameV', 'RouteElimination', 'Flip-Single-Unlimited', 'SwapWithin-random-A-MaxNone', 'SwapBetween-random', 'Transfer-A-Max1', 'Shift-random-A-Max3-Seg3-Dist5', 'TwoOpt']
+Episode 0: New instance generated (55 requests)
+Episode 0/1500 | Reward: -65.00 (avg: -65.00) | Fitness: 25357.67 (avg: 25357.67) | Steps: 100 | eps: 0.995 | Loss: 0.0000 | Time: 0.36s | Total: 0.41s
+Episode 6: New instance generated (51 requests)
+Episode 10/1500 | Reward: -49.00 (avg: -63.00) | Fitness: 8592.76 (avg: 13818.37) | Steps: 100 | eps: 0.946 | Loss: 0.5474 | Time: 1.27s | Total: 4.20s
+Episode 12: New instance generated (51 requests)
+Episode 15: New population generated
+Episode 18: New instance generated (50 requests)
+Episode 20/1500 | Reward: -27.00 (avg: -59.00) | Fitness: 1596.58 (avg: 1750.68) | Steps: 100 | eps: 0.900 | Loss: 0.7713 | Time: 1.40s | Total: 14.05s
+Episode 24: New instance generated (53 requests)
+Episode 30: New instance generated (55 requests)
+Episode 30/1500 | Reward: -54.00 (avg: -68.20) | Fitness: 16334.43 (avg: 10478.37) | Steps: 100 | eps: 0.856 | Loss: 1.0020 | Time: 0.67s | Total: 21.98s
+Episode 36: New instance generated (51 requests)
+Episode 40/1500 | Reward: -98.00 (avg: -55.20) | Fitness: 2093.27 (avg: 12001.91) | Steps: 100 | eps: 0.814 | Loss: 1.2315 | Time: 1.06s | Total: 29.94s
+Episode 42: New instance generated (55 requests)
+Episode 45: New population generated
+Episode 48: New instance generated (53 requests)
+Episode 50/1500 | Reward: -42.00 (avg: -49.70) | Fitness: 20450.68 (avg: 17635.69) | Steps: 100 | eps: 0.774 | Loss: 1.3448 | Time: 0.66s | Total: 37.25s
+Episode 54: New instance generated (53 requests)
+Episode 60: New instance generated (50 requests)
+Episode 60/1500 | Reward: -71.00 (avg: -51.20) | Fitness: 2378.57 (avg: 14973.20) | Steps: 100 | eps: 0.737 | Loss: 1.5851 | Time: 1.00s | Total: 44.32s
+Episode 66: New instance generated (50 requests)
+Episode 70/1500 | Reward: -106.00 (avg: -72.30) | Fitness: 1835.62 (avg: 3652.39) | Steps: 100 | eps: 0.701 | Loss: 1.7301 | Time: 0.96s | Total: 54.31s
+Episode 72: New instance generated (51 requests)
+Episode 75: New population generated
+Episode 78: New instance generated (52 requests)
+Episode 80/1500 | Reward: -33.00 (avg: -48.20) | Fitness: 12745.21 (avg: 5125.75) | Steps: 100 | eps: 0.666 | Loss: 1.8006 | Time: 0.67s | Total: 63.93s
+Episode 84: New instance generated (51 requests)
+Episode 90: New instance generated (51 requests)
+Episode 90/1500 | Reward: -50.00 (avg: -36.20) | Fitness: 983.29 (avg: 4207.25) | Steps: 100 | eps: 0.634 | Loss: 1.8068 | Time: 0.89s | Total: 72.54s
+Episode 96: New instance generated (53 requests)
+Episode 100/1500 | Reward: -36.00 (avg: -30.20) | Fitness: 2446.79 (avg: 8346.16) | Steps: 100 | eps: 0.603 | Loss: 1.7837 | Time: 0.68s | Total: 79.93s
+Episode 102: New instance generated (53 requests)
+Episode 105: New population generated
+Episode 108: New instance generated (51 requests)
+Episode 110/1500 | Reward: -31.00 (avg: -25.30) | Fitness: 1003.29 (avg: 6879.23) | Steps: 100 | eps: 0.573 | Loss: 1.5089 | Time: 0.72s | Total: 87.27s
+Episode 114: New instance generated (53 requests)
+Episode 120: New instance generated (50 requests)
+Episode 120/1500 | Reward: -35.00 (avg: -23.50) | Fitness: 1778.57 (avg: 3579.04) | Steps: 100 | eps: 0.545 | Loss: 1.5925 | Time: 0.86s | Total: 95.09s
+Episode 126: New instance generated (53 requests)
+Episode 130/1500 | Reward: -17.00 (avg: -23.40) | Fitness: 2442.36 (avg: 9141.30) | Steps: 100 | eps: 0.519 | Loss: 1.5736 | Time: 0.69s | Total: 102.43s
+Episode 132: New instance generated (53 requests)
+Episode 135: New population generated
+Episode 138: New instance generated (53 requests)
+Episode 140/1500 | Reward: -14.00 (avg: -19.10) | Fitness: 2824.54 (avg: 9753.75) | Steps: 100 | eps: 0.493 | Loss: 1.4782 | Time: 0.74s | Total: 109.65s
+Episode 144: New instance generated (53 requests)
+Episode 150: New instance generated (51 requests)
+Episode 150/1500 | Reward: -3.00 (avg: -19.00) | Fitness: 965.43 (avg: 2144.32) | Steps: 100 | eps: 0.469 | Loss: 1.5540 | Time: 0.79s | Total: 116.86s
+Episode 156: New instance generated (51 requests)
+Episode 160/1500 | Reward: -40.00 (avg: -24.70) | Fitness: 1762.96 (avg: 1549.33) | Steps: 100 | eps: 0.446 | Loss: 1.4772 | Time: 1.09s | Total: 125.13s
+Episode 162: New instance generated (50 requests)
+Episode 165: New population generated
+Episode 168: New instance generated (51 requests)
+Episode 170/1500 | Reward: -25.00 (avg: -15.90) | Fitness: 1885.60 (avg: 1763.75) | Steps: 100 | eps: 0.424 | Loss: 1.4089 | Time: 0.88s | Total: 133.23s
+Episode 174: New instance generated (51 requests)
+Episode 180: New instance generated (50 requests)
+Episode 180/1500 | Reward: -18.00 (avg: -13.30) | Fitness: 1335.51 (avg: 2141.37) | Steps: 100 | eps: 0.404 | Loss: 1.3940 | Time: 0.94s | Total: 140.95s
+Episode 186: New instance generated (53 requests)
+Episode 190/1500 | Reward: 0.00 (avg: -13.60) | Fitness: 13339.67 (avg: 4318.68) | Steps: 100 | eps: 0.384 | Loss: 1.3920 | Time: 0.70s | Total: 148.62s
+Episode 192: New instance generated (50 requests)
+Episode 195: New population generated
+Episode 198: New instance generated (51 requests)
+Episode 200/1500 | Reward: -4.00 (avg: -12.10) | Fitness: 1161.60 (avg: 1951.18) | Steps: 100 | eps: 0.365 | Loss: 1.3918 | Time: 0.78s | Total: 155.93s
+Episode 204: New instance generated (55 requests)
+Episode 210: New instance generated (50 requests)
+Episode 210/1500 | Reward: 12.00 (avg: -3.40) | Fitness: 1747.12 (avg: 9875.94) | Steps: 100 | eps: 0.347 | Loss: 1.2453 | Time: 0.78s | Total: 163.28s
+Episode 216: New instance generated (52 requests)
+Episode 220/1500 | Reward: -9.00 (avg: -11.10) | Fitness: 11992.88 (avg: 4112.25) | Steps: 100 | eps: 0.330 | Loss: 1.1941 | Time: 0.71s | Total: 170.73s
+Episode 222: New instance generated (52 requests)
+Episode 225: New population generated
+Episode 228: New instance generated (52 requests)
+Episode 230/1500 | Reward: -1.00 (avg: -2.10) | Fitness: 2348.37 (avg: 2263.00) | Steps: 100 | eps: 0.314 | Loss: 1.2466 | Time: 0.70s | Total: 177.76s
+Episode 234: New instance generated (52 requests)
+Episode 240: New instance generated (51 requests)
+Episode 240/1500 | Reward: 1.00 (avg: -0.20) | Fitness: 1661.61 (avg: 4243.65) | Steps: 100 | eps: 0.299 | Loss: 1.2811 | Time: 0.77s | Total: 184.88s
+Episode 246: New instance generated (53 requests)
+Episode 250/1500 | Reward: -2.00 (avg: 4.10) | Fitness: 15225.75 (avg: 5325.65) | Steps: 100 | eps: 0.284 | Loss: 1.2679 | Time: 0.71s | Total: 192.22s
+Episode 252: New instance generated (50 requests)
+Episode 255: New population generated
+Episode 258: New instance generated (50 requests)
+Episode 260/1500 | Reward: -14.00 (avg: -0.90) | Fitness: 2261.18 (avg: 1752.03) | Steps: 100 | eps: 0.270 | Loss: 1.3691 | Time: 0.72s | Total: 200.77s
+Episode 264: New instance generated (53 requests)
+Episode 270: New instance generated (52 requests)
+Episode 270/1500 | Reward: -21.00 (avg: -2.00) | Fitness: 2687.94 (avg: 3474.89) | Steps: 100 | eps: 0.257 | Loss: 1.3601 | Time: 0.77s | Total: 207.95s
+Episode 276: New instance generated (53 requests)
+Episode 280/1500 | Reward: 4.00 (avg: 3.30) | Fitness: 2467.89 (avg: 8062.13) | Steps: 100 | eps: 0.245 | Loss: 1.4207 | Time: 0.72s | Total: 215.15s
+Episode 282: New instance generated (52 requests)
+Episode 285: New population generated
+Episode 288: New instance generated (51 requests)
+Episode 290/1500 | Reward: -18.00 (avg: 0.00) | Fitness: 2464.68 (avg: 6235.81) | Steps: 100 | eps: 0.233 | Loss: 1.3985 | Time: 0.73s | Total: 222.40s
+Episode 294: New instance generated (51 requests)
+Episode 300: New instance generated (51 requests)
+Episode 300/1500 | Reward: 9.00 (avg: 5.50) | Fitness: 8512.03 (avg: 4953.47) | Steps: 100 | eps: 0.221 | Loss: 1.4038 | Time: 0.81s | Total: 230.28s
+Episode 306: New instance generated (51 requests)
+Episode 310/1500 | Reward: 9.00 (avg: 9.60) | Fitness: 8956.55 (avg: 1831.94) | Steps: 100 | eps: 0.210 | Loss: 1.2963 | Time: 0.73s | Total: 237.97s
+Episode 312: New instance generated (50 requests)
+Episode 315: New population generated
+Episode 318: New instance generated (51 requests)
+Episode 320/1500 | Reward: 9.00 (avg: 11.10) | Fitness: 1822.41 (avg: 1566.49) | Steps: 100 | eps: 0.200 | Loss: 1.3034 | Time: 0.72s | Total: 245.79s
+Episode 324: New instance generated (53 requests)
+Episode 330: New instance generated (52 requests)
+Episode 330/1500 | Reward: 8.00 (avg: 6.00) | Fitness: 2498.27 (avg: 4342.27) | Steps: 100 | eps: 0.190 | Loss: 1.3827 | Time: 0.74s | Total: 253.11s
+Episode 336: New instance generated (51 requests)
+Episode 340/1500 | Reward: 14.00 (avg: 14.20) | Fitness: 11060.87 (avg: 5480.56) | Steps: 100 | eps: 0.181 | Loss: 1.3129 | Time: 0.74s | Total: 260.43s
+Episode 342: New instance generated (53 requests)
+Episode 345: New population generated
+Episode 348: New instance generated (51 requests)
+Episode 350/1500 | Reward: 16.00 (avg: 11.50) | Fitness: 908.91 (avg: 2582.70) | Steps: 100 | eps: 0.172 | Loss: 1.2452 | Time: 0.75s | Total: 267.77s
+Episode 354: New instance generated (51 requests)
+Episode 360: New instance generated (50 requests)
+Episode 360/1500 | Reward: 11.00 (avg: 13.00) | Fitness: 8799.29 (avg: 3668.94) | Steps: 100 | eps: 0.164 | Loss: 1.1997 | Time: 0.76s | Total: 275.43s
+Episode 366: New instance generated (52 requests)
+Episode 370/1500 | Reward: 10.00 (avg: 13.30) | Fitness: 2862.87 (avg: 5061.87) | Steps: 100 | eps: 0.156 | Loss: 1.2463 | Time: 0.72s | Total: 282.73s
+Episode 372: New instance generated (51 requests)
+Episode 375: New population generated
+Episode 378: New instance generated (51 requests)
+Episode 380/1500 | Reward: 16.00 (avg: 14.60) | Fitness: 1053.57 (avg: 1713.44) | Steps: 100 | eps: 0.148 | Loss: 1.2788 | Time: 0.80s | Total: 290.32s
+Episode 384: New instance generated (53 requests)
+Episode 390: New instance generated (53 requests)
+Episode 390/1500 | Reward: 27.00 (avg: 16.00) | Fitness: 2768.52 (avg: 7473.40) | Steps: 100 | eps: 0.141 | Loss: 1.2824 | Time: 0.75s | Total: 297.70s
+Episode 396: New instance generated (51 requests)
+Episode 400/1500 | Reward: 11.00 (avg: 17.80) | Fitness: 1602.62 (avg: 4978.75) | Steps: 100 | eps: 0.134 | Loss: 1.2438 | Time: 0.73s | Total: 305.07s
+Episode 402: New instance generated (51 requests)
+Episode 405: New population generated
+Episode 408: New instance generated (50 requests)
+Episode 410/1500 | Reward: 27.00 (avg: 17.80) | Fitness: 1856.42 (avg: 2323.04) | Steps: 100 | eps: 0.127 | Loss: 1.1854 | Time: 0.77s | Total: 312.67s
+Episode 414: New instance generated (51 requests)
+Episode 420: New instance generated (50 requests)
+Episode 420/1500 | Reward: 16.00 (avg: 14.30) | Fitness: 2006.95 (avg: 1303.69) | Steps: 100 | eps: 0.121 | Loss: 1.2200 | Time: 0.83s | Total: 320.35s
+Episode 426: New instance generated (53 requests)
+Episode 430/1500 | Reward: 22.00 (avg: 20.30) | Fitness: 2582.82 (avg: 4943.45) | Steps: 100 | eps: 0.115 | Loss: 1.1675 | Time: 0.73s | Total: 327.83s
+Episode 432: New instance generated (50 requests)
+Episode 435: New population generated
+Episode 438: New instance generated (53 requests)
+Episode 440/1500 | Reward: 23.00 (avg: 20.40) | Fitness: 14521.62 (avg: 6315.03) | Steps: 100 | eps: 0.110 | Loss: 1.1624 | Time: 0.74s | Total: 335.28s
+Episode 444: New instance generated (53 requests)
+Episode 450: New instance generated (51 requests)
+Episode 450/1500 | Reward: 25.00 (avg: 20.70) | Fitness: 751.71 (avg: 6112.93) | Steps: 100 | eps: 0.104 | Loss: 1.1077 | Time: 0.74s | Total: 342.65s
+Episode 456: New instance generated (51 requests)
+Episode 460/1500 | Reward: 15.00 (avg: 18.90) | Fitness: 1156.65 (avg: 3796.43) | Steps: 100 | eps: 0.100 | Loss: 1.1374 | Time: 0.74s | Total: 350.18s
+Episode 462: New instance generated (53 requests)
+Episode 465: New population generated
+Episode 468: New instance generated (51 requests)
+Episode 470/1500 | Reward: 23.00 (avg: 20.00) | Fitness: 1069.17 (avg: 2796.56) | Steps: 100 | eps: 0.100 | Loss: 1.1776 | Time: 0.78s | Total: 357.68s
+Episode 474: New instance generated (51 requests)
+Episode 480: New instance generated (53 requests)
+Episode 480/1500 | Reward: 10.00 (avg: 19.50) | Fitness: 2558.62 (avg: 3076.91) | Steps: 100 | eps: 0.100 | Loss: 1.1062 | Time: 0.75s | Total: 365.26s
+Episode 486: New instance generated (51 requests)
+Episode 490/1500 | Reward: 9.00 (avg: 15.90) | Fitness: 9350.58 (avg: 5864.24) | Steps: 100 | eps: 0.100 | Loss: 1.1862 | Time: 0.72s | Total: 372.65s
+Episode 492: New instance generated (52 requests)
+Episode 495: New population generated
+Episode 498: New instance generated (51 requests)
+Episode 500/1500 | Reward: 26.00 (avg: 18.50) | Fitness: 1318.00 (avg: 1864.15) | Steps: 100 | eps: 0.100 | Loss: 1.1338 | Time: 0.75s | Total: 380.13s
+Saved checkpoint to models/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_42_episode_500.pt
+Episode 504: New instance generated (52 requests)
+Episode 510: New instance generated (51 requests)
+Episode 510/1500 | Reward: 15.00 (avg: 21.50) | Fitness: 738.23 (avg: 2731.29) | Steps: 100 | eps: 0.100 | Loss: 1.1640 | Time: 0.76s | Total: 387.62s
+Episode 516: New instance generated (51 requests)
+Episode 520/1500 | Reward: 12.00 (avg: 20.50) | Fitness: 9423.49 (avg: 3873.30) | Steps: 100 | eps: 0.100 | Loss: 1.1213 | Time: 0.74s | Total: 395.16s
+Episode 522: New instance generated (51 requests)
+Episode 525: New population generated
+Episode 528: New instance generated (50 requests)
+Episode 530/1500 | Reward: 30.00 (avg: 15.80) | Fitness: 1865.96 (avg: 2170.63) | Steps: 100 | eps: 0.100 | Loss: 1.1170 | Time: 0.73s | Total: 402.61s
+Episode 534: New instance generated (51 requests)
+Episode 540: New instance generated (51 requests)
+Episode 540/1500 | Reward: 26.00 (avg: 23.80) | Fitness: 973.80 (avg: 1376.26) | Steps: 100 | eps: 0.100 | Loss: 1.1469 | Time: 0.75s | Total: 410.12s
+Episode 546: New instance generated (51 requests)
+Episode 550/1500 | Reward: 19.00 (avg: 21.00) | Fitness: 763.57 (avg: 2929.94) | Steps: 100 | eps: 0.100 | Loss: 1.0665 | Time: 0.74s | Total: 417.63s
+Episode 552: New instance generated (51 requests)
+Episode 555: New population generated
+Episode 558: New instance generated (50 requests)
+Episode 560/1500 | Reward: 21.00 (avg: 16.90) | Fitness: 1920.26 (avg: 1364.66) | Steps: 100 | eps: 0.100 | Loss: 1.0975 | Time: 0.77s | Total: 425.15s
+Episode 564: New instance generated (52 requests)
+Episode 570: New instance generated (51 requests)
+Episode 570/1500 | Reward: 19.00 (avg: 17.50) | Fitness: 2043.35 (avg: 4198.51) | Steps: 100 | eps: 0.100 | Loss: 1.0957 | Time: 0.76s | Total: 432.64s
+Episode 576: New instance generated (52 requests)
+Episode 580/1500 | Reward: 19.00 (avg: 21.10) | Fitness: 2996.03 (avg: 2390.52) | Steps: 100 | eps: 0.100 | Loss: 1.1764 | Time: 0.74s | Total: 440.12s
+Episode 582: New instance generated (52 requests)
+Episode 585: New population generated
+Episode 588: New instance generated (51 requests)
+Episode 590/1500 | Reward: 21.00 (avg: 23.30) | Fitness: 1970.44 (avg: 3043.90) | Steps: 100 | eps: 0.100 | Loss: 1.1765 | Time: 0.73s | Total: 447.56s
+Episode 594: New instance generated (53 requests)
+Episode 600: New instance generated (53 requests)
+Episode 600/1500 | Reward: 29.00 (avg: 19.40) | Fitness: 2361.83 (avg: 9100.95) | Steps: 100 | eps: 0.100 | Loss: 1.1371 | Time: 0.79s | Total: 455.05s
+Episode 606: New instance generated (51 requests)
+Episode 610/1500 | Reward: 23.00 (avg: 21.20) | Fitness: 10291.01 (avg: 5822.28) | Steps: 100 | eps: 0.100 | Loss: 1.0836 | Time: 0.74s | Total: 462.42s
+Episode 612: New instance generated (51 requests)
+Episode 615: New population generated
+Episode 618: New instance generated (52 requests)
+Episode 620/1500 | Reward: 14.00 (avg: 14.70) | Fitness: 2430.75 (avg: 3947.46) | Steps: 100 | eps: 0.100 | Loss: 1.0909 | Time: 0.74s | Total: 469.93s
+Episode 624: New instance generated (51 requests)
+Episode 630: New instance generated (51 requests)
+Episode 630/1500 | Reward: 19.00 (avg: 17.70) | Fitness: 851.21 (avg: 3294.15) | Steps: 100 | eps: 0.100 | Loss: 1.0795 | Time: 0.78s | Total: 477.43s
+Episode 636: New instance generated (51 requests)
+Episode 640/1500 | Reward: 23.00 (avg: 24.30) | Fitness: 1361.12 (avg: 2194.12) | Steps: 100 | eps: 0.100 | Loss: 1.0604 | Time: 0.82s | Total: 484.98s
+Episode 642: New instance generated (51 requests)
+Episode 645: New population generated
+Episode 648: New instance generated (51 requests)
+Episode 650/1500 | Reward: 21.00 (avg: 15.00) | Fitness: 1022.29 (avg: 3213.15) | Steps: 100 | eps: 0.100 | Loss: 1.1213 | Time: 0.74s | Total: 492.46s
+Episode 654: New instance generated (52 requests)
+Episode 660: New instance generated (51 requests)
+Episode 660/1500 | Reward: 34.00 (avg: 21.30) | Fitness: 1100.23 (avg: 1928.97) | Steps: 100 | eps: 0.100 | Loss: 1.0943 | Time: 0.76s | Total: 499.94s
+Episode 666: New instance generated (52 requests)
+Episode 670/1500 | Reward: 37.00 (avg: 23.50) | Fitness: 2648.72 (avg: 3722.38) | Steps: 100 | eps: 0.100 | Loss: 1.0654 | Time: 0.74s | Total: 507.38s
+Episode 672: New instance generated (51 requests)
+Episode 675: New population generated
+Episode 678: New instance generated (50 requests)
+Episode 680/1500 | Reward: 14.00 (avg: 23.50) | Fitness: 1988.83 (avg: 3790.43) | Steps: 100 | eps: 0.100 | Loss: 1.0556 | Time: 0.74s | Total: 514.81s
+Episode 684: New instance generated (53 requests)
+Episode 690: New instance generated (51 requests)
+Episode 690/1500 | Reward: 9.00 (avg: 21.70) | Fitness: 1231.59 (avg: 2001.94) | Steps: 100 | eps: 0.100 | Loss: 1.0236 | Time: 0.80s | Total: 522.28s
+Episode 696: New instance generated (53 requests)
+Episode 700/1500 | Reward: 22.00 (avg: 22.00) | Fitness: 1367.37 (avg: 3609.99) | Steps: 100 | eps: 0.100 | Loss: 1.0369 | Time: 0.74s | Total: 530.29s
+Episode 702: New instance generated (50 requests)
+Episode 705: New population generated
+Episode 708: New instance generated (50 requests)
+Episode 710/1500 | Reward: 33.00 (avg: 22.70) | Fitness: 9254.56 (avg: 3601.85) | Steps: 100 | eps: 0.100 | Loss: 0.9851 | Time: 0.77s | Total: 537.88s
+Episode 714: New instance generated (50 requests)
+Episode 720: New instance generated (51 requests)
+Episode 720/1500 | Reward: 26.00 (avg: 21.10) | Fitness: 923.61 (avg: 1478.12) | Steps: 100 | eps: 0.100 | Loss: 1.0428 | Time: 0.76s | Total: 545.94s
+Episode 726: New instance generated (53 requests)
+Episode 730/1500 | Reward: 23.00 (avg: 15.90) | Fitness: 2834.01 (avg: 3745.86) | Steps: 100 | eps: 0.100 | Loss: 1.0339 | Time: 0.74s | Total: 553.45s
+Episode 732: New instance generated (52 requests)
+Episode 735: New population generated
+Episode 738: New instance generated (53 requests)
+Episode 740/1500 | Reward: 25.00 (avg: 23.60) | Fitness: 2611.09 (avg: 4391.80) | Steps: 100 | eps: 0.100 | Loss: 0.9995 | Time: 0.74s | Total: 560.81s
+Episode 744: New instance generated (50 requests)
+Episode 750: New instance generated (53 requests)
+Episode 750/1500 | Reward: 18.00 (avg: 16.40) | Fitness: 2508.24 (avg: 4005.48) | Steps: 100 | eps: 0.100 | Loss: 1.0218 | Time: 0.75s | Total: 568.53s
+Episode 756: New instance generated (51 requests)
+Episode 760/1500 | Reward: 9.00 (avg: 18.80) | Fitness: 1045.79 (avg: 2631.38) | Steps: 100 | eps: 0.100 | Loss: 0.9978 | Time: 0.74s | Total: 575.92s
+Episode 762: New instance generated (51 requests)
+Episode 765: New population generated
+Episode 768: New instance generated (51 requests)
+Episode 770/1500 | Reward: 34.00 (avg: 19.30) | Fitness: 2027.77 (avg: 2478.85) | Steps: 100 | eps: 0.100 | Loss: 1.0409 | Time: 0.77s | Total: 583.45s
+Episode 774: New instance generated (51 requests)
+Episode 780: New instance generated (51 requests)
+Episode 780/1500 | Reward: 15.00 (avg: 20.30) | Fitness: 1726.85 (avg: 1344.57) | Steps: 100 | eps: 0.100 | Loss: 0.9971 | Time: 0.74s | Total: 591.12s
+Episode 786: New instance generated (51 requests)
+Episode 790/1500 | Reward: 15.00 (avg: 14.80) | Fitness: 990.23 (avg: 3013.44) | Steps: 100 | eps: 0.100 | Loss: 0.9943 | Time: 0.77s | Total: 598.60s
+Episode 792: New instance generated (51 requests)
+Episode 795: New population generated
+Episode 798: New instance generated (53 requests)
+Episode 800/1500 | Reward: 27.00 (avg: 23.30) | Fitness: 2131.68 (avg: 4430.98) | Steps: 100 | eps: 0.100 | Loss: 0.9936 | Time: 0.74s | Total: 606.08s
+Episode 804: New instance generated (52 requests)
+Episode 810: New instance generated (53 requests)
+Episode 810/1500 | Reward: 17.00 (avg: 19.70) | Fitness: 1921.46 (avg: 3168.81) | Steps: 100 | eps: 0.100 | Loss: 0.9433 | Time: 0.75s | Total: 613.49s
+Episode 816: New instance generated (51 requests)
+Episode 820/1500 | Reward: 10.00 (avg: 21.80) | Fitness: 919.52 (avg: 3616.08) | Steps: 100 | eps: 0.100 | Loss: 0.9168 | Time: 0.74s | Total: 620.98s
+Episode 822: New instance generated (51 requests)
+Episode 825: New population generated
+Episode 828: New instance generated (51 requests)
+Episode 830/1500 | Reward: 20.00 (avg: 17.60) | Fitness: 9178.18 (avg: 3783.99) | Steps: 100 | eps: 0.100 | Loss: 0.9005 | Time: 0.75s | Total: 628.63s
+Episode 834: New instance generated (52 requests)
+Episode 840: New instance generated (50 requests)
+Episode 840/1500 | Reward: 23.00 (avg: 20.40) | Fitness: 11362.41 (avg: 3841.76) | Steps: 100 | eps: 0.100 | Loss: 0.9287 | Time: 0.75s | Total: 636.04s
+Episode 846: New instance generated (53 requests)
+Episode 850/1500 | Reward: 19.00 (avg: 21.80) | Fitness: 2013.80 (avg: 2357.25) | Steps: 100 | eps: 0.100 | Loss: 0.9184 | Time: 0.74s | Total: 643.47s
+Episode 852: New instance generated (51 requests)
+Episode 855: New population generated
+Episode 858: New instance generated (53 requests)
+Episode 860/1500 | Reward: 17.00 (avg: 21.50) | Fitness: 2064.95 (avg: 1806.54) | Steps: 100 | eps: 0.100 | Loss: 0.9251 | Time: 0.75s | Total: 651.03s
+Episode 864: New instance generated (53 requests)
+Episode 870: New instance generated (51 requests)
+Episode 870/1500 | Reward: 13.00 (avg: 14.00) | Fitness: 1758.39 (avg: 7695.70) | Steps: 100 | eps: 0.100 | Loss: 0.9747 | Time: 0.82s | Total: 658.58s
+Episode 876: New instance generated (51 requests)
+Episode 880/1500 | Reward: 23.00 (avg: 22.70) | Fitness: 1104.01 (avg: 2952.83) | Steps: 100 | eps: 0.100 | Loss: 1.0297 | Time: 0.75s | Total: 666.12s
+Episode 882: New instance generated (55 requests)
+Episode 885: New population generated
+Episode 888: New instance generated (53 requests)
+Episode 890/1500 | Reward: 30.00 (avg: 18.70) | Fitness: 12905.75 (avg: 6365.36) | Steps: 100 | eps: 0.100 | Loss: 0.9472 | Time: 0.75s | Total: 673.66s
+Episode 894: New instance generated (50 requests)
+Episode 900: New instance generated (51 requests)
+Episode 900/1500 | Reward: 16.00 (avg: 21.50) | Fitness: 1900.73 (avg: 3326.73) | Steps: 100 | eps: 0.100 | Loss: 0.9561 | Time: 0.79s | Total: 681.23s
+Episode 906: New instance generated (53 requests)
+Episode 910/1500 | Reward: 19.00 (avg: 16.10) | Fitness: 15229.93 (avg: 5140.94) | Steps: 100 | eps: 0.100 | Loss: 0.8949 | Time: 0.75s | Total: 688.88s
+Episode 912: New instance generated (53 requests)
+Episode 915: New population generated
+Episode 918: New instance generated (53 requests)
+Episode 920/1500 | Reward: 9.00 (avg: 15.80) | Fitness: 3434.79 (avg: 9705.80) | Steps: 100 | eps: 0.100 | Loss: 0.9365 | Time: 0.78s | Total: 696.40s
+Episode 924: New instance generated (51 requests)
+Episode 930: New instance generated (51 requests)
+Episode 930/1500 | Reward: 29.00 (avg: 18.60) | Fitness: 900.06 (avg: 4384.44) | Steps: 100 | eps: 0.100 | Loss: 0.9532 | Time: 0.83s | Total: 704.28s
+Episode 936: New instance generated (53 requests)
+Episode 940/1500 | Reward: 27.00 (avg: 22.10) | Fitness: 2497.71 (avg: 3613.86) | Steps: 100 | eps: 0.100 | Loss: 0.9371 | Time: 0.76s | Total: 711.89s
+Episode 942: New instance generated (53 requests)
+Episode 945: New population generated
+Episode 948: New instance generated (53 requests)
+Episode 950/1500 | Reward: 26.00 (avg: 24.80) | Fitness: 13016.10 (avg: 3599.59) | Steps: 100 | eps: 0.100 | Loss: 0.9604 | Time: 0.76s | Total: 719.50s
+Episode 954: New instance generated (53 requests)
+Episode 960: New instance generated (51 requests)
+Episode 960/1500 | Reward: 11.00 (avg: 17.90) | Fitness: 1037.52 (avg: 2091.81) | Steps: 100 | eps: 0.100 | Loss: 0.9281 | Time: 0.76s | Total: 727.01s
+Episode 966: New instance generated (51 requests)
+Episode 970/1500 | Reward: 20.00 (avg: 15.80) | Fitness: 2343.64 (avg: 1415.25) | Steps: 100 | eps: 0.100 | Loss: 0.9940 | Time: 0.78s | Total: 734.87s
+Episode 972: New instance generated (51 requests)
+Episode 975: New population generated
+Episode 978: New instance generated (50 requests)
+Episode 980/1500 | Reward: 22.00 (avg: 21.90) | Fitness: 2251.06 (avg: 3641.83) | Steps: 100 | eps: 0.100 | Loss: 0.9330 | Time: 0.75s | Total: 742.50s
+Episode 984: New instance generated (52 requests)
+Episode 990: New instance generated (51 requests)
+Episode 990/1500 | Reward: 19.00 (avg: 9.20) | Fitness: 1207.62 (avg: 4441.51) | Steps: 100 | eps: 0.100 | Loss: 0.9229 | Time: 0.75s | Total: 750.50s
+Episode 996: New instance generated (51 requests)
+Episode 1000/1500 | Reward: 24.00 (avg: 19.60) | Fitness: 1242.82 (avg: 2075.61) | Steps: 100 | eps: 0.100 | Loss: 0.9051 | Time: 0.76s | Total: 758.11s
+Saved checkpoint to models/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_42_episode_1000.pt
+Episode 1002: New instance generated (51 requests)
+Episode 1005: New population generated
+Episode 1008: New instance generated (53 requests)
+Episode 1010/1500 | Reward: 21.00 (avg: 22.60) | Fitness: 12848.97 (avg: 2916.70) | Steps: 100 | eps: 0.100 | Loss: 0.8940 | Time: 0.76s | Total: 765.88s
+Episode 1014: New instance generated (51 requests)
+Episode 1020: New instance generated (53 requests)
+Episode 1020/1500 | Reward: 18.00 (avg: 22.70) | Fitness: 13029.56 (avg: 6777.64) | Steps: 100 | eps: 0.100 | Loss: 0.8729 | Time: 0.76s | Total: 773.56s
+Episode 1026: New instance generated (52 requests)
+Episode 1030/1500 | Reward: 17.00 (avg: 18.20) | Fitness: 12837.99 (avg: 4269.42) | Steps: 100 | eps: 0.100 | Loss: 0.8713 | Time: 0.75s | Total: 781.22s
+Episode 1032: New instance generated (52 requests)
+Episode 1035: New population generated
+Episode 1038: New instance generated (51 requests)
+Episode 1040/1500 | Reward: 12.00 (avg: 14.60) | Fitness: 9353.35 (avg: 5069.82) | Steps: 100 | eps: 0.100 | Loss: 0.8659 | Time: 0.80s | Total: 788.94s
+Episode 1044: New instance generated (52 requests)
+Episode 1050: New instance generated (50 requests)
+Episode 1050/1500 | Reward: 20.00 (avg: 19.80) | Fitness: 2321.46 (avg: 2741.55) | Steps: 100 | eps: 0.100 | Loss: 0.8848 | Time: 0.78s | Total: 796.52s
+Episode 1056: New instance generated (51 requests)
+Episode 1060/1500 | Reward: 17.00 (avg: 16.90) | Fitness: 2035.10 (avg: 2897.78) | Steps: 100 | eps: 0.100 | Loss: 0.8439 | Time: 0.76s | Total: 804.16s
+Episode 1062: New instance generated (53 requests)
+Episode 1065: New population generated
+Episode 1068: New instance generated (51 requests)
+Episode 1070/1500 | Reward: 20.00 (avg: 20.00) | Fitness: 1849.52 (avg: 5932.55) | Steps: 100 | eps: 0.100 | Loss: 0.8323 | Time: 0.75s | Total: 811.76s
+Episode 1074: New instance generated (50 requests)
+Episode 1080: New instance generated (51 requests)
+Episode 1080/1500 | Reward: 27.00 (avg: 24.20) | Fitness: 1242.89 (avg: 2844.23) | Steps: 100 | eps: 0.100 | Loss: 0.7985 | Time: 0.76s | Total: 819.28s
+Episode 1086: New instance generated (50 requests)
+Episode 1090/1500 | Reward: 26.00 (avg: 16.50) | Fitness: 2316.79 (avg: 2439.86) | Steps: 100 | eps: 0.100 | Loss: 0.8185 | Time: 0.75s | Total: 826.84s
+Episode 1092: New instance generated (51 requests)
+Episode 1095: New population generated
+Episode 1098: New instance generated (51 requests)
+Episode 1100/1500 | Reward: 20.00 (avg: 26.20) | Fitness: 10938.45 (avg: 2216.73) | Steps: 100 | eps: 0.100 | Loss: 0.8162 | Time: 0.75s | Total: 834.45s
+Episode 1104: New instance generated (50 requests)
+Episode 1110: New instance generated (55 requests)
+Episode 1110/1500 | Reward: 20.00 (avg: 16.60) | Fitness: 14905.21 (avg: 3841.93) | Steps: 100 | eps: 0.100 | Loss: 0.8063 | Time: 0.77s | Total: 842.15s
+Episode 1116: New instance generated (50 requests)
+Episode 1120/1500 | Reward: 13.00 (avg: 13.50) | Fitness: 10579.91 (avg: 4324.86) | Steps: 100 | eps: 0.100 | Loss: 0.7551 | Time: 0.78s | Total: 849.78s
+Episode 1122: New instance generated (50 requests)
+Episode 1125: New population generated
+Episode 1128: New instance generated (53 requests)
+Episode 1130/1500 | Reward: 20.00 (avg: 24.50) | Fitness: 1648.25 (avg: 1555.46) | Steps: 100 | eps: 0.100 | Loss: 0.7624 | Time: 0.76s | Total: 857.58s
+Episode 1134: New instance generated (52 requests)
+Episode 1140: New instance generated (51 requests)
+Episode 1140/1500 | Reward: 9.00 (avg: 18.30) | Fitness: 1156.48 (avg: 5168.58) | Steps: 100 | eps: 0.100 | Loss: 0.7733 | Time: 0.76s | Total: 865.13s
+Episode 1146: New instance generated (51 requests)
+Episode 1150/1500 | Reward: 22.00 (avg: 7.40) | Fitness: 1889.26 (avg: 4860.83) | Steps: 100 | eps: 0.100 | Loss: 0.7414 | Time: 0.77s | Total: 872.77s
+Episode 1152: New instance generated (52 requests)
+Episode 1155: New population generated
+Episode 1158: New instance generated (53 requests)
+Episode 1160/1500 | Reward: 29.00 (avg: 22.40) | Fitness: 2343.89 (avg: 2502.87) | Steps: 100 | eps: 0.100 | Loss: 0.7593 | Time: 0.76s | Total: 880.33s
+Episode 1164: New instance generated (51 requests)
+Episode 1170: New instance generated (50 requests)
+Episode 1170/1500 | Reward: 23.00 (avg: 17.20) | Fitness: 1424.87 (avg: 2540.67) | Steps: 100 | eps: 0.100 | Loss: 0.7615 | Time: 0.81s | Total: 888.02s
+Episode 1176: New instance generated (51 requests)
+Episode 1180/1500 | Reward: 21.00 (avg: 13.70) | Fitness: 1509.82 (avg: 2348.67) | Steps: 100 | eps: 0.100 | Loss: 0.7428 | Time: 0.77s | Total: 897.21s
+Episode 1182: New instance generated (53 requests)
+Episode 1185: New population generated
+Episode 1188: New instance generated (53 requests)
+Episode 1190/1500 | Reward: 27.00 (avg: 22.00) | Fitness: 2972.50 (avg: 9491.87) | Steps: 100 | eps: 0.100 | Loss: 0.7103 | Time: 0.75s | Total: 904.75s
+Episode 1194: New instance generated (50 requests)
+Episode 1200: New instance generated (51 requests)
+Episode 1200/1500 | Reward: 25.00 (avg: 15.30) | Fitness: 1338.86 (avg: 4054.45) | Steps: 100 | eps: 0.100 | Loss: 0.6927 | Time: 0.81s | Total: 912.42s
+Episode 1206: New instance generated (51 requests)
+Episode 1210/1500 | Reward: 26.00 (avg: 21.60) | Fitness: 1756.97 (avg: 1640.75) | Steps: 100 | eps: 0.100 | Loss: 0.6970 | Time: 0.78s | Total: 920.44s
+Episode 1212: New instance generated (51 requests)
+Episode 1215: New population generated
+Episode 1218: New instance generated (50 requests)
+Episode 1220/1500 | Reward: 23.00 (avg: 20.70) | Fitness: 1418.17 (avg: 3089.76) | Steps: 100 | eps: 0.100 | Loss: 0.6874 | Time: 0.82s | Total: 928.38s
+Episode 1224: New instance generated (50 requests)
+Episode 1230: New instance generated (53 requests)
+Episode 1230/1500 | Reward: 19.00 (avg: 22.00) | Fitness: 1769.47 (avg: 1545.63) | Steps: 100 | eps: 0.100 | Loss: 0.6921 | Time: 0.78s | Total: 936.68s
+Episode 1236: New instance generated (50 requests)
+Episode 1240/1500 | Reward: 28.00 (avg: 25.30) | Fitness: 1709.60 (avg: 1916.54) | Steps: 100 | eps: 0.100 | Loss: 0.6822 | Time: 0.76s | Total: 944.48s
+Episode 1242: New instance generated (50 requests)
+Episode 1245: New population generated
+Episode 1248: New instance generated (55 requests)
+Episode 1250/1500 | Reward: 22.00 (avg: 21.20) | Fitness: 3596.74 (avg: 3243.66) | Steps: 100 | eps: 0.100 | Loss: 0.6658 | Time: 0.80s | Total: 952.52s
+Episode 1254: New instance generated (51 requests)
+Episode 1260: New instance generated (55 requests)
+Episode 1260/1500 | Reward: 18.00 (avg: 17.10) | Fitness: 3559.00 (avg: 5009.90) | Steps: 100 | eps: 0.100 | Loss: 0.6882 | Time: 0.81s | Total: 960.40s
+Episode 1266: New instance generated (51 requests)
+Episode 1270/1500 | Reward: 14.00 (avg: 19.80) | Fitness: 1319.95 (avg: 7788.59) | Steps: 100 | eps: 0.100 | Loss: 0.6474 | Time: 0.78s | Total: 968.20s
+Episode 1272: New instance generated (55 requests)
+Episode 1275: New population generated
+Episode 1278: New instance generated (51 requests)
+Episode 1280/1500 | Reward: 3.00 (avg: 18.40) | Fitness: 9431.88 (avg: 4188.54) | Steps: 100 | eps: 0.100 | Loss: 0.6550 | Time: 0.80s | Total: 976.00s
+Episode 1284: New instance generated (51 requests)
+Episode 1290: New instance generated (52 requests)
+Episode 1290/1500 | Reward: 24.00 (avg: 17.80) | Fitness: 2713.82 (avg: 3346.60) | Steps: 100 | eps: 0.100 | Loss: 0.6413 | Time: 0.78s | Total: 983.90s
+Episode 1296: New instance generated (51 requests)
+Episode 1300/1500 | Reward: 22.00 (avg: 19.80) | Fitness: 2134.40 (avg: 1972.29) | Steps: 100 | eps: 0.100 | Loss: 0.6167 | Time: 0.79s | Total: 991.74s
+Episode 1302: New instance generated (51 requests)
+Episode 1305: New population generated
+Episode 1308: New instance generated (53 requests)
+Episode 1310/1500 | Reward: 18.00 (avg: 16.70) | Fitness: 2788.28 (avg: 1659.13) | Steps: 100 | eps: 0.100 | Loss: 0.6460 | Time: 0.77s | Total: 999.75s
+Episode 1314: New instance generated (51 requests)
+Episode 1320: New instance generated (51 requests)
+Episode 1320/1500 | Reward: 24.00 (avg: 27.10) | Fitness: 2070.82 (avg: 3610.77) | Steps: 100 | eps: 0.100 | Loss: 0.6128 | Time: 0.81s | Total: 1007.64s
+Episode 1326: New instance generated (50 requests)
+Episode 1330/1500 | Reward: 20.00 (avg: 26.80) | Fitness: 1406.57 (avg: 2258.75) | Steps: 100 | eps: 0.100 | Loss: 0.5712 | Time: 0.80s | Total: 1015.66s
+Episode 1332: New instance generated (51 requests)
+Episode 1335: New population generated
+Episode 1338: New instance generated (50 requests)
+Episode 1340/1500 | Reward: 21.00 (avg: 19.10) | Fitness: 1614.40 (avg: 2454.06) | Steps: 100 | eps: 0.100 | Loss: 0.6523 | Time: 0.81s | Total: 1023.52s
+Episode 1344: New instance generated (53 requests)
+Episode 1350: New instance generated (55 requests)
+Episode 1350/1500 | Reward: 4.00 (avg: 17.70) | Fitness: 16646.33 (avg: 4430.01) | Steps: 100 | eps: 0.100 | Loss: 0.6089 | Time: 0.80s | Total: 1031.34s
+Episode 1356: New instance generated (50 requests)
+Episode 1360/1500 | Reward: 17.00 (avg: 21.20) | Fitness: 1616.16 (avg: 3566.60) | Steps: 100 | eps: 0.100 | Loss: 0.6202 | Time: 0.81s | Total: 1039.26s
+Episode 1362: New instance generated (51 requests)
+Episode 1365: New population generated
+Episode 1368: New instance generated (51 requests)
+Episode 1370/1500 | Reward: 22.00 (avg: 22.40) | Fitness: 908.47 (avg: 1469.24) | Steps: 100 | eps: 0.100 | Loss: 0.5770 | Time: 0.76s | Total: 1047.17s
+Episode 1374: New instance generated (55 requests)
+Episode 1380: New instance generated (52 requests)
+Episode 1380/1500 | Reward: 15.00 (avg: 19.00) | Fitness: 2006.13 (avg: 6011.14) | Steps: 100 | eps: 0.100 | Loss: 0.6217 | Time: 0.78s | Total: 1055.07s
+Episode 1386: New instance generated (53 requests)
+Episode 1390/1500 | Reward: 13.00 (avg: 20.10) | Fitness: 2672.64 (avg: 4543.91) | Steps: 100 | eps: 0.100 | Loss: 0.5806 | Time: 0.75s | Total: 1062.60s
+Episode 1392: New instance generated (53 requests)
+Episode 1395: New population generated
+Episode 1398: New instance generated (52 requests)
+Episode 1400/1500 | Reward: 22.00 (avg: 17.70) | Fitness: 2536.29 (avg: 9364.52) | Steps: 100 | eps: 0.100 | Loss: 0.5832 | Time: 0.74s | Total: 1070.06s
+Episode 1404: New instance generated (53 requests)
+Episode 1410: New instance generated (51 requests)
+Episode 1410/1500 | Reward: 24.00 (avg: 20.10) | Fitness: 873.72 (avg: 4777.47) | Steps: 100 | eps: 0.100 | Loss: 0.5858 | Time: 0.80s | Total: 1077.53s
+Episode 1416: New instance generated (50 requests)
+Episode 1420/1500 | Reward: 25.00 (avg: 18.40) | Fitness: 2188.92 (avg: 1558.85) | Steps: 100 | eps: 0.100 | Loss: 0.5723 | Time: 0.75s | Total: 1085.16s
+Episode 1422: New instance generated (52 requests)
+Episode 1425: New population generated
+Episode 1428: New instance generated (50 requests)
+Episode 1430/1500 | Reward: 10.00 (avg: 20.40) | Fitness: 2043.31 (avg: 3088.20) | Steps: 100 | eps: 0.100 | Loss: 0.5580 | Time: 0.77s | Total: 1092.62s
+Episode 1434: New instance generated (50 requests)
+Episode 1440: New instance generated (51 requests)
+Episode 1440/1500 | Reward: 11.00 (avg: 18.00) | Fitness: 1465.96 (avg: 2627.02) | Steps: 100 | eps: 0.100 | Loss: 0.5676 | Time: 0.89s | Total: 1100.33s
+Episode 1446: New instance generated (51 requests)
+Episode 1450/1500 | Reward: 19.00 (avg: 20.50) | Fitness: 933.28 (avg: 3070.59) | Steps: 100 | eps: 0.100 | Loss: 0.5741 | Time: 0.79s | Total: 1107.84s
+Episode 1452: New instance generated (53 requests)
+Episode 1455: New population generated
+Episode 1458: New instance generated (51 requests)
+Episode 1460/1500 | Reward: 17.00 (avg: 20.20) | Fitness: 1000.59 (avg: 3807.73) | Steps: 100 | eps: 0.100 | Loss: 0.5772 | Time: 0.75s | Total: 1115.47s
+Episode 1464: New instance generated (52 requests)
+Episode 1470: New instance generated (50 requests)
+Episode 1470/1500 | Reward: 16.00 (avg: 18.70) | Fitness: 1769.66 (avg: 5673.57) | Steps: 100 | eps: 0.100 | Loss: 0.5802 | Time: 0.79s | Total: 1123.02s
+Episode 1476: New instance generated (51 requests)
+Episode 1480/1500 | Reward: 19.00 (avg: 16.80) | Fitness: 898.95 (avg: 3290.43) | Steps: 100 | eps: 0.100 | Loss: 0.5612 | Time: 0.74s | Total: 1130.67s
+Episode 1482: New instance generated (51 requests)
+Episode 1485: New population generated
+Episode 1488: New instance generated (51 requests)
+Episode 1490/1500 | Reward: 21.00 (avg: 19.60) | Fitness: 2015.87 (avg: 5045.29) | Steps: 100 | eps: 0.100 | Loss: 0.5772 | Time: 0.77s | Total: 1138.25s
+Episode 1494: New instance generated (50 requests)
+Episode 1499/1500 | Reward: 13.00 (avg: 15.30) | Fitness: 1684.91 (avg: 1587.28) | Steps: 100 | eps: 0.100 | Loss: 0.5766 | Time: 0.73s | Total: 1145.93s
+Training completed! Saved final model to models/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_42_final.pt
+
+Training Summary:
+Total episodes: 1500
+Total time: 1146.04s (0.76s per episode)
+Final epsilon: 0.100
+Replay buffer size: 100000
+TensorBoard logs saved to runs/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_seed42_1763733794
+
+Training completed!
+Final average reward (last 100): 18.81
+Final average fitness (last 100): 3457.85
+Saved model to models/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_42_final.pt
+  - Weights: models/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_42_final.pt
+  - History: models/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_42_final_history.pkl
+  - Config: models/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_42_final_config.pkl
+  - Operators: ['Reinsert-nC-Max1-NewV-SameV-nF_SameV', 'RouteElimination', 'Flip-Single-Unlimited', 'SwapWithin-random-A-MaxNone', 'SwapBetween-random', 'Transfer-A-Max1', 'Shift-random-A-Max3-Seg3-Dist5', 'TwoOpt']
+  - Population features: True
+
+Saved final model to: models/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_42_final.pt
+
+================================================================================
+EVALUATION ON TEST INSTANCES
+================================================================================
+
+Evaluation Configuration:
+  Test instances: 20
+  Episodes per instance: 1
+  Test seeds: [42, 111, 222]
+  Total evaluations per model: 60
+
+================================================================================
+NAIVE BASELINE EVALUATION (Random Operator Selection)
+================================================================================
+
+Test Seed 1/3: 42
+  1/20 lc108           | Fitness: 54193.83 -> 54193.83 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  2/20 lc109           | Fitness: 42686.33 -> 42686.33 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  3/20 lr211           | Fitness: 27517.25 -> 26728.53 | Δ=+788.72 (+2.9%) | Diversity: 0.880
+  4/20 lr111           | Fitness: 48859.45 -> 40890.22 | Δ=+7969.24 (+16.3%) | Diversity: 0.882
+  5/20 lc109           | Fitness: 49365.02 -> 49365.02 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  6/20 lr110           | Fitness: 43167.41 -> 43167.41 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  7/20 lr110           | Fitness: 44095.95 -> 44095.95 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  8/20 lc109           | Fitness: 44787.13 -> 44787.13 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  9/20 lr210           | Fitness: 34186.02 -> 31967.62 | Δ=+2218.40 (+6.5%) | Diversity: 0.925
+  10/20 lc207           | Fitness: 44941.02 -> 44713.17 | Δ=+227.85 (+0.5%) | Diversity: 0.904
+  11/20 lr110           | Fitness: 40926.28 -> 40926.28 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  12/20 lc208           | Fitness: 39652.46 -> 39652.46 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  13/20 lc208           | Fitness: 50288.91 -> 49536.80 | Δ=+752.11 (+1.5%) | Diversity: 0.912
+  14/20 lc108           | Fitness: 49418.99 -> 43851.69 | Δ=+5567.30 (+11.3%) | Diversity: 0.868
+  15/20 lc109           | Fitness: 50049.44 -> 50049.44 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  16/20 lc109           | Fitness: 40272.14 -> 40272.14 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  17/20 lc207           | Fitness: 42118.65 -> 42118.65 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  18/20 lc207           | Fitness: 43624.61 -> 40377.10 | Δ=+3247.52 (+7.4%) | Diversity: 0.906
+  19/20 lr111           | Fitness: 42395.32 -> 42395.32 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  20/20 lr209           | Fitness: 27948.27 -> 27948.27 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+
+Test Seed 2/3: 111
+  1/20 lc208           | Fitness: 41942.97 -> 41942.97 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  2/20 lr211           | Fitness: 20852.16 -> 19066.38 | Δ=+1785.78 (+8.6%) | Diversity: 0.938
+  3/20 lc109           | Fitness: 49257.46 -> 49257.46 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  4/20 lc207           | Fitness: 44503.85 -> 44503.85 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  5/20 lr110           | Fitness: 45755.89 -> 45755.89 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  6/20 lr110           | Fitness: 44756.80 -> 44756.80 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  7/20 lc207           | Fitness: 38267.40 -> 38267.40 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  8/20 lc208           | Fitness: 41871.47 -> 41871.47 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  9/20 lr110           | Fitness: 45337.06 -> 43230.68 | Δ=+2106.38 (+4.6%) | Diversity: 0.807
+  10/20 lc207           | Fitness: 39220.28 -> 38416.78 | Δ=+803.50 (+2.0%) | Diversity: 0.880
+  11/20 lc108           | Fitness: 54361.04 -> 48587.74 | Δ=+5773.30 (+10.6%) | Diversity: 0.887
+  12/20 lc208           | Fitness: 39077.34 -> 34214.05 | Δ=+4863.29 (+12.4%) | Diversity: 0.890
+  13/20 lc109           | Fitness: 42334.18 -> 42334.18 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  14/20 lr112           | Fitness: 39706.16 -> 39706.16 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  15/20 lc207           | Fitness: 46582.75 -> 40680.75 | Δ=+5902.00 (+12.7%) | Diversity: 0.869
+  16/20 lc109           | Fitness: 50207.91 -> 50207.91 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  17/20 lc108           | Fitness: 48807.37 -> 48807.37 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  18/20 lc208           | Fitness: 45555.93 -> 45555.93 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  19/20 lr110           | Fitness: 44091.44 -> 43728.35 | Δ=+363.08 (+0.8%) | Diversity: 0.904
+  20/20 lr210           | Fitness: 27388.69 -> 27388.69 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+
+Test Seed 3/3: 222
+  1/20 lc108           | Fitness: 52414.69 -> 48329.12 | Δ=+4085.58 (+7.8%) | Diversity: 0.875
+  2/20 lr111           | Fitness: 47558.53 -> 47151.48 | Δ=+407.05 (+0.9%) | Diversity: 0.930
+  3/20 lc108           | Fitness: 47838.55 -> 45460.50 | Δ=+2378.04 (+5.0%) | Diversity: 0.842
+  4/20 lc207           | Fitness: 50088.81 -> 43999.20 | Δ=+6089.62 (+12.2%) | Diversity: 0.894
+  5/20 lr209           | Fitness: 28618.26 -> 24868.07 | Δ=+3750.19 (+13.1%) | Diversity: 0.890
+  6/20 lr211           | Fitness: 21650.44 -> 18515.53 | Δ=+3134.92 (+14.5%) | Diversity: 0.933
+  7/20 lc207           | Fitness: 42356.27 -> 42356.27 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  8/20 lc207           | Fitness: 41987.24 -> 36629.16 | Δ=+5358.08 (+12.8%) | Diversity: 0.821
+  9/20 lc208           | Fitness: 46267.87 -> 41169.85 | Δ=+5098.02 (+11.0%) | Diversity: 0.930
+  10/20 lc108           | Fitness: 53235.08 -> 53235.08 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  11/20 lr110           | Fitness: 39524.19 -> 39524.19 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  12/20 lc207           | Fitness: 44971.53 -> 40379.42 | Δ=+4592.11 (+10.2%) | Diversity: 0.915
+  13/20 lr111           | Fitness: 41133.86 -> 38975.64 | Δ=+2158.23 (+5.2%) | Diversity: 0.833
+  14/20 lr112           | Fitness: 41751.84 -> 39472.26 | Δ=+2279.59 (+5.5%) | Diversity: 0.839
+  15/20 lr111           | Fitness: 47545.49 -> 47545.49 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  16/20 lr209           | Fitness: 33374.69 -> 33296.32 | Δ= +78.37 (+0.2%) | Diversity: 0.917
+  17/20 lr110           | Fitness: 44143.58 -> 44143.58 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  18/20 lc108           | Fitness: 51903.94 -> 51903.94 | Δ=  +0.00 (+0.0%) | Diversity: 0.000
+  19/20 lc108           | Fitness: 51764.60 -> 48406.70 | Δ=+3357.90 (+6.5%) | Diversity: 0.924
+  20/20 lc109           | Fitness: 50197.77 -> 47034.68 | Δ=+3163.08 (+6.3%) | Diversity: 0.883
+
+================================================================================
+BASELINE SUMMARY
+================================================================================
+Average initial best fitness: 43145.00
+Average final best fitness: 41673.34
+Average improvement: +1471.65 (+3.49%)
+Average final best diversity: 0.415
+Average final mean diversity: 0.415
+
+================================================================================
+RL MODEL EVALUATION
+================================================================================
+
+================================================================================
+Evaluating model: models/rl_mutation_dqn_100_pop1_greedy_hybrid_sparse_42_final.pt
+================================================================================
+Detected: DQN
+Successfully loaded model
+
+Test Seed 1/3: 42
+  1/20 lc108           | Fitness: 54193.83 -> 32438.52 | Δ=+21755.30 (+40.1%) | Diversity: 0.670
+  2/20 lc109           | Fitness: 42686.33 -> 27191.14 | Δ=+15495.19 (+36.3%) | Diversity: 0.707
+  3/20 lr211           | Fitness: 27517.25 -> 15050.70 | Δ=+12466.55 (+45.3%) | Diversity: 0.706
+  4/20 lr111           | Fitness: 48859.45 -> 31880.33 | Δ=+16979.12 (+34.8%) | Diversity: 0.702
+  5/20 lc109           | Fitness: 49365.02 -> 32719.89 | Δ=+16645.13 (+33.7%) | Diversity: 0.681
+  6/20 lr110           | Fitness: 43167.41 -> 24416.62 | Δ=+18750.79 (+43.4%) | Diversity: 0.704
+  7/20 lr110           | Fitness: 44095.95 -> 26920.78 | Δ=+17175.17 (+38.9%) | Diversity: 0.704
+  8/20 lc109           | Fitness: 44787.13 -> 28164.65 | Δ=+16622.48 (+37.1%) | Diversity: 0.592
+  9/20 lr210           | Fitness: 34186.02 -> 20596.97 | Δ=+13589.05 (+39.8%) | Diversity: 0.781
+  10/20 lc207           | Fitness: 44941.02 -> 22973.93 | Δ=+21967.09 (+48.9%) | Diversity: 0.762
+  11/20 lr110           | Fitness: 40926.28 -> 28534.37 | Δ=+12391.92 (+30.3%) | Diversity: 0.615
+  12/20 lc208           | Fitness: 39652.46 -> 25270.19 | Δ=+14382.27 (+36.3%) | Diversity: 0.694
+  13/20 lc208           | Fitness: 50288.91 -> 24511.82 | Δ=+25777.09 (+51.3%) | Diversity: 0.809
+  14/20 lc108           | Fitness: 49418.99 -> 29482.21 | Δ=+19936.78 (+40.3%) | Diversity: 0.684
+  15/20 lc109           | Fitness: 50049.44 -> 31225.03 | Δ=+18824.41 (+37.6%) | Diversity: 0.685
+  16/20 lc109           | Fitness: 40272.14 -> 24146.02 | Δ=+16126.13 (+40.0%) | Diversity: 0.700
+  17/20 lc207           | Fitness: 42118.65 -> 24986.75 | Δ=+17131.91 (+40.7%) | Diversity: 0.777
+  18/20 lc207           | Fitness: 43624.61 -> 24472.23 | Δ=+19152.38 (+43.9%) | Diversity: 0.747
+  19/20 lr111           | Fitness: 42395.32 -> 26054.97 | Δ=+16340.35 (+38.5%) | Diversity: 0.679
+  20/20 lr209           | Fitness: 27948.27 -> 14339.31 | Δ=+13608.96 (+48.7%) | Diversity: 0.813
+
+Test Seed 2/3: 111
+  1/20 lc208           | Fitness: 41942.97 -> 23157.56 | Δ=+18785.41 (+44.8%) | Diversity: 0.798
+  2/20 lr211           | Fitness: 20852.16 -> 11173.57 | Δ=+9678.58 (+46.4%) | Diversity: 0.840
+  3/20 lc109           | Fitness: 49257.46 -> 28908.98 | Δ=+20348.48 (+41.3%) | Diversity: 0.762
+  4/20 lc207           | Fitness: 44503.85 -> 28079.42 | Δ=+16424.43 (+36.9%) | Diversity: 0.698
+  5/20 lr110           | Fitness: 45755.89 -> 31411.08 | Δ=+14344.81 (+31.4%) | Diversity: 0.656
+  6/20 lr110           | Fitness: 44756.80 -> 22052.48 | Δ=+22704.32 (+50.7%) | Diversity: 0.760
+  7/20 lc207           | Fitness: 38267.40 -> 21292.74 | Δ=+16974.66 (+44.4%) | Diversity: 0.839
+  8/20 lc208           | Fitness: 41871.47 -> 21805.06 | Δ=+20066.40 (+47.9%) | Diversity: 0.773
+  9/20 lr110           | Fitness: 45337.06 -> 25734.89 | Δ=+19602.18 (+43.2%) | Diversity: 0.728
+  10/20 lc207           | Fitness: 39220.28 -> 22041.88 | Δ=+17178.41 (+43.8%) | Diversity: 0.749
+  11/20 lc108           | Fitness: 54361.04 -> 29136.83 | Δ=+25224.21 (+46.4%) | Diversity: 0.784
+  12/20 lc208           | Fitness: 39077.34 -> 22148.52 | Δ=+16928.82 (+43.3%) | Diversity: 0.771
+  13/20 lc109           | Fitness: 42334.18 -> 21621.42 | Δ=+20712.76 (+48.9%) | Diversity: 0.714
+  14/20 lr112           | Fitness: 39706.16 -> 22884.54 | Δ=+16821.62 (+42.4%) | Diversity: 0.707
+  15/20 lc207           | Fitness: 46582.75 -> 24244.47 | Δ=+22338.28 (+48.0%) | Diversity: 0.717
+  16/20 lc109           | Fitness: 50207.91 -> 32187.12 | Δ=+18020.79 (+35.9%) | Diversity: 0.644
+  17/20 lc108           | Fitness: 48807.37 -> 29167.65 | Δ=+19639.72 (+40.2%) | Diversity: 0.702
+  18/20 lc208           | Fitness: 45555.93 -> 26192.81 | Δ=+19363.12 (+42.5%) | Diversity: 0.795
+  19/20 lr110           | Fitness: 44091.44 -> 29063.92 | Δ=+15027.51 (+34.1%) | Diversity: 0.709
+  20/20 lr210           | Fitness: 27388.69 -> 17588.57 | Δ=+9800.12 (+35.8%) | Diversity: 0.702
+
+Test Seed 3/3: 222
+  1/20 lc108           | Fitness: 52414.69 -> 27518.11 | Δ=+24896.58 (+47.5%) | Diversity: 0.744
+  2/20 lr111           | Fitness: 47558.53 -> 31852.26 | Δ=+15706.27 (+33.0%) | Diversity: 0.656
+  3/20 lc108           | Fitness: 47838.55 -> 29418.63 | Δ=+18419.92 (+38.5%) | Diversity: 0.676
+  4/20 lc207           | Fitness: 50088.81 -> 25455.97 | Δ=+24632.84 (+49.2%) | Diversity: 0.780
+  5/20 lr209           | Fitness: 28618.26 -> 17399.44 | Δ=+11218.81 (+39.2%) | Diversity: 0.743
+  6/20 lr211           | Fitness: 21650.44 -> 11745.21 | Δ=+9905.23 (+45.8%) | Diversity: 0.786
+  7/20 lc207           | Fitness: 42356.27 -> 25435.56 | Δ=+16920.71 (+39.9%) | Diversity: 0.750
+  8/20 lc207           | Fitness: 41987.24 -> 21047.01 | Δ=+20940.23 (+49.9%) | Diversity: 0.760
+  9/20 lc208           | Fitness: 46267.87 -> 20797.86 | Δ=+25470.01 (+55.0%) | Diversity: 0.794
+  10/20 lc108           | Fitness: 53235.08 -> 30548.84 | Δ=+22686.24 (+42.6%) | Diversity: 0.759
+  11/20 lr110           | Fitness: 39524.19 -> 24610.09 | Δ=+14914.10 (+37.7%) | Diversity: 0.699
+  12/20 lc207           | Fitness: 44971.53 -> 27356.80 | Δ=+17614.74 (+39.2%) | Diversity: 0.831
+  13/20 lr111           | Fitness: 41133.86 -> 27961.52 | Δ=+13172.34 (+32.0%) | Diversity: 0.594
+  14/20 lr112           | Fitness: 41751.84 -> 24147.46 | Δ=+17604.39 (+42.2%) | Diversity: 0.668
+  15/20 lr111           | Fitness: 47545.49 -> 26336.86 | Δ=+21208.63 (+44.6%) | Diversity: 0.686
+  16/20 lr209           | Fitness: 33374.69 -> 18280.42 | Δ=+15094.27 (+45.2%) | Diversity: 0.792
+  17/20 lr110           | Fitness: 44143.58 -> 26655.68 | Δ=+17487.89 (+39.6%) | Diversity: 0.737
+  18/20 lc108           | Fitness: 51903.94 -> 24735.17 | Δ=+27168.78 (+52.3%) | Diversity: 0.773
+  19/20 lc108           | Fitness: 51764.60 -> 34026.13 | Δ=+17738.47 (+34.3%) | Diversity: 0.614
+  20/20 lc109           | Fitness: 50197.77 -> 25860.97 | Δ=+24336.80 (+48.5%) | Diversity: 0.768
+
+================================================================================
+RL MODEL SUMMARY
+================================================================================
+Average initial best fitness: 43145.00
+Average final best fitness: 25107.67
+Average improvement: +18037.33 (+41.84%)
+Average final best diversity: 0.728
+Average final mean diversity: 0.728
+
+Per-Instance Results:
+  lc108           ( 9 tests): Δ=+21940.67 (+42.5%) | Diversity: 0.712
+  lc109           ( 9 tests): Δ=+18570.24 (+39.9%) | Diversity: 0.695
+  lc207           (11 tests): Δ=+19206.88 (+44.1%) | Diversity: 0.765
+  lc208           ( 7 tests): Δ=+20110.45 (+45.9%) | Diversity: 0.776
+  lr110           ( 9 tests): Δ=+16933.19 (+38.8%) | Diversity: 0.701
+  lr111           ( 5 tests): Δ=+16681.34 (+36.6%) | Diversity: 0.663
+  lr112           ( 2 tests): Δ=+17213.00 (+42.3%) | Diversity: 0.688
+  lr209           ( 3 tests): Δ=+13307.35 (+44.4%) | Diversity: 0.783
+  lr210           ( 2 tests): Δ=+11694.58 (+37.8%) | Diversity: 0.741
+  lr211           ( 3 tests): Δ=+10683.46 (+45.8%) | Diversity: 0.777
+
+================================================================================
+COMPARISON: RL MODEL vs NAIVE BASELINE
+================================================================================
+
+Average Final Best Fitness:
+  Baseline: 41673.34
+  RL Model: 25107.67
+  Difference: +16565.68 (RL better by 16565.68)
+
+Average Improvement:
+  Baseline: +1471.65 (+3.49%)
+  RL Model: +18037.33 (+41.84%)
+  Difference: +16565.68 (+38.35%)
+
+Average Final Diversity:
+  Baseline: 0.415
+  RL Model: 0.728
+  Difference: +0.313 (+75.52%)
+
+Win/Loss/Tie (RL vs Baseline):
+  Wins:    60 (100.0%)
+  Losses:   0 (0.0%)
+  Ties:     0 (0.0%)
