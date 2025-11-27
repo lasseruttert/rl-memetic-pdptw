@@ -1,5 +1,3 @@
-"""Example script for training and using RL-based local search."""
-
 import sys
 import os
 import argparse
@@ -7,41 +5,27 @@ import random
 import time
 import numpy as np
 
-
 class TeeLogger:
-    """Logger that writes to both console and file simultaneously."""
-
     def __init__(self, filename, mode='w'):
-        """Initialize TeeLogger.
-
-        Args:
-            filename: Path to log file
-            mode: File open mode ('w' for overwrite, 'a' for append)
-        """
         self.terminal = sys.stdout
         self.log = open(filename, mode, encoding='utf-8')
 
     def write(self, message):
-        """Write message to both terminal and log file."""
         self.terminal.write(message)
         self.log.write(message)
         self.log.flush()  # Ensure immediate write to file
 
     def flush(self):
-        """Flush both terminal and log file."""
         self.terminal.flush()
         self.log.flush()
 
     def close(self):
-        """Close log file."""
         self.log.close()
 
     def __enter__(self):
-        """Context manager entry."""
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
         self.close()
 
 # Add parent directory to path for imports
@@ -58,25 +42,29 @@ from memetic.local_search.naive_local_search import NaiveLocalSearch
 from memetic.local_search.random_local_search import RandomLocalSearch
 from memetic.solution_generators.random_generator import RandomGenerator
 
-# fitness function for initial solution evaluation
 from memetic.fitness.fitness import fitness
 
-# Import operators
 from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.solution_operators.route_elimination import RouteEliminationOperator
 from memetic.solution_operators.flip import FlipOperator
+from memetic.solution_operators.merge import MergeOperator
 from memetic.solution_operators.swap_within import SwapWithinOperator
 from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
 from memetic.solution_operators.shift import ShiftOperator
+from memetic.solution_operators.two_opt import TwoOptOperator
+from memetic.solution_operators.two_opt_star import TwoOptStarOperator
 from memetic.solution_operators.cls_m1 import CLSM1Operator
 from memetic.solution_operators.cls_m2 import CLSM2Operator
 from memetic.solution_operators.cls_m3 import CLSM3Operator
 from memetic.solution_operators.cls_m4 import CLSM4Operator
-from memetic.solution_operators.two_opt import TwoOptOperator
+from memetic.solution_operators.request_shift_within import RequestShiftWithinOperator
+from memetic.solution_operators.node_swap_within import NodeSwapWithinOperator
+
+from config import load_config, create_operators_from_config, TrainingConfiguration
 
 
-def create_operators():
+def create_preset_operators():
     """Create a fresh set of operators with independent state.
 
     Returns:
@@ -91,37 +79,47 @@ def create_operators():
         
         RouteEliminationOperator(),
         
-        # FlipOperator(),
-        # FlipOperator(max_attempts=5),
-        # FlipOperator(single_route=True),
+        FlipOperator(),
+        FlipOperator(max_attempts=5),
+        FlipOperator(single_route=True),
+        
+        MergeOperator(type="random", num_routes=2),
+        MergeOperator(type="random", num_routes=2, reorder=False),
+        
+        MergeOperator(type="min", num_routes=2),
+        MergeOperator(type="min", num_routes=2, reorder=False),
         
         SwapWithinOperator(),
-        # SwapWithinOperator(max_attempts=5),
-        # SwapWithinOperator(single_route=True),
-        # SwapWithinOperator(single_route=True, type="best"),
-        # SwapWithinOperator(single_route=False, type="best"),
+        SwapWithinOperator(max_attempts=5),
+        SwapWithinOperator(single_route=True),
+        SwapWithinOperator(single_route=True, type="best"),
+        SwapWithinOperator(single_route=False, type="best"),
 
         SwapBetweenOperator(),
-        # SwapBetweenOperator(type="best"),
+        SwapBetweenOperator(type="best"),
         
         TransferOperator(),
-        # TransferOperator(single_route=True),
-        # TransferOperator(max_attempts=5,single_route=True),
+        TransferOperator(single_route=True),
+        TransferOperator(max_attempts=5,single_route=True),
 
-        # ShiftOperator(type="random", segment_length=3, max_shift_distance=3, max_attempts=5),
-        # ShiftOperator(type="random", segment_length=2, max_shift_distance=4, max_attempts=5),
-        # ShiftOperator(type="random", segment_length=4, max_shift_distance=2, max_attempts=3),
+        ShiftOperator(type="random", segment_length=3, max_shift_distance=3, max_attempts=5),
+        ShiftOperator(type="random", segment_length=2, max_shift_distance=4, max_attempts=5),
+        ShiftOperator(type="random", segment_length=4, max_shift_distance=2, max_attempts=3),
         ShiftOperator(type="random", segment_length=3, max_shift_distance=5, max_attempts=3),
-        # ShiftOperator(type="best", segment_length=2, max_shift_distance=3),
-        # ShiftOperator(type="best", segment_length=3, max_shift_distance=2),
-        # ShiftOperator(type="random", segment_length=3, max_shift_distance=3, max_attempts=5, single_route=True),
+        ShiftOperator(type="best", segment_length=2, max_shift_distance=3),
+        ShiftOperator(type="best", segment_length=3, max_shift_distance=2),
+        ShiftOperator(type="random", segment_length=3, max_shift_distance=3, max_attempts=5, single_route=True),
 
         TwoOptOperator(),
         
-        # CLSM1Operator(),
-        # CLSM2Operator(),
-        # CLSM3Operator(),
-        # CLSM4Operator()
+        CLSM1Operator(),
+        CLSM2Operator(),
+        CLSM3Operator(),
+        CLSM4Operator(),
+        
+        RequestShiftWithinOperator(),
+        NodeSwapWithinOperator(check_precedence=True),
+        NodeSwapWithinOperator(check_precedence=False),
     ]
 
 
@@ -142,17 +140,14 @@ def create_problem_generator(size: int = 100, categories: list[str] = None, inst
     if categories is None:
         categories = list(instance_manager.CATEGORIES.keys())
 
-    # If instance_subset is provided, use only those instances
     if instance_subset is None:
         available_instances = {cat: instance_manager.CATEGORIES[cat] for cat in categories}
     else:
         available_instances = instance_subset
 
     def generator():
-        # Randomly select category and instance from available subset
         category = random.choice(list(available_instances.keys()))
         instance_name = random.choice(available_instances[category])
-        # print(f"Loading instance: {instance_name} from category: {category}")
         problem = instance_manager.load(instance_name, size)
 
         if return_name:
@@ -255,20 +250,6 @@ def create_validation_set(
     seed: int = 42,
     problem_generator: callable = None
 ):
-    """Create validation set for evaluating RL local search.
-
-    Args:
-        instance_manager: LiLimInstanceManager for loading problems
-        solution_generator: Function that generates initial solutions
-        size: Problem size (100, 200, 400, 600, 1000)
-        mode: "fixed_benchmark" (recommended) or "random_sampled"
-        num_instances: Number of validation instances
-        seed: Random seed for reproducibility
-        problem_generator: Required if mode="random_sampled"
-
-    Returns:
-        List of (problem, initial_solution) tuples
-    """
     validation_set = []
 
     if mode == "fixed_benchmark":
@@ -303,11 +284,6 @@ def create_validation_set(
 
 
 def set_seed(seed: int):
-    """Set random seeds for reproducibility.
-
-    Args:
-        seed: Random seed value
-    """
     random.seed(seed)
     np.random.seed(seed)
 
@@ -317,29 +293,202 @@ def set_seed(seed: int):
         torch.manual_seed(seed)
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
-        # Make PyTorch deterministic (may reduce performance)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
     except ImportError:
         pass
 
 
+def resolve_configuration(args) -> TrainingConfiguration:
+    if args.config is not None:
+        # CONFIG MODE: Load from YAML
+        print(f"Loading configuration from: {args.config}")
+        config = load_config(args.config)
+        print("Configuration loaded successfully (CLI arguments ignored)")
+        return config
+    else:
+        # CLI MODE: Build config from arguments (backward compatible)
+        print("Using CLI arguments (no config file provided)")
+
+        config = TrainingConfiguration()
+
+        # Map CLI args to config structure
+        config.general.seed = args.seed
+        config.general.problem_size = args.problem_size
+        config.general.categories = ['lc1', 'lc2', 'lr1', 'lr2']  
+
+        config.algorithm.type = args.rl_algorithm
+        config.algorithm.acceptance_strategy = "greedy"  
+        config.algorithm.reward_strategy = "binary"  
+        config.algorithm.search_type = "OneShot" 
+
+        config.network.learning_rate = 1e-4  
+        config.network.gamma = 0.90  
+        config.network.hidden_dims = [128, 128, 64]  
+        config.network.use_operator_attention = args.use_operator_attention
+        config.network.disable_operator_features = False  
+        config.network.feature_weights = None  
+        # DQN parameters 
+        config.dqn.epsilon_start = 1.0
+        config.dqn.epsilon_end = 0.05
+        config.dqn.epsilon_decay = 0.9975
+        config.dqn.target_update_interval = 100
+        config.dqn.replay_buffer_capacity = 100000
+        config.dqn.batch_size = 64 if args.rl_algorithm == "dqn" else 2048
+        config.dqn.n_step = 3
+        config.dqn.use_prioritized_replay = True
+        config.dqn.per_alpha = 0.6
+        config.dqn.per_beta_start = 0.4
+
+        # PPO parameters 
+        config.ppo.batch_size = 2048  
+        config.ppo.clip_epsilon = 0.2  
+        config.ppo.entropy_coef = 0.01  
+        config.ppo.num_epochs = 2  
+        config.ppo.num_minibatches = 2  
+        # PPO parameters not in CLI 
+        config.ppo.value_coef = 0.5
+        config.ppo.gae_lambda = 0.95
+        config.ppo.max_grad_norm = 0.5
+        config.ppo.normalize_advantages = True
+
+        # Training parameters
+        config.training.num_episodes = args.num_episodes
+        config.training.max_iterations = 200  
+        config.training.max_no_improvement = 50  
+        config.training.new_instance_interval = 5  
+        config.training.new_solution_interval = 1  
+        config.training.update_interval = 1  
+        config.training.warmup_episodes = 10  
+        config.training.save_interval = 1000 
+        config.training.save_path = "models/rl_local_search"
+        config.training.tensorboard_dir = None  
+        config.training.log_interval = 10  
+        # Environment parameters
+        config.environment.alpha = 10.0  
+        config.environment.beta = 0.0  
+
+        # Validation
+        config.validation.skip_validation = False  
+        config.validation.mode = "fixed_benchmark"  
+        config.validation.num_instances = 10  
+        config.validation.interval = 50  
+        config.validation.seeds = [42, 111, 222, 333, 444]  
+        config.validation.runs_per_seed = 1  
+
+        # Testing
+        config.testing.skip_testing = args.skip_testing
+        config.testing.test_only = args.test_only
+        config.testing.train_ratio = 0.8  
+        config.testing.num_test_problems = 50  
+        config.testing.runs_per_problem = 3  
+        config.testing.deterministic_test_rng = False  
+        config.testing.test_seeds = [42, 422, 100, 200, 300]  
+        config.testing.model_paths = [] 
+
+        # Operators: always use preset in CLI mode
+        config.operators.mode = "preset"
+
+        # Validate and return
+        config.validate()
+        return config
+
+
+def print_config_summary(config: TrainingConfiguration):
+    print("\n" + "="*80)
+    print("CONFIGURATION SUMMARY")
+    print("="*80)
+
+    print(f"\nGeneral:")
+    print(f"  Seed: {config.general.seed}")
+    print(f"  Problem size: {config.general.problem_size}")
+    print(f"  Categories: {', '.join(config.general.categories)}")
+
+    print(f"\nAlgorithm:")
+    print(f"  Type: {config.algorithm.type.upper()}")
+    print(f"  Acceptance strategy: {config.algorithm.acceptance_strategy}")
+    print(f"  Reward strategy: {config.algorithm.reward_strategy}")
+    print(f"  Search type: {config.algorithm.search_type}")
+
+    print(f"\nNetwork:")
+    print(f"  Hidden dims: {config.network.hidden_dims}")
+    print(f"  Learning rate: {config.network.learning_rate}")
+    print(f"  Gamma: {config.network.gamma}")
+    print(f"  Operator attention: {config.network.use_operator_attention}")
+    print(f"  Disable operator features: {config.network.disable_operator_features}")
+    if config.network.feature_weights is not None:
+        num_enabled = sum(config.network.feature_weights)
+        total = len(config.network.feature_weights)
+        print(f"  Feature weights: {num_enabled}/{total} features enabled")
+    else:
+        print(f"  Feature weights: None (all enabled)")
+
+    if config.algorithm.type == "dqn":
+        print(f"\nDQN Parameters:")
+        print(f"  Epsilon: {config.dqn.epsilon_start} -> {config.dqn.epsilon_end} (decay: {config.dqn.epsilon_decay})")
+        print(f"  Batch size: {config.dqn.batch_size}")
+        print(f"  N-step: {config.dqn.n_step}")
+        print(f"  Prioritized replay: {config.dqn.use_prioritized_replay}")
+        if config.dqn.use_prioritized_replay:
+            print(f"  PER alpha: {config.dqn.per_alpha}, beta start: {config.dqn.per_beta_start}")
+    else:
+        print(f"\nPPO Parameters:")
+        print(f"  Batch size: {config.ppo.batch_size}")
+        print(f"  Clip epsilon: {config.ppo.clip_epsilon}")
+        print(f"  Entropy coef: {config.ppo.entropy_coef}")
+        print(f"  Num epochs: {config.ppo.num_epochs}")
+        print(f"  Num minibatches: {config.ppo.num_minibatches}")
+
+    print(f"\nTraining:")
+    print(f"  Episodes: {config.training.num_episodes}")
+    print(f"  Max iterations/episode: {config.training.max_iterations}")
+    print(f"  Max no improvement: {config.training.max_no_improvement}")
+    print(f"  New instance interval: {config.training.new_instance_interval}")
+    print(f"  Save interval: {config.training.save_interval}")
+
+    print(f"\nValidation:")
+    if config.validation.skip_validation:
+        print(f"  DISABLED")
+    else:
+        print(f"  Mode: {config.validation.mode}")
+        print(f"  Instances: {config.validation.num_instances}")
+        print(f"  Interval: {config.validation.interval}")
+        print(f"  Seeds: {config.validation.seeds}")
+
+    print(f"\nTesting:")
+    if config.testing.skip_testing:
+        print(f"  DISABLED")
+    elif config.testing.test_only:
+        print(f"  TEST ONLY MODE")
+    else:
+        print(f"  Train ratio: {config.testing.train_ratio}")
+        print(f"  Test problems: {config.testing.num_test_problems}")
+        print(f"  Runs per problem: {config.testing.runs_per_problem}")
+
+    print(f"\nOperators:")
+    print(f"  Mode: {config.operators.mode}")
+    if config.operators.mode == "custom":
+        print(f"  Custom operators: {len(config.operators.custom_list)}")
+        for i, op_spec in enumerate(config.operators.custom_list):
+            print(f"    [{i}] {op_spec.type}")
+
+    print("="*80 + "\n")
+
+
 def main():
     """Main training script for RL local search."""
 
-    # Parse command-line arguments
-    parser = argparse.ArgumentParser(description="Train RL-based local search with configurable strategies")
+    parser = argparse.ArgumentParser(
+        description="Train RL-based local search with configurable strategies",
+        epilog="Use --config to load all settings from YAML file (overrides all other arguments)"
+    )
+
+    parser.add_argument("--config", type=str, default=None,
+                       help="Path to YAML configuration file (when provided, all other args are ignored)")
+
     parser.add_argument("--rl_algorithm", type=str, default="dqn",
                         choices=["dqn", "ppo"],
                         help="RL algorithm to use: dqn or ppo (default: dqn)")
-    parser.add_argument("--acceptance_strategy", type=str, default="greedy",
-                        choices=["greedy", "always", "epsilon_greedy",
-                                 "simulated_annealing", "late_acceptance", "rising_epsilon_greedy"],
-                        help="Acceptance strategy for local search")
-    parser.add_argument("--reward_strategy", type=str, default="binary",
-                        choices=["binary", "initial_improvement", "old_improvement", "hybrid_improvement",
-                                 "distance_baseline", "log_improvement", "tanh", "component"],
-                        help="Reward strategy for RL agent")
     parser.add_argument("--problem_size", type=int, default=100,
                         choices=[100, 200, 400, 600, 1000],
                         help="Problem size")
@@ -349,71 +498,32 @@ def main():
                         help="Random seed for reproducibility (default: 42)")
     parser.add_argument("--use_operator_attention", action="store_true",
                         help="Enable operator attention mechanism for operator selection")
-    parser.add_argument("--validation_mode", type=str, default="fixed_benchmark",
-                        choices=["fixed_benchmark", "random_sampled"],
-                        help="Validation set mode: fixed_benchmark (reproducible) or random_sampled (faster)")
-    parser.add_argument("--num_validation_instances", type=int, default=10,
-                        help="Number of validation instances (default: 10)")
-    parser.add_argument("--validation_interval", type=int, default=50,
-                        help="Evaluate on validation set every N episodes (default: 50)")
-    parser.add_argument("--validation_seeds", type=int, nargs='+', default=[42, 111, 222, 333, 444],
-                        help="List of base seeds for validation runs (default: [42, 111, 222, 333, 444])")
-    parser.add_argument("--validation_runs_per_seed", type=int, default=1,
-                        help="Number of runs per seed for each validation instance (default: 1)")
-
-    # Train/Test split arguments
-    parser.add_argument("--train_ratio", type=float, default=0.8,
-                        help="Ratio of instances to use for training (0.0-1.0, default: 1.0 = use all for both train/test)")
-    parser.add_argument("--num_test_problems", type=int, default=50,
-                        help="Number of unique test cases (problem + initial solution) per seed (default: 50)")
-    parser.add_argument("--runs_per_problem", type=int, default=3,
-                        help="Number of runs per test case with different RNG seeds (default: 5)")
-    parser.add_argument("--deterministic_test_rng", action="store_true",
-                        help="Use deterministic RNG during testing for reproducible results")
     parser.add_argument("--test_only", action="store_true",
                         help="Skip training and only run testing/evaluation on existing models")
-    parser.add_argument("--skip_validation", action="store_true",
-                        help="Skip validation during training (disables validation set creation)")
     parser.add_argument("--skip_testing", action="store_true",
                         help="Skip testing/evaluation phase after training")
 
-    # PPO-specific arguments
-    parser.add_argument("--ppo_batch_size", type=int, default=2048,
-                        help="PPO batch size - steps to accumulate before update (default: 2048)")
-    parser.add_argument("--ppo_clip_epsilon", type=float, default=0.2,
-                        help="PPO clipping parameter (default: 0.2)")
-    parser.add_argument("--ppo_entropy_coef", type=float, default=0.01,
-                        help="PPO entropy coefficient (default: 0.01)")
-    parser.add_argument("--ppo_num_epochs", type=int, default=2,
-                        help="PPO number of update epochs per trajectory (default: 2)")
-    parser.add_argument("--ppo_num_minibatches", type=int, default=2,
-                        help="PPO number of minibatches per epoch (default: 2)")
-
     args = parser.parse_args()
 
-    # Set random seed if provided
-    if args.seed is not None:
-        print(f"Setting random seed to {args.seed}")
-        set_seed(args.seed)
+    config = resolve_configuration(args)
 
-    # Configuration
-    PROBLEM_SIZE = args.problem_size
-    CATEGORIES = ['lc1', 'lc2', 'lr1', 'lr2']
-    RL_ALGORITHM = args.rl_algorithm
-    ACCEPTANCE_STRATEGY = args.acceptance_strategy
-    REWARD_STRATEGY = args.reward_strategy
-    SEED = args.seed
-    USE_OPERATOR_ATTENTION = args.use_operator_attention
-    seed_suffix = f"_seed{SEED}" if SEED is not None else ""
-    attention_suffix = "_attention" if USE_OPERATOR_ATTENTION else ""
-    RUN_NAME = f"rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}{seed_suffix}_{int(time.time())}"
+    if config.general.seed is not None:
+        print(f"Setting random seed to {config.general.seed}")
+        set_seed(config.general.seed)
+
+    # Generate run name from config
+    attention_suffix = "_attention" if config.network.use_operator_attention else ""
+    seed_suffix = f"_seed{config.general.seed}" if config.general.seed is not None else ""
+    custom_suffix = f"_{config.general.run_name_suffix}" if config.general.run_name_suffix else ""
+    RUN_NAME = (f"rl_local_search_{config.algorithm.type}_{config.general.problem_size}_"
+                f"{config.algorithm.acceptance_strategy}_{config.algorithm.reward_strategy}"
+                f"{attention_suffix}{seed_suffix}{custom_suffix}_{int(time.time())}")
 
     # Setup logging to file
     log_dir = "logs"
     os.makedirs(log_dir, exist_ok=True)
     log_filename = os.path.join(log_dir, f"training_{RUN_NAME}.log")
 
-    # Redirect stdout and stderr to both console and log file
     tee_logger = TeeLogger(log_filename)
     sys.stdout = tee_logger
     sys.stderr = tee_logger
@@ -421,133 +531,139 @@ def main():
     print(f"Logging to: {log_filename}")
     print("=" * 80)
 
-    # Validate argument combinations
-    if args.test_only and args.skip_testing:
+    print_config_summary(config)
+
+    if config.testing.test_only and config.testing.skip_testing:
         print("Error: Cannot use --test_only and --skip_testing together")
-        print("  --test_only means 'skip training, run testing only'")
-        print("  --skip_testing means 'skip testing phase'")
-        print("  These options are mutually exclusive.")
         sys.exit(1)
 
-    if args.test_only:
+    # Create operators
+    if config.operators.mode == "preset":
+        operators = create_preset_operators()
+        print(f"Using preset operators ({len(operators)} operators)")
+    else:
+        operators = create_operators_from_config(config.operators.custom_list)
+        print(f"Using custom operators ({len(operators)} operators)")
+        for i, op in enumerate(operators):
+            print(f"  [{i}] {op.__class__.__name__}")
+
+    if config.testing.test_only:
         print("\n*** TEST ONLY MODE - Skipping training ***\n")
     else:
-        # Initialize RL local search with fresh operators
-        # Use different batch sizes for DQN (64) vs PPO (2048)
-        batch_size = 64 if RL_ALGORITHM == "dqn" else args.ppo_batch_size
+        batch_size = config.dqn.batch_size if config.algorithm.type == "dqn" else config.ppo.batch_size
 
         rl_local_search = RLLocalSearch(
-            operators=create_operators(),
-            rl_algorithm=RL_ALGORITHM,
-            hidden_dims=[128, 128, 64],
-            learning_rate=1e-4,
-            gamma=0.90,
+            operators=operators,
+            rl_algorithm=config.algorithm.type,
+            hidden_dims=config.network.hidden_dims,
+            learning_rate=config.network.learning_rate,
+            gamma=config.network.gamma,
             # DQN-specific parameters
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            replay_buffer_capacity=100000,
+            epsilon_start=config.dqn.epsilon_start,
+            epsilon_end=config.dqn.epsilon_end,
+            epsilon_decay=config.dqn.epsilon_decay,
+            target_update_interval=config.dqn.target_update_interval,
+            replay_buffer_capacity=config.dqn.replay_buffer_capacity,
             batch_size=batch_size,
-            n_step=3,
-            use_prioritized_replay=True,
-            per_alpha=0.6,
-            per_beta_start=0.4,
+            n_step=config.dqn.n_step,
+            use_prioritized_replay=config.dqn.use_prioritized_replay,
+            per_alpha=config.dqn.per_alpha,
+            per_beta_start=config.dqn.per_beta_start,
             # PPO-specific parameters
-            ppo_clip_epsilon=args.ppo_clip_epsilon,
-            ppo_entropy_coef=args.ppo_entropy_coef,
-            ppo_num_epochs=args.ppo_num_epochs,
-            ppo_num_minibatches=args.ppo_num_minibatches,
+            ppo_clip_epsilon=config.ppo.clip_epsilon,
+            ppo_entropy_coef=config.ppo.entropy_coef,
+            ppo_num_epochs=config.ppo.num_epochs,
+            ppo_num_minibatches=config.ppo.num_minibatches,
             # Common parameters
-            alpha=10.0,
-            beta=0.0,
-            acceptance_strategy=ACCEPTANCE_STRATEGY,
-            reward_strategy=REWARD_STRATEGY,
-            max_iterations=200,
-            max_no_improvement=50,
-            use_operator_attention=USE_OPERATOR_ATTENTION,
+            alpha=config.environment.alpha,
+            beta=config.environment.beta,
+            acceptance_strategy=config.algorithm.acceptance_strategy,
+            reward_strategy=config.algorithm.reward_strategy,
+            max_iterations=config.training.max_iterations,
+            max_no_improvement=config.training.max_no_improvement,
+            use_operator_attention=config.network.use_operator_attention,
+            disable_operator_features=config.network.disable_operator_features,
+            feature_weights=np.array(config.network.feature_weights) if config.network.feature_weights is not None else None,
             device="cuda",
             verbose=True
         )
 
     # Create train/test split
     train_instances, test_instances = split_instances_by_ratio(
-        categories=CATEGORIES,
-        train_ratio=args.train_ratio
+        categories=config.general.categories,
+        train_ratio=config.testing.train_ratio
     )
 
     # Log the train/test split
-    print(f"\nTrain/Test Split (ratio={args.train_ratio}):")
-    for category in CATEGORIES:
+    print(f"\nTrain/Test Split (ratio={config.testing.train_ratio}):")
+    for category in config.general.categories:
         print(f"  {category}:")
         print(f"    Train ({len(train_instances[category])}): {train_instances[category]}")
         print(f"    Test  ({len(test_instances[category])}): {test_instances[category]}")
     print()
 
-    # Create problem and solution generators
-    # Training uses only train_instances
     problem_generator = create_problem_generator(
-        size=PROBLEM_SIZE,
-        categories=CATEGORIES,
+        size=config.general.problem_size,
+        categories=config.general.categories,
         instance_subset=train_instances
     )
 
-    # Testing uses only test_instances and returns instance names for tracking
     test_problem_generator = create_problem_generator(
-        size=PROBLEM_SIZE,
-        categories=CATEGORIES,
+        size=config.general.problem_size,
+        categories=config.general.categories,
         instance_subset=test_instances,
         return_name=True
     )
 
-    if not args.test_only:
-        # Create validation set (unless disabled)
-        if not args.skip_validation:
+    if not config.testing.test_only:
+        if not config.validation.skip_validation:
             instance_manager = LiLimInstanceManager()
             validation_set = create_validation_set(
                 instance_manager=instance_manager,
                 solution_generator=create_solution_generator,
-                size=PROBLEM_SIZE,
-                mode=args.validation_mode,
-                num_instances=args.num_validation_instances,
-                seed=SEED if SEED is not None else 42,
+                size=config.general.problem_size,
+                mode=config.validation.mode,
+                num_instances=config.validation.num_instances,
+                seed=config.general.seed if config.general.seed is not None else 42,
                 problem_generator=problem_generator
             )
 
-            total_validation_runs = len(args.validation_seeds) * args.validation_runs_per_seed
-            print(f"\nValidation Set:")
-            print(f"  Mode: {args.validation_mode}")
-            print(f"  Instances: {len(validation_set)}")
-            print(f"  Seeds: {args.validation_seeds}")
-            print(f"  Runs per seed: {args.validation_runs_per_seed}")
-            print(f"  Total runs per instance: {total_validation_runs}")
-            print(f"  Interval: {args.validation_interval} episodes\n")
+            total_validation_runs = len(config.validation.seeds) * config.validation.runs_per_seed
         else:
             validation_set = None
-            print(f"\nValidation: DISABLED (--skip_validation flag set)\n")
 
         # Train the RL agent
-        print(f"Starting RL Local Search Training on size {PROBLEM_SIZE} instances...")
-        print(f"Algorithm: {RL_ALGORITHM.upper()}")
-        print(f"Categories: {CATEGORIES}")
-        print(f"Operator Attention: {'ENABLED' if USE_OPERATOR_ATTENTION else 'DISABLED'}")
+        print(f"Starting RL Local Search Training on size {config.general.problem_size} instances...")
+
+        # Auto-generate save path and tensorboard dir
+        save_path = (f"{config.training.save_path}_{config.algorithm.type}_{config.general.problem_size}_"
+                    f"{config.algorithm.acceptance_strategy}_{config.algorithm.reward_strategy}"
+                    f"{attention_suffix}_{config.general.seed}_{config.general.run_name_suffix}")
+
+        # Auto-generate tensorboard subdirectory with run name
+        if config.training.tensorboard_dir:
+            base_dir = config.training.tensorboard_dir.rstrip('/')
+            tensorboard_dir = f"{base_dir}/{RUN_NAME}"
+        else:
+            # Default: use runs/ as base directory
+            tensorboard_dir = f"runs/{RUN_NAME}"
 
         training_history = rl_local_search.train(
             problem_generator=problem_generator,
             initial_solution_generator=create_solution_generator,
-            num_episodes=args.num_episodes,
-            new_instance_interval=5,
-            new_solution_interval=1,
-            update_interval=1,
-            warmup_episodes=10,
-            save_interval=1000,
-            save_path=f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_o",
-            tensorboard_dir=f"runs/{RUN_NAME}",
-            seed=SEED,
+            num_episodes=config.training.num_episodes,
+            new_instance_interval=config.training.new_instance_interval,
+            new_solution_interval=config.training.new_solution_interval,
+            update_interval=config.training.update_interval,
+            warmup_episodes=config.training.warmup_episodes,
+            save_interval=config.training.save_interval,
+            save_path=save_path,
+            tensorboard_dir=tensorboard_dir,
+            seed=config.general.seed,
             validation_set=validation_set,
-            validation_interval=args.validation_interval,
-            validation_seeds=args.validation_seeds,
-            validation_runs_per_seed=args.validation_runs_per_seed
+            validation_interval=config.validation.interval,
+            validation_seeds=config.validation.seeds,
+            validation_runs_per_seed=config.validation.runs_per_seed
         )
 
         print("\nTraining completed!")
@@ -556,36 +672,51 @@ def main():
     else:
         print("\nStarting evaluation on test instances...")
 
-    # Skip testing if requested
-    if args.skip_testing:
-        print("\n" + "="*80)
-        print("TESTING PHASE: SKIPPED (--skip_testing flag set)")
-        print("="*80)
-        print("\nTraining completed. Exiting without testing/evaluation.")
+    if config.testing.skip_testing:
         return
 
     # Create baseline methods with independent operator instances
-    adaptive_local_search = AdaptiveLocalSearch(operators=create_operators(), max_no_improvement=50, max_iterations=200)
+    adaptive_local_search = AdaptiveLocalSearch(
+        operators=create_preset_operators(),
+        max_no_improvement=config.training.max_no_improvement,
+        max_iterations=config.training.max_iterations
+    )
 
-    naive_local_search = NaiveLocalSearch(operators=create_operators(), max_no_improvement=50, max_iterations=200, first_improvement=True, random_operator_order=True)
+    naive_local_search = NaiveLocalSearch(
+        operators=create_preset_operators(),
+        max_no_improvement=config.training.max_no_improvement,
+        max_iterations=config.training.max_iterations,
+        first_improvement=True,
+        random_operator_order=True
+    )
 
-    naive_with_best_local_search = NaiveLocalSearch(operators=create_operators(), max_no_improvement=50, max_iterations=200, first_improvement=False)
+    naive_with_best_local_search = NaiveLocalSearch(
+        operators=create_preset_operators(),
+        max_no_improvement=config.training.max_no_improvement,
+        max_iterations=config.training.max_iterations,
+        first_improvement=False
+    )
 
-    random_local_search = RandomLocalSearch(operators=create_operators(), max_no_improvement=50, max_iterations=200)
+    random_local_search = RandomLocalSearch(
+        operators=create_preset_operators(),
+        max_no_improvement=config.training.max_no_improvement,
+        max_iterations=config.training.max_iterations
+    )
 
-    # You can provide up to 6 different RL model paths to evaluate here.
-    RL_MODEL_PATHS = [
-        # f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_422.pt",
-        # f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_42.pt",
-        # f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}_final_100.pt",
-        f"models/rl_local_search_{RL_ALGORITHM}_{PROBLEM_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{attention_suffix}_{SEED}_o_final.pt",
-    ]
+    # Configure RL model paths for evaluation
+    if config.testing.model_paths:
+        # Use paths from config
+        RL_MODEL_PATHS = config.testing.model_paths
+    else:
+        # Auto-generate path for just-trained model
+        RL_MODEL_PATHS = [
+            f"models/rl_local_search_{config.algorithm.type}_{config.general.problem_size}_"
+            f"{config.algorithm.acceptance_strategy}_{config.algorithm.reward_strategy}"
+            f"{attention_suffix}_{config.general.seed}_o_final.pt",
+        ]
 
-    # Configure seeds for testing
-    TEST_SEEDS = [42, 422, 100, 200, 300]
-    # Total number of test evaluations = num_test_problems * runs_per_problem per seed
+    TEST_SEEDS = config.testing.test_seeds
 
-    # Build RLLocalSearch instances for each provided path and try to load them.
     rl_models = []
     model_names = []
     for path in RL_MODEL_PATHS:
@@ -594,17 +725,13 @@ def main():
 
         # Auto-detect architecture from checkpoint
         try:
-            # Detect algorithm type (DQN or PPO)
             model_is_ppo = detect_ppo_from_checkpoint(path)
             model_algorithm = "ppo" if model_is_ppo else "dqn"
 
-            # Detect attention mechanism (only for DQN models)
             if not model_is_ppo:
                 model_uses_attention = detect_attention_from_checkpoint(path)
             else:
-                # For PPO, we need to check the network architecture
-                # For now, assume same as training configuration
-                model_uses_attention = USE_OPERATOR_ATTENTION
+                model_uses_attention = config.network.use_operator_attention
 
             arch_str = f"{model_algorithm.upper()}, {'with' if model_uses_attention else 'without'} attention"
             print(f"Detected model architecture ({arch_str}): {path}")
@@ -614,76 +741,82 @@ def main():
 
         # OneShot model (same architecture as saved model)
         model_oneshot = RLLocalSearch(
-            operators=create_operators(),
+            operators=create_preset_operators(),
             rl_algorithm=model_algorithm,
-            hidden_dims=[128, 128, 64],
-            learning_rate=1e-4,
-            gamma=0.99,
+            hidden_dims=config.network.hidden_dims,
+            learning_rate=config.network.learning_rate,
+            gamma=config.network.gamma,
             epsilon_start=1.0,
             epsilon_end=0.05,
             epsilon_decay=0.995,
             target_update_interval=100,
-            alpha=10.0,
-            beta=0.0,
+            alpha=config.environment.alpha,
+            beta=config.environment.beta,
             acceptance_strategy="greedy",
             type="OneShot",
-            max_iterations=200,
-            max_no_improvement=50,
+            max_iterations=config.training.max_iterations,
+            max_no_improvement=config.training.max_no_improvement,
             replay_buffer_capacity=100000,
             batch_size=64,
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=model_uses_attention,
+            disable_operator_features=config.network.disable_operator_features,
+            feature_weights=np.array(config.network.feature_weights) if config.network.feature_weights is not None else None,
             device="cuda",
             verbose=False
         )
         # Roulette model (probabilistic sampling based on Q-values/policy logits)
         model_roulette = RLLocalSearch(
-            operators=create_operators(),
+            operators=create_preset_operators(),
             rl_algorithm=model_algorithm,
-            hidden_dims=[128, 128, 64],
-            learning_rate=1e-4,
-            gamma=0.99,
+            hidden_dims=config.network.hidden_dims,
+            learning_rate=config.network.learning_rate,
+            gamma=config.network.gamma,
             epsilon_start=1.0,
             epsilon_end=0.05,
             epsilon_decay=0.995,
             target_update_interval=100,
-            alpha=10.0,
-            beta=0.0,
+            alpha=config.environment.alpha,
+            beta=config.environment.beta,
             acceptance_strategy="greedy",
             type="Roulette",
-            max_iterations=200,
-            max_no_improvement=50,
+            max_iterations=config.training.max_iterations,
+            max_no_improvement=config.training.max_no_improvement,
             replay_buffer_capacity=100000,
             batch_size=64,
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=model_uses_attention,
+            disable_operator_features=config.network.disable_operator_features,
+            feature_weights=np.array(config.network.feature_weights) if config.network.feature_weights is not None else None,
             device="cuda",
             verbose=False
         )
         # Ranking model (strict Q-value/policy order, best first)
         model_ranking = RLLocalSearch(
-            operators=create_operators(),
+            operators=create_preset_operators(),
             rl_algorithm=model_algorithm,
-            hidden_dims=[128, 128, 64],
-            learning_rate=1e-4,
-            gamma=0.99,
+            hidden_dims=config.network.hidden_dims,
+            learning_rate=config.network.learning_rate,
+            gamma=config.network.gamma,
             epsilon_start=1.0,
             epsilon_end=0.05,
             epsilon_decay=0.995,
             target_update_interval=100,
-            alpha=10.0,
-            beta=0.0,
+            alpha=config.environment.alpha,
+            beta=config.environment.beta,
             acceptance_strategy="greedy",
             type="Ranking",
-            max_iterations=200,
-            max_no_improvement=50,
+            max_iterations=config.training.max_iterations,
+            max_no_improvement=config.training.max_no_improvement,
             replay_buffer_capacity=100000,
             batch_size=64,
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=model_uses_attention,
+            disable_operator_features=config.network.disable_operator_features,
+            feature_weights=np.array(config.network.feature_weights) if config.network.feature_weights is not None else None,
             device="cuda",
             verbose=False
         )
@@ -713,10 +846,10 @@ def main():
     print("\n--- Comparing RL models vs Naive/Random Local Search ---")
     print(f"Testing Configuration:")
     print(f"  Seeds: {TEST_SEEDS}")
-    print(f"  Test problems per seed: {args.num_test_problems}")
-    print(f"  Runs per problem: {args.runs_per_problem}")
-    print(f"  Total evaluations per seed: {args.num_test_problems * args.runs_per_problem}")
-    print(f"  Deterministic RNG: {args.deterministic_test_rng}")
+    print(f"  Test problems per seed: {config.testing.num_test_problems}")
+    print(f"  Runs per problem: {config.testing.runs_per_problem}")
+    print(f"  Total evaluations per seed: {config.testing.num_test_problems * config.testing.runs_per_problem}")
+    print(f"  Deterministic RNG: {config.testing.deterministic_test_rng}")
     print()
 
     for seed_idx, test_seed in enumerate(TEST_SEEDS):
@@ -725,9 +858,9 @@ def main():
         print(f"{'='*80}")
 
         # Generate test cases (problem + initial solution pairs) upfront for this seed
-        print(f"\nGenerating {args.num_test_problems} test cases...")
+        print(f"\nGenerating {config.testing.num_test_problems} test cases...")
         test_cases = []
-        for case_idx in range(args.num_test_problems):
+        for case_idx in range(config.testing.num_test_problems):
             set_seed(test_seed + case_idx)
             test_problem, instance_name = test_problem_generator()
             initial_solution = create_solution_generator(test_problem)
@@ -736,7 +869,7 @@ def main():
 
         # Run each test case multiple times
         for case_idx, (test_problem, initial_solution, initial_fitness, instance_name) in enumerate(test_cases):
-            print(f"\nTest Case {case_idx+1}/{args.num_test_problems} - Instance: {instance_name}")
+            print(f"\nTest Case {case_idx+1}/{config.testing.num_test_problems} - Instance: {instance_name}")
             print(f"  Initial fitness: {initial_fitness:.2f}")
 
             # Initialize instance tracking if first time seeing this instance
@@ -749,9 +882,9 @@ def main():
                     'random': []
                 }
 
-            for run_idx in range(args.runs_per_problem):
-                if args.runs_per_problem > 1:
-                    print(f"  Run {run_idx+1}/{args.runs_per_problem}")
+            for run_idx in range(config.testing.runs_per_problem):
+                if config.testing.runs_per_problem > 1:
+                    print(f"  Run {run_idx+1}/{config.testing.runs_per_problem}")
 
                 # Different RNG seed for each run
                 run_seed = test_seed + case_idx * 1000 + run_idx
@@ -766,14 +899,14 @@ def main():
                             problem=test_problem,
                             solution=rl_solution,
                             epsilon=0.0,
-                            deterministic_rng=args.deterministic_test_rng,
+                            deterministic_rng=config.testing.deterministic_test_rng,
                             base_seed=run_seed
                         )
                     except Exception as e:
                         print(f"    Model {model_names[midx]} failed: {e}")
                         rl_best_fitness = float('inf')
                     rl_time = time.time() - t0
-                    if args.runs_per_problem > 1:
+                    if config.testing.runs_per_problem > 1:
                         print(f"    {model_names[midx]}: {rl_best_fitness:.2f} (time: {rl_time:.2f}s)")
                     else:
                         print(f"  {model_names[midx]}: {rl_best_fitness:.2f} (time: {rl_time:.2f}s)")
@@ -788,11 +921,11 @@ def main():
                 adaptive_best_solution, adaptive_best_fitness = adaptive_local_search.search(
                     problem=test_problem,
                     solution=adaptive_solution,
-                    deterministic_rng=args.deterministic_test_rng,
+                    deterministic_rng=config.testing.deterministic_test_rng,
                     base_seed=run_seed
                 )
                 adaptive_time = time.time() - t0
-                if args.runs_per_problem > 1:
+                if config.testing.runs_per_problem > 1:
                     print(f"    Adaptive: {adaptive_best_fitness:.2f} (time: {adaptive_time:.2f}s)")
                 else:
                     print(f"  Adaptive: {adaptive_best_fitness:.2f} (time: {adaptive_time:.2f}s)")
@@ -807,11 +940,11 @@ def main():
                 naive_best_solution, naive_best_fitness = naive_local_search.search(
                     problem=test_problem,
                     solution=naive_solution,
-                    deterministic_rng=args.deterministic_test_rng,
+                    deterministic_rng=config.testing.deterministic_test_rng,
                     base_seed=run_seed
                 )
                 naive_time = time.time() - t0
-                if args.runs_per_problem > 1:
+                if config.testing.runs_per_problem > 1:
                     print(f"    Naive: {naive_best_fitness:.2f} (time: {naive_time:.2f}s)")
                 else:
                     print(f"  Naive: {naive_best_fitness:.2f} (time: {naive_time:.2f}s)")
@@ -826,11 +959,11 @@ def main():
                 naive_with_best_best_solution, naive_with_best_best_fitness = naive_with_best_local_search.search(
                     problem=test_problem,
                     solution=naive_with_best_solution,
-                    deterministic_rng=args.deterministic_test_rng,
+                    deterministic_rng=config.testing.deterministic_test_rng,
                     base_seed=run_seed
                 )
                 naive_with_best_time = time.time() - t0
-                if args.runs_per_problem > 1:
+                if config.testing.runs_per_problem > 1:
                     print(f"    Naive (best): {naive_with_best_best_fitness:.2f} (time: {naive_with_best_time:.2f}s)")
                 else:
                     print(f"  Naive (best): {naive_with_best_best_fitness:.2f} (time: {naive_with_best_time:.2f}s)")
@@ -845,11 +978,11 @@ def main():
                 random_best_solution, random_best_fitness = random_local_search.search(
                     problem=test_problem,
                     solution=random_solution,
-                    deterministic_rng=args.deterministic_test_rng,
+                    deterministic_rng=config.testing.deterministic_test_rng,
                     base_seed=run_seed
                 )
                 random_time = time.time() - t0
-                if args.runs_per_problem > 1:
+                if config.testing.runs_per_problem > 1:
                     print(f"    Random: {random_best_fitness:.2f} (time: {random_time:.2f}s)")
                 else:
                     print(f"  Random: {random_best_fitness:.2f} (time: {random_time:.2f}s)")
@@ -857,8 +990,7 @@ def main():
                     (initial_fitness, random_best_fitness, random_time, case_idx, run_idx)
                 )
 
-        # Print brief summary for this seed
-        total_evals = args.num_test_problems * args.runs_per_problem
+        total_evals = config.testing.num_test_problems * config.testing.runs_per_problem
         print(f"\n--- Completed Seed {test_seed}: {total_evals} evaluations across {len(test_cases)} test cases ---")
 
     # Per-instance summary
@@ -874,7 +1006,7 @@ def main():
             num_tests = len(results['adaptive'])
             # Count unique case indices to get number of unique test cases
             unique_cases = len(set(r[3] for r in results['adaptive']))
-            runs_per_case = args.runs_per_problem
+            runs_per_case = config.testing.runs_per_problem
         else:
             num_tests = 0
             unique_cases = 0
@@ -931,7 +1063,6 @@ def main():
 
                 print(f"    {method_name:45s}: {avg_best:.2f} ± {std_best:.2f} (within: {avg_within_std:.2f}, Δ={avg_improvement:+.2f})")
         else:
-            # Simpler output for single runs
             print(f"\n  Method Performance (mean ± std):")
 
             for midx, name in enumerate(model_names):
@@ -1012,7 +1143,6 @@ if __name__ == "__main__":
         traceback.print_exc()
         sys.exit(1)
     finally:
-        # Restore original stdout/stderr and close log file
         if hasattr(sys.stdout, 'close'):
             sys.stdout.close()
         sys.stdout = sys.__stdout__

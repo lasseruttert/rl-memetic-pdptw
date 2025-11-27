@@ -54,6 +54,14 @@ class DQNNetwork(nn.Module):
                 raise ValueError("When use_operator_attention=True, must provide solution_feature_dim, "
                                  "operator_feature_dim_per_op, and num_operators")
 
+            # Check that operator features actually exist
+            if operator_feature_dim_per_op == 0:
+                raise ValueError(
+                    "Cannot use operator attention when operator_feature_dim_per_op=0. "
+                    "This typically means operator features are disabled. "
+                    "Set use_operator_attention=False in RLLocalSearch initialization."
+                )
+
         # Build architecture based on attention flag
         if not use_operator_attention:
             # Shared feature extraction layers

@@ -70,6 +70,8 @@ class RLLocalSearch(BaseLocalSearch):
         max_iterations: int = 100,
         max_no_improvement: Optional[int] = None,
         use_operator_attention: bool = False,
+        disable_operator_features: bool = False,
+        feature_weights: Optional[np.ndarray] = None,
         device: str = "cuda",
         verbose: bool = False,
         tracking: bool = False
@@ -115,6 +117,8 @@ class RLLocalSearch(BaseLocalSearch):
                 max_iterations: Maximum iterations for both training episodes and inference
                 max_no_improvement: Early stopping after N steps without improvement (None to disable)
                 use_operator_attention: Whether to use operator attention mechanism
+                disable_operator_features: If True, exclude all operator features from state
+                feature_weights: Optional binary mask (0/1) for individual feature control
                 device: Device for training ("cuda" or "cpu")
                 verbose: Whether to print training progress
         """
@@ -143,6 +147,12 @@ class RLLocalSearch(BaseLocalSearch):
         if self.type in ["Ranking", "Roulette"] and self.acceptance_strategy != "greedy":
             raise ValueError(f"{self.type} type requires greedy acceptance strategy")
 
+        # Auto-disable attention when operator features are disabled
+        if disable_operator_features and use_operator_attention:
+            if verbose:
+                print("Warning: Disabling attention mechanism (operator features disabled)")
+            use_operator_attention = False
+
         # Environment
         self.env = LocalSearchEnv(
             operators=operators,
@@ -150,7 +160,9 @@ class RLLocalSearch(BaseLocalSearch):
             acceptance_strategy=acceptance_strategy,
             reward_strategy=reward_strategy,
             max_steps=max_iterations,
-            max_no_improvement=max_no_improvement
+            max_no_improvement=max_no_improvement,
+            disable_operator_features=disable_operator_features,
+            feature_weights=feature_weights
         )
 
         # Agent initialization (DQN or PPO)
@@ -246,6 +258,13 @@ class RLLocalSearch(BaseLocalSearch):
                 print(f"  - Number of operators: {action_dim}")
             else:
                 print(f"Operator Attention: DISABLED (standard concatenation)")
+
+            # Feature control logging
+            if disable_operator_features:
+                print(f"Feature Control: Operator features DISABLED (state_dim={state_dim})")
+            elif feature_weights is not None:
+                num_enabled = int(np.sum(feature_weights))
+                print(f"Feature Control: {num_enabled}/{len(feature_weights)} features enabled")
 
         # Training mode flag
         self.training_mode = False
@@ -1180,6 +1199,11 @@ class RLLocalSearch(BaseLocalSearch):
                 'max_steps': self.env.max_steps,
                 'max_no_improvement': self.env.max_no_improvement,
             },
+            # Feature control config
+            'feature_control': {
+                'disable_operator_features': self.env.disable_operator_features,
+                'feature_weights': self.env.feature_weights.tolist() if self.env.feature_weights is not None else None,
+            },
             # Agent config (algorithm-agnostic)
             'agent_config': {
                 'state_dim': self.agent.state_dim,
@@ -1300,6 +1324,15 @@ class RLLocalSearch(BaseLocalSearch):
 
         if config['use_operator_attention'] != self.use_operator_attention:
             warnings.append(f"Attention mechanism mismatch: current={self.use_operator_attention}, saved={config['use_operator_attention']}")
+
+        # Check feature control compatibility
+        if 'feature_control' in config:
+            saved_disable = config['feature_control']['disable_operator_features']
+            if saved_disable != self.env.disable_operator_features:
+                warnings.append(
+                    f"disable_operator_features mismatch: current={self.env.disable_operator_features}, "
+                    f"saved={saved_disable}"
+                )
 
         if warnings and self.verbose:
             print("\nWARNINGS - Configuration mismatches detected:")
