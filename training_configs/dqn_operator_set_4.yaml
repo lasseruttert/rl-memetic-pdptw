@@ -1,0 +1,135 @@
+general:
+  seed: 42
+  problem_size: 100
+  categories: [lc1, lc2, lr1, lr2]
+  run_name_suffix: set4
+
+algorithm:
+  type: dqn
+  acceptance_strategy: greedy
+  reward_strategy: binary
+  search_type: OneShot
+  acceptance_params:
+    epsilon_value: 0.1
+    initial_temp: 1000.0
+    temp_decay: 0.995
+    late_acceptance_length: 20
+    rising_epsilon_start: 0.05
+    rising_epsilon_end: 0.5
+
+network:
+  hidden_dims: [128, 128, 64]
+  learning_rate: 0.0001
+  gamma: 0.90
+  dropout_rate: 0.05
+  use_operator_attention: False
+  disable_operator_features: False  
+  feature_weights: null  
+
+
+dqn:
+  epsilon_start: 1.0
+  epsilon_end: 0.05
+  epsilon_decay: 0.9975
+  target_update_interval: 100
+  replay_buffer_capacity: 100000
+  batch_size: 64
+  n_step: 3
+  use_prioritized_replay: True
+  per_alpha: 0.6
+  per_beta_start: 0.4
+
+ppo:
+  batch_size: 2048
+  clip_epsilon: 0.2
+  entropy_coef: 0.01
+  value_coef: 0.5
+  gae_lambda: 0.95
+  max_grad_norm: 0.5
+  num_epochs: 2
+  num_minibatches: 2
+  normalize_advantages: True
+
+training:
+  num_episodes: 1000
+  max_iterations: 200
+  max_no_improvement: 50
+  new_instance_interval: 5
+  new_solution_interval: 1
+  update_interval: 1
+  warmup_episodes: 10
+  log_interval: 10
+  save_interval: 1000
+  save_path: models/rl_local_search
+  tensorboard_dir: runs
+
+environment:
+  alpha: 10.0
+  beta: 0.0
+
+validation:
+  skip_validation: True
+
+testing:
+  skip_testing: False
+  test_only: False
+  train_ratio: 0.8
+  num_test_problems: 50
+  runs_per_problem: 3
+  deterministic_test_rng: False
+  test_seeds: [42, 422, 100, 200, 300]
+  model_paths: []
+
+operators:
+  mode: custom
+  custom_list:
+    - type: RouteElimination
+      params: {}
+
+    - type: Flip
+      params: {}
+
+    - type: Merge
+      params: 
+        type: min
+
+    - type: Merge
+      params: 
+        type: random
+
+    - type: TwoOpt
+      params: {}
+
+    - type: SwapWithin
+      params: {}
+
+    - type: SwapWithin
+      params: 
+        single_route: True
+
+    - type: SwapBetween
+      params: {}
+
+    - type: Transfer
+      params: {}
+
+    - type: Transfer
+      params: 
+        single_route: True
+
+    - type: Shift
+      params:
+        type: random
+
+    - type: Shift
+      params:
+        type: best
+
+    - type: CLSM2
+      params: {}
+
+    - type: CLSM3
+      params: {}
+
+    - type: CLSM4
+      params: {}
