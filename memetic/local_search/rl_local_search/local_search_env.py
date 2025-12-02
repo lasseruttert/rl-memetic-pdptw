@@ -26,9 +26,7 @@ class LocalSearchEnv(gym.Env):
         acceptance_strategy: str = "greedy",
         reward_strategy: str = "binary",
         max_steps: int = 100,
-        max_no_improvement: Optional[int] = None,
-        disable_operator_features: bool = False,
-        feature_weights: Optional[np.ndarray] = None
+        max_no_improvement: Optional[int] = None
     ):
         """Initialize the local search environment.
 
@@ -39,8 +37,6 @@ class LocalSearchEnv(gym.Env):
             reward_strategy: Strategy for calculating rewards
             max_steps: Maximum number of steps per episode
             max_no_improvement: Early stopping after N steps without improvement (None to disable)
-            disable_operator_features: If True, exclude all operator features from state
-            feature_weights: Optional binary mask (0/1) for individual feature control
         """
         super().__init__()
 
@@ -50,8 +46,6 @@ class LocalSearchEnv(gym.Env):
         self.reward_strategy = reward_strategy
         self.max_steps = max_steps
         self.max_no_improvement = max_no_improvement
-        self.disable_operator_features = disable_operator_features
-        self.feature_weights = feature_weights
 
         # Action space: discrete selection of operators (no no-op)
         self.action_space = spaces.Discrete(len(operators))
@@ -78,36 +72,19 @@ class LocalSearchEnv(gym.Env):
         solution_features = self._get_solution_features(dummy_problem, dummy_solution)
         operator_features = self._get_operator_features()
 
-        # Store full dimensions (before masking) for validation
-        self.full_solution_feature_dim = len(solution_features)
-        self.full_operator_feature_dim = len(operator_features.flatten())
-        self.full_state_dim = self.full_solution_feature_dim + self.full_operator_feature_dim
+        # Store feature dimensions for dynamic network architecture
+        self.solution_feature_dim = len(solution_features)
+        self.operator_feature_dim_per_op = operator_features.shape[1]  # Features per operator
 
-        # Validate feature control configuration
-        self._validate_feature_control()
+        solution_feature_dim = self.solution_feature_dim
+        operator_feature_dim = len(operator_features.flatten())
+        obs_dim = solution_feature_dim + operator_feature_dim
 
-        # Calculate effective dimensions with feature control
-        if disable_operator_features:
-            effective_state_dim = self.full_solution_feature_dim
-            self.solution_feature_dim = self.full_solution_feature_dim
-            self.operator_feature_dim_per_op = 0  # Signal to networks
-        else:
-            effective_state_dim = self.full_state_dim
-            self.solution_feature_dim = self.full_solution_feature_dim
-            self.operator_feature_dim_per_op = operator_features.shape[1]
-
-        # Apply feature_weights if provided
-        if feature_weights is not None:
-            effective_state_dim = int(np.sum(feature_weights))
-            # Recalculate solution_feature_dim for attention splitting
-            solution_mask = feature_weights[:self.full_solution_feature_dim]
-            self.solution_feature_dim = int(np.sum(solution_mask))
-
-        # Observation space: feature vector with effective dimensions
+        # Observation space: feature vector
         self.observation_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(effective_state_dim,),
+            shape=(obs_dim,),
             dtype=np.float32
         )
 
@@ -488,20 +465,13 @@ class LocalSearchEnv(gym.Env):
         return features
     
     def _get_operator_features(self) -> np.ndarray:
-        """Extract features for each operator based on historical performance and identity.
-
-        Features include:
-        - Static features: One-hot encoding of operator identity (allows learning operator-specific patterns)
-        - Dynamic features: Episode-specific performance metrics (applications, improvements, acceptances)
+        """Extract features for each operator based on historical performance.
 
         Returns:
             np.ndarray: Feature matrix of shape (num_operators, num_features)
-                where num_features = num_operators (one-hot) + 3 (performance metrics)
         """
         features = []
-        num_operators = len(self.operator_metrics)
-
-        for i, metrics in enumerate(self.operator_metrics):
+        for metrics in self.operator_metrics:
             applications = metrics.get('applications', 0)
             improvements = metrics.get('improvements', 0)
             acceptances = metrics.get('acceptances', 0)
@@ -511,101 +481,30 @@ class LocalSearchEnv(gym.Env):
             acceptance_rate = acceptances / applications if applications > 0 else 0.0
             avg_improvement = total_improvement / acceptances if acceptances > 0 else 0.0
 
-            # Static features: operator identity (one-hot encoding)
-            # This allows the network to learn operator-specific patterns and preferences
-            operator_identity = [1.0 if j == i else 0.0 for j in range(num_operators)]
-
             features.append([
-                # Static: operator identity
-                *operator_identity,
-                # Dynamic: episode-specific performance
                 applications / self.step_count if self.step_count > 0 else 0.0,
                 improvements / self.step_count if self.step_count > 0 else 0.0,
                 acceptances / self.step_count if self.step_count > 0 else 0.0,
                 # success_rate,
                 # acceptance_rate,
             ])
-
+        
         return np.array(features, dtype=np.float32)
-
-    def _validate_feature_control(self):
-        """Validate feature control configuration.
-
-        Raises:
-            ValueError: If feature_weights has invalid length, non-binary values,
-                        all zeros, or conflicts with disable_operator_features
-        """
-        if self.feature_weights is not None:
-            # Check length matches full state
-            if len(self.feature_weights) != self.full_state_dim:
-                raise ValueError(
-                    f"feature_weights length ({len(self.feature_weights)}) must match "
-                    f"full state dimension ({self.full_state_dim})"
-                )
-
-            # Check binary values only
-            if not np.all(np.isin(self.feature_weights, [0, 1])):
-                raise ValueError("feature_weights must contain only 0 or 1 values")
-
-            # Check at least one feature enabled
-            if np.sum(self.feature_weights) == 0:
-                raise ValueError("feature_weights must enable at least one feature")
-
-        # Check for conflicting configuration
-        if self.disable_operator_features and self.feature_weights is not None:
-            op_start = self.full_solution_feature_dim
-            op_mask = self.feature_weights[op_start:]
-            if np.any(op_mask == 1):
-                raise ValueError(
-                    "Conflict: feature_weights enables operator features but "
-                    "disable_operator_features=True"
-                )
-
-    def _apply_feature_control(self, state: np.ndarray) -> np.ndarray:
-        """Apply feature control to state vector.
-
-        Order: First disable operator features, then apply feature_weights mask.
-
-        Args:
-            state: Full state vector (solution + operator features)
-
-        Returns:
-            Filtered state vector
-        """
-        # Step 1: Handle global operator feature disable
-        if self.disable_operator_features:
-            state = state[:self.full_solution_feature_dim]
-
-        # Step 2: Apply fine-grained feature_weights mask
-        if self.feature_weights is not None:
-            if self.disable_operator_features:
-                # Only mask solution features (operator features already removed)
-                mask = self.feature_weights[:self.full_solution_feature_dim]
-            else:
-                # Mask full state
-                mask = self.feature_weights
-
-            # Apply boolean mask
-            state = state[mask == 1]
-
-        return state
-
+    
     def _get_state(self) -> np.ndarray:
         """Get the current state representation.
 
         Returns:
-            np.ndarray: Combined feature vector of solution and operators (with feature control applied)
+            np.ndarray: Combined feature vector of solution and operators
         """
         if self.problem is None or self.current_solution is None:
             raise RuntimeError("Environment must be reset before getting state")
 
-        # Generate full state
         solution_features = self._get_solution_features(self.problem, self.current_solution)
         operator_features = self._get_operator_features().flatten()
-        state = np.concatenate([solution_features, operator_features])
 
-        # Apply feature control
-        state = self._apply_feature_control(state)
+        # Combine features
+        state = np.concatenate([solution_features, operator_features])
 
         return state
 

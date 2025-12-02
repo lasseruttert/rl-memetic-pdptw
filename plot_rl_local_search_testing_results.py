@@ -4,7 +4,6 @@ import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
 from collections import defaultdict
 from pathlib import Path
 
@@ -223,7 +222,7 @@ def organize_testing_data(parsed_testing_logs):
 
 
 def plot_testing_comparison(testing_data_by_acceptance, output_dir):
-    """Create plots comparing reward strategies and baselines for each acceptance strategy.
+    """Create plots comparing reward strategies for each acceptance strategy.
 
     Args:
         testing_data_by_acceptance: dict {acceptance_strategy: {(rl_algo, reward_strategy): testing_results}}
@@ -254,52 +253,20 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
 
         # Plot each metric separately
         for metric_key, metric_name, ylabel in [
-            ('avg_fitness', 'fitness', 'Average Fitness'),
+            ('avg_fitness', 'fitness', 'Average Fitness (lower is better)'),
             ('avg_improvement', 'improvement', 'Average Improvement (Δ)'),
             ('avg_time', 'time', 'Average Time (seconds)')
         ]:
-            fig, ax = plt.subplots(figsize=(14, 6))  # Wider to accommodate baselines
+            fig, ax = plt.subplots(figsize=(12, 6))
 
-            # Step 1: Extract and average baseline data
-            # Baselines are constant across reward strategies - average them across all configurations
-            baseline_aggregated = defaultdict(lambda: {'values': [], 'std_values': []})
-
-            for (rl_algo, reward_strategy), results in algo_reward_data.items():
-                if results['baselines']:
-                    for baseline_name, baseline_data in results['baselines'].items():
-                        baseline_aggregated[baseline_name]['values'].append(baseline_data[metric_key])
-                        if metric_key == 'avg_fitness':
-                            baseline_aggregated[baseline_name]['std_values'].append(baseline_data['std_fitness'])
-
-            # Compute average across all configurations
-            baseline_stats = {}
-            for baseline_name, data in baseline_aggregated.items():
-                if data['values']:
-                    baseline_stats[baseline_name] = {
-                        'mean': np.mean(data['values']),
-                        'std': np.std(data['values']) if len(data['values']) > 1 else 0,
-                        'std_of_std': np.mean(data['std_values']) if data['std_values'] else 0
-                    }
-
-            # Step 2: Prepare plot data
-            baseline_order = ['Adaptive', 'Naive', 'Naive (best)', 'Random']
-            available_baselines = [b for b in baseline_order if b in baseline_stats]
-
-            num_reward_bars = len(reward_strategies)
-            num_baseline_bars = len(available_baselines)
-            total_bars = num_reward_bars + num_baseline_bars
-
-            x = np.arange(total_bars)
+            x = np.arange(len(reward_strategies))
             width = 0.6
 
-            # Colors for RL models (reward strategies) and baselines
-            rl_colors = plt.cm.tab10(np.linspace(0, 1, num_reward_bars))
-            baseline_colors = plt.cm.Greys(np.linspace(0.4, 0.9, num_baseline_bars)) if num_baseline_bars > 0 else []
+            colors = plt.cm.tab10(np.linspace(0, 1, len(reward_strategies)))
 
-            # Collect RL model values
-            rl_values = []
-            rl_std_values = []
-            rl_labels = []
+            values = []
+            std_values = []
+            labels = []
 
             for reward in reward_strategies:
                 # Average across all algorithms for this reward strategy
@@ -314,73 +281,35 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
                         all_values.append(results['rl_models'][first_model][metric_key])
 
                 if all_values:
-                    rl_values.append(np.mean(all_values))
-                    rl_std_values.append(np.std(all_values) if len(all_values) > 1 else 0)
+                    values.append(np.mean(all_values))
+                    std_values.append(np.std(all_values) if len(all_values) > 1 else 0)
                 else:
-                    rl_values.append(0)
-                    rl_std_values.append(0)
+                    values.append(0)
+                    std_values.append(0)
 
-                rl_labels.append(reward)
+                labels.append(reward)
 
-            # Collect baseline values
-            baseline_values = []
-            baseline_std_values = []
-            baseline_labels = []
-
-            for baseline_name in available_baselines:
-                stats = baseline_stats[baseline_name]
-                baseline_values.append(stats['mean'])
-                # Use std_of_std for fitness (variation in std across runs)
-                if metric_key == 'avg_fitness':
-                    baseline_std_values.append(stats['std_of_std'])
-                else:
-                    baseline_std_values.append(0)
-                baseline_labels.append(baseline_name)
-
-            # Combine values and plot
-            all_values = rl_values + baseline_values
-            all_std_values = rl_std_values + baseline_std_values
-            all_labels = rl_labels + baseline_labels
-
-            # Combine colors
-            if num_baseline_bars > 0:
-                all_colors = np.vstack([rl_colors, baseline_colors])
+            if metric_key == 'avg_fitness':
+                ax.bar(x, values, width, yerr=std_values, capsize=5,
+                      color=colors[:len(reward_strategies)], alpha=0.8,
+                      edgecolor='black', linewidth=1.5)
             else:
-                all_colors = rl_colors
+                ax.bar(x, values, width,
+                      color=colors[:len(reward_strategies)], alpha=0.8,
+                      edgecolor='black', linewidth=1.5)
 
-            # Plot bars
-            ax.bar(x, all_values, width,
-                   color=all_colors, alpha=0.8,
-                   edgecolor='black', linewidth=1.5)
-
-            # Step 3: Labels and legend
-            # Add vertical separator between RL models and baselines
-            if num_baseline_bars > 0:
-                separator_x = num_reward_bars - 0.5
-                ax.axvline(x=separator_x, color='gray', linestyle='--',
-                          linewidth=2, alpha=0.5, zorder=0)
-
-                # Add legend to distinguish RL vs baselines
-                legend_elements = [
-                    Patch(facecolor=rl_colors[0], edgecolor='black', label='RL Models'),
-                    Patch(facecolor=baseline_colors[0], edgecolor='black', label='Baselines')
-                ]
-                ax.legend(handles=legend_elements, loc='upper right', fontsize=10)
-
-            ax.set_xlabel('Method (Reward Strategies | Baselines)' if num_baseline_bars > 0 else 'Reward Strategy',
-                         fontsize=12, fontweight='bold')
+            ax.set_xlabel('Reward Strategy', fontsize=12, fontweight='bold')
             ax.set_ylabel(ylabel, fontsize=12, fontweight='bold')
-            ax.set_title(f'Acceptance: {acceptance_strategy}\nRL Models vs Baselines ({metric_name.capitalize()})' if num_baseline_bars > 0
-                        else f'Acceptance: {acceptance_strategy}\nTesting Performance: Reward Strategy Comparison ({metric_name.capitalize()})',
+            ax.set_title(f'Acceptance: {acceptance_strategy}\nTesting Performance: Reward Strategy Comparison ({metric_name.capitalize()})',
                         fontsize=13, fontweight='bold')
             ax.set_xticks(x)
-            ax.set_xticklabels(all_labels, rotation=45, ha='right', fontsize=10)
+            ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=10)
             ax.grid(True, alpha=0.3, axis='y')
 
             if metric_key == 'avg_improvement':
                 ax.axhline(y=0, color='black', linestyle='--', linewidth=1, alpha=0.5)
 
-            filename = f'{acceptance_strategy}_testing_{metric_name}_comparison.png'
+            filename = f'{acceptance_strategy}_testing_{metric_name}_by_reward_strategy.png'
             filepath = os.path.join(output_dir, filename)
             plt.tight_layout()
             plt.savefig(filepath, dpi=300, bbox_inches='tight')
@@ -392,7 +321,7 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
 
 def main():
     """Main function to parse logs and create plots."""
-    log_dir = 'results/reward_acceptance_logs'
+    log_dir = '_vm_logs'
     testing_output_dir = 'results/log_plots/testing_by_acceptance'
 
     print(f'Scanning {log_dir}/ for log files...')
