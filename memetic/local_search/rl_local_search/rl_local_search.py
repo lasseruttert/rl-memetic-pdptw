@@ -1034,30 +1034,31 @@ class RLLocalSearch(BaseLocalSearch):
                     next_state, reward, terminated, truncated, step_info = self.env.step(action)
                     state = next_state
 
-                    # Calculate constraint violations and route metrics
-                    route_metrics = self._calculate_route_metrics(self.env.current_solution)
-                    run_history[iteration] = {
-                        'time': time.time() - base_time,
-                        'action': action,
-                        'operator': step_info['operator'],
-                        'no_improvement_count': step_info['no_improvement_count'],
-                        'accepted': step_info['accepted'],
-                        'fitness': step_info['fitness'],
-                        'fitness_improvement': step_info['fitness_improvement'],
-                        'total_distance': best_solution.total_distance,
-                        'num_vehicles_used': best_solution.num_vehicles_used,
-                        'is_feasible': best_solution.is_feasible,
-                        # Agent decision metrics
-                        'state_features': state.tolist() if hasattr(state, 'tolist') else list(state),
-                        # Route metrics
-                        'num_routes': route_metrics['num_routes'],
-                        'empty_routes': route_metrics['empty_routes'],
-                        'avg_route_distance': route_metrics['avg_route_distance'],
-                        'max_route_distance': route_metrics['max_route_distance'],
-                        # Trajectory metrics
-                        'cumulative_improvement':initial_fitness - best_fitness,
-                        'best_fitness_so_far': best_fitness,
-                    }
+                    if self.tracking:
+                        # Calculate constraint violations and route metrics
+                        route_metrics = self._calculate_route_metrics(self.env.current_solution)
+                        run_history[iteration] = {
+                            'time': time.time() - base_time,
+                            'action': action,
+                            'operator': step_info['operator'],
+                            'no_improvement_count': step_info['no_improvement_count'],
+                            'accepted': step_info['accepted'],
+                            'fitness': step_info['fitness'],
+                            'fitness_improvement': step_info['fitness_improvement'],
+                            'total_distance': best_solution.total_distance,
+                            'num_vehicles_used': best_solution.num_vehicles_used,
+                            'is_feasible': best_solution.is_feasible,
+                            # Agent decision metrics
+                            'state_features': state.tolist() if hasattr(state, 'tolist') else list(state),
+                            # Route metrics
+                            'num_routes': route_metrics['num_routes'],
+                            'empty_routes': route_metrics['empty_routes'],
+                            'avg_route_distance': route_metrics['avg_route_distance'],
+                            'max_route_distance': route_metrics['max_route_distance'],
+                            # Trajectory metrics
+                            'cumulative_improvement':initial_fitness - best_fitness,
+                            'best_fitness_so_far': best_fitness,
+                        }
 
                     # Check if this operator improved fitness
                     if step_info['fitness'] < best_fitness:

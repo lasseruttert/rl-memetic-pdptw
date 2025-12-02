@@ -16,55 +16,17 @@ from typing import List, Tuple, Union
 # ]
 # ------------------------------------------------------------
 TASKS: List[Union[str, List[str]]] = [
-    "train_rl_local_search.py -rl_algorithm ppo -use_operator_attention",
-    "train_rl_local_search.py -rl_algorithm dqn -use_operator_attention",
-    "train_rl_local_search.py -rl_algorithm ppo",
-    "train_rl_local_search.py -rl_algorithm dqn",
-    "train_rl_local_search.py --acceptance_strategy greedy --reward_strategy binary",
-    "train_rl_local_search.py --acceptance_strategy greedy --reward_strategy initial_improvement",
-    "train_rl_local_search.py --acceptance_strategy greedy --reward_strategy old_improvement",
-    "train_rl_local_search.py --acceptance_strategy greedy --reward_strategy hybrid_improvement",
-    "train_rl_local_search.py --acceptance_strategy greedy --reward_strategy distance_baseline",
-    "train_rl_local_search.py --acceptance_strategy greedy --reward_strategy log_improvement",
-    "train_rl_local_search.py --acceptance_strategy greedy --reward_strategy tanh",
-    "train_rl_local_search.py --acceptance_strategy greedy --reward_strategy component",
-
-    "train_rl_local_search.py --acceptance_strategy always --reward_strategy binary",
-    "train_rl_local_search.py --acceptance_strategy always --reward_strategy initial_improvement",
-    "train_rl_local_search.py --acceptance_strategy always --reward_strategy old_improvement",
-    "train_rl_local_search.py --acceptance_strategy always --reward_strategy hybrid_improvement",
-    "train_rl_local_search.py --acceptance_strategy always --reward_strategy distance_baseline",
-    "train_rl_local_search.py --acceptance_strategy always --reward_strategy log_improvement",
-    "train_rl_local_search.py --acceptance_strategy always --reward_strategy tanh",
-    "train_rl_local_search.py --acceptance_strategy always --reward_strategy component",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set1.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/ppo_set1.yaml",
     
-    "train_rl_local_search.py --acceptance_strategy epsilon_greedy --reward_strategy binary",
-    "train_rl_local_search.py --acceptance_strategy epsilon_greedy --reward_strategy initial_improvement",
-    "train_rl_local_search.py --acceptance_strategy epsilon_greedy --reward_strategy old_improvement",
-    "train_rl_local_search.py --acceptance_strategy epsilon_greedy --reward_strategy hybrid_improvement",
-    "train_rl_local_search.py --acceptance_strategy epsilon_greedy --reward_strategy distance_baseline",
-    "train_rl_local_search.py --acceptance_strategy epsilon_greedy --reward_strategy log_improvement",
-    "train_rl_local_search.py --acceptance_strategy epsilon_greedy --reward_strategy tanh",
-    "train_rl_local_search.py --acceptance_strategy epsilon_greedy --reward_strategy component",
-
-    "train_rl_local_search.py --acceptance_strategy rising_epsilon_greedy --reward_strategy binary",
-    "train_rl_local_search.py --acceptance_strategy rising_epsilon_greedy --reward_strategy initial_improvement",
-    "train_rl_local_search.py --acceptance_strategy rising_epsilon_greedy --reward_strategy old_improvement",
-    "train_rl_local_search.py --acceptance_strategy rising_epsilon_greedy --reward_strategy hybrid_improvement",
-    "train_rl_local_search.py --acceptance_strategy rising_epsilon_greedy --reward_strategy distance_baseline",
-    "train_rl_local_search.py --acceptance_strategy rising_epsilon_greedy --reward_strategy log_improvement",
-    "train_rl_local_search.py --acceptance_strategy rising_epsilon_greedy --reward_strategy tanh",
-    "train_rl_local_search.py --acceptance_strategy rising_epsilon_greedy --reward_strategy component",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/ppo_set2.yaml",
     
-    "train_rl_mutation.py -rl_algorithm ppo",
-    "train_rl_mutation.py -rl_algorithm dqn",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set3.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/ppo_set3.yaml",
     
-    "train_rl_mutation.py --no_population_features",
-    
-    "train_rl_mutation.py --population_size 1",
-    "train_rl_mutation.py --population_size 5",
-    "train_rl_mutation.py --population_size 10",
-    "train_rl_mutation.py --population_size 20",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set4.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/ppo_set4.yaml",
 ]
 
 
