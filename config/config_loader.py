@@ -22,6 +22,7 @@ class Config:
         """Parse configuration sections into attributes."""
         # Extract major sections
         self.problem = self.raw.get('problem', {})
+        self.rl_algorithm = self.raw.get('rl_algorithm', {})
         self.algorithm = self.raw.get('algorithm', {})
         self.network = self.raw.get('network', {})
         self.dqn = self.raw.get('dqn', {})

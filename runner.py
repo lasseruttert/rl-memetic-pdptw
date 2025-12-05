@@ -16,17 +16,17 @@ from typing import List, Tuple, Union
 # ]
 # ------------------------------------------------------------
 TASKS: List[Union[str, List[str]]] = [
-    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set1.yaml",
     "train_rl_local_search.py --config config/experiment_rl_algo/ppo_set1.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set1.yaml",
     
-    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2.yaml",
     "train_rl_local_search.py --config config/experiment_rl_algo/ppo_set2.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2.yaml",
     
-    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set3.yaml",
     "train_rl_local_search.py --config config/experiment_rl_algo/ppo_set3.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set3.yaml",
     
-    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set4.yaml",
     "train_rl_local_search.py --config config/experiment_rl_algo/ppo_set4.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set4.yaml",
 ]
 
 

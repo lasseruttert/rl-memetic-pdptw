@@ -329,7 +329,7 @@ def main():
     # Extract configuration values
     PROBLEM_SIZE = config.problem['size']
     CATEGORIES = config.problem['categories']
-    RL_ALGORITHM = args.rl_algorithm if args.rl_algorithm else 'dqn'
+    RL_ALGORITHM = args.rl_algorithm if args.rl_algorithm else config.rl_algorithm
     ACCEPTANCE_STRATEGY = config.algorithm['acceptance_strategy']
     REWARD_STRATEGY = config.algorithm['reward_strategy']
     SEED = args.seed if args.seed is not None else 100

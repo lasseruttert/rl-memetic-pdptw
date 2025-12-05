@@ -78,44 +78,44 @@ testing:
 operators:
   preset: custom  # standard, aggressive, minimal, cls, or custom
   custom:
-    - type: Reinsert
+    - type: ReinsertOperator
       params: {}
 
-    - type: Reinsert
+    - type: ReinsertOperator
       params:
         max_attempts: 5
         clustered: True
 
-    - type: Reinsert
+    - type: ReinsertOperator
       params: 
         allow_same_vehicle: False   
 
-    - type: Reinsert
+    - type: ReinsertOperator
       params: 
         allow_same_vehicle: False  
         allow_new_vehicles: False 
     
-    - type: RouteElimination
+    - type: RouteEliminationOperator
       params: {}
 
-    - type: TwoOpt
+    - type: TwoOptOperator
       params: {}
 
-    - type: SwapBetween
+    - type: SwapBetweenOperator
       params: 
         type: best
 
-    - type: Merge
+    - type: MergeOperator
       params: 
         type: min
 
-    - type: CLSM2
+    - type: CLSM2Operator
       params: {}
 
-    - type: CLSM3
+    - type: CLSM3Operator
       params: {}
 
-    - type: CLSM4
+    - type: CLSM4Operator
       params: {}
 
 

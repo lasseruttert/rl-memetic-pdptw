@@ -78,55 +78,55 @@ testing:
 operators:
   preset: custom  # standard, aggressive, minimal, cls, or custom
   custom:
-    - type: RouteElimination
+    - type: RouteEliminationOperator
       params: {}
 
-    - type: Flip
+    - type: FlipOperator
       params: {}
 
-    - type: Merge
+    - type: MergeOperator
       params: 
         type: min
 
-    - type: Merge
+    - type: MergeOperator
       params: 
         type: random
 
-    - type: TwoOpt
+    - type: TwoOptOperator
       params: {}
 
-    - type: SwapWithin
+    - type: SwapWithinOperator
       params: {}
 
-    - type: SwapWithin
+    - type: SwapWithinOperator
       params: 
         single_route: True
 
-    - type: SwapBetween
+    - type: SwapBetweenOperator
       params: {}
 
-    - type: Transfer
+    - type: TransferOperator
       params: {}
 
-    - type: Transfer
+    - type: TransferOperator
       params: 
         single_route: True
 
-    - type: Shift
+    - type: ShiftOperator
       params:
         type: random
 
-    - type: Shift
+    - type: ShiftOperator
       params:
         type: best
 
-    - type: CLSM2
+    - type: CLSM2Operator
       params: {}
 
-    - type: CLSM3
+    - type: CLSM3Operator
       params: {}
 
-    - type: CLSM4
+    - type: CLSM4Operator
       params: {}
 
 
