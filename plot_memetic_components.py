@@ -28,16 +28,23 @@ import matplotlib.pyplot as plt
 RESULTS_FILE = "results/memetic_component_results.json"
 OUTPUT_BASE_DIR = "results/memetic_component_plots"
 
-# Plot styling
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['savefig.dpi'] = 300
-plt.rcParams['font.size'] = 10
-plt.rcParams['axes.labelsize'] = 11
-plt.rcParams['axes.titlesize'] = 12
-plt.rcParams['xtick.labelsize'] = 9
-plt.rcParams['ytick.labelsize'] = 9
-plt.rcParams['legend.fontsize'] = 9
-plt.rcParams['figure.titlesize'] = 13
+# Plot styling - Thesis quality
+plt.rcParams.update({
+    'figure.dpi': 300,
+    'savefig.dpi': 300,
+    'font.size': 11,
+    'axes.labelsize': 12,
+    'axes.titlesize': 13,
+    'xtick.labelsize': 10,
+    'ytick.labelsize': 10,
+    'legend.fontsize': 10,
+    'figure.titlesize': 14,
+    'font.family': 'serif',
+    'font.serif': ['Times New Roman', 'DejaVu Serif'],
+    'text.usetex': False,
+    'pdf.fonttype': 42,
+    'ps.fonttype': 42,
+})
 
 # Color scheme
 COMBO_COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b']
@@ -120,7 +127,10 @@ def save_figure(fig, filepath, formats=['png', 'pdf']):
     Path(filepath).parent.mkdir(parents=True, exist_ok=True)
     for fmt in formats:
         output_path = Path(filepath).with_suffix(f'.{fmt}')
-        fig.savefig(output_path, bbox_inches='tight', format=fmt)
+        if fmt == 'pdf':
+            fig.savefig(output_path, bbox_inches='tight', format=fmt, backend='pdf')
+        else:
+            fig.savefig(output_path, bbox_inches='tight', format=fmt)
         print(f"  Saved: {output_path}")
 
 # ============================================================================
@@ -165,7 +175,7 @@ def plot_convergence_metric(results, output_dir, metric_name, ylabel, title_suff
         return
 
     # Create plot
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 5.5))
 
     combo_ids = sorted(combo_convergence.keys())
     for i, combo_id in enumerate(combo_ids):
@@ -304,7 +314,7 @@ def plot_time_to_best(results, output_dir, category=None):
     avg_times = [np.mean(combo_times[cid]) for cid in combo_ids]
 
     # Create plot
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(9, 5))
     x = np.arange(len(combo_ids))
     bars = ax.bar(x, avg_times, color=COMBO_COLORS[:len(combo_ids)],
                    alpha=0.8, edgecolor='black')
@@ -369,7 +379,7 @@ def plot_efficiency_score(results, output_dir, category=None):
     avg_scores = [np.mean(combo_scores[cid]) for cid in combo_ids]
 
     # Create plot
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(9, 5))
     x = np.arange(len(combo_ids))
     bars = ax.bar(x, avg_scores, color=COMBO_COLORS[:len(combo_ids)],
                    alpha=0.8, edgecolor='black')
@@ -434,7 +444,7 @@ def plot_time_quality_product(results, output_dir, category=None):
     avg_products = [np.mean(combo_products[cid]) for cid in combo_ids]
 
     # Create plot
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(9, 5))
     x = np.arange(len(combo_ids))
     bars = ax.bar(x, avg_products, color=COMBO_COLORS[:len(combo_ids)],
                    alpha=0.8, edgecolor='black')
@@ -463,6 +473,207 @@ def plot_time_quality_product(results, output_dir, category=None):
     filename = f'time_quality_product_{category_label}'
     save_figure(fig, output_dir / filename)
     plt.close()
+
+
+def plot_combined_convergence(results, output_dir, category=None):
+    """Create combined convergence plot with all 4 metrics in subplots.
+
+    Args:
+        results: Results dictionary
+        output_dir: Output directory path
+        category: Category to filter by (None for overall)
+    """
+    category_label = category if category else "overall"
+    print(f"  Creating combined convergence plot ({category_label})...")
+
+    metrics = [
+        ('best_fitness', 'Best Fitness', 'Best Fitness Convergence'),
+        ('avg_fitness', 'Average Fitness', 'Average Fitness Convergence'),
+        ('num_vehicles', 'Number of Vehicles', 'Number of Vehicles Convergence'),
+        ('total_distance', 'Total Distance', 'Total Distance Convergence')
+    ]
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    axes = axes.flatten()
+
+    for idx, (metric_name, ylabel, _) in enumerate(metrics):
+        ax = axes[idx]
+
+        # Collect convergence data for this metric
+        combo_convergence = defaultdict(list)
+
+        for combo_id, combo_data in results.items():
+            for instance_name, instance_data in combo_data['instances'].items():
+                if category:
+                    parsed = parse_instance_name(instance_name)
+                    if parsed['category'] != category:
+                        continue
+
+                if instance_data.get('convergence'):
+                    conv_dict = instance_data['convergence']
+                    conv_list = [(float(t), data.get(metric_name))
+                                for t, data in conv_dict.items()
+                                if data.get(metric_name) is not None]
+                    conv_list.sort(key=lambda x: x[0])
+                    if conv_list:
+                        combo_convergence[combo_id].append(conv_list)
+
+        if not any(combo_convergence.values()):
+            ax.text(0.5, 0.5, f'No data for {metric_name}',
+                   ha='center', va='center', transform=ax.transAxes)
+            continue
+
+        # Plot each combination
+        combo_ids = sorted(combo_convergence.keys())
+        for i, combo_id in enumerate(combo_ids):
+            convergences = combo_convergence[combo_id]
+            if not convergences:
+                continue
+
+            all_times = sorted(set(t for conv in convergences for t, _ in conv))
+            times = []
+            metric_means = []
+
+            for t in all_times:
+                metric_at_t = []
+                for conv in convergences:
+                    metric_val = None
+                    for conv_time, conv_metric in conv:
+                        if conv_time <= t:
+                            metric_val = conv_metric
+                        else:
+                            break
+                    if metric_val is not None:
+                        metric_at_t.append(metric_val)
+
+                if metric_at_t:
+                    times.append(t)
+                    metric_means.append(np.mean(metric_at_t))
+
+            if times:
+                color = COMBO_COLORS[i % len(COMBO_COLORS)]
+                ax.plot(times, metric_means,
+                       label=f"C{combo_id.split('_')[1]}",
+                       color=color, linewidth=2)
+
+        ax.set_xlabel('Time (seconds)', fontsize=11)
+        ax.set_ylabel(ylabel, fontsize=11)
+        ax.set_title(ylabel, fontsize=12)
+        ax.legend(loc='best', fontsize=9)
+        ax.grid(alpha=0.3)
+
+    # Overall title
+    if category:
+        title = f'Convergence Metrics - {category.upper()}'
+    else:
+        title = 'Convergence Metrics - Overall'
+    fig.suptitle(title, fontsize=14, fontweight='bold')
+
+    plt.tight_layout(rect=[0, 0, 1, 0.97])
+
+    # Save
+    filename = f'combined_convergence_{category_label}'
+    save_figure(fig, output_dir / filename)
+    plt.close()
+
+
+def plot_combined_metrics_bars(results, output_dir, category=None):
+    """Create combined bar chart with time-to-best, efficiency, and time-quality.
+
+    Args:
+        results: Results dictionary
+        output_dir: Output directory path
+        category: Category to filter by (None for overall)
+    """
+    category_label = category if category else "overall"
+    print(f"  Creating combined metrics bar chart ({category_label})...")
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+    # Collect data for all three metrics
+    combo_times = defaultdict(list)
+    combo_scores = defaultdict(list)
+    combo_products = defaultdict(list)
+
+    for combo_id, combo_data in results.items():
+        for instance_name, instance_data in combo_data['instances'].items():
+            if category:
+                parsed = parse_instance_name(instance_name)
+                if parsed['category'] != category:
+                    continue
+
+            final_eval = instance_data.get('final_evaluation')
+            if final_eval:
+                time_to_best = final_eval.get('time_to_final_fitness')
+                final_fitness = final_eval.get('final_fitness')
+
+                if time_to_best is not None:
+                    combo_times[combo_id].append(time_to_best)
+
+                if (time_to_best is not None and final_fitness is not None
+                    and time_to_best > 0 and final_fitness > 0):
+                    combo_scores[combo_id].append(1.0 / (final_fitness * time_to_best))
+                    combo_products[combo_id].append(final_fitness * time_to_best)
+
+    # Plot 1: Time to Best
+    ax = axes[0]
+    combo_ids = sorted([cid for cid in combo_times.keys() if combo_times[cid]])
+    if combo_ids:
+        avg_times = [np.mean(combo_times[cid]) for cid in combo_ids]
+        x = np.arange(len(combo_ids))
+        ax.bar(x, avg_times, color=COMBO_COLORS[:len(combo_ids)],
+               alpha=0.8, edgecolor='black')
+        ax.set_xlabel('Combination', fontsize=11)
+        ax.set_ylabel('Avg Time (s)', fontsize=11)
+        ax.set_title('Time to Best', fontsize=12)
+        ax.set_xticks(x)
+        ax.set_xticklabels([f"C{cid.split('_')[1]}" for cid in combo_ids], fontsize=10)
+        ax.grid(axis='y', alpha=0.3)
+
+    # Plot 2: Efficiency Score
+    ax = axes[1]
+    combo_ids = sorted([cid for cid in combo_scores.keys() if combo_scores[cid]])
+    if combo_ids:
+        avg_scores = [np.mean(combo_scores[cid]) for cid in combo_ids]
+        x = np.arange(len(combo_ids))
+        ax.bar(x, avg_scores, color=COMBO_COLORS[:len(combo_ids)],
+               alpha=0.8, edgecolor='black')
+        ax.set_xlabel('Combination', fontsize=11)
+        ax.set_ylabel('Efficiency (higher better)', fontsize=11)
+        ax.set_title('Efficiency Score', fontsize=12)
+        ax.set_xticks(x)
+        ax.set_xticklabels([f"C{cid.split('_')[1]}" for cid in combo_ids], fontsize=10)
+        ax.grid(axis='y', alpha=0.3)
+
+    # Plot 3: Time-Quality Product
+    ax = axes[2]
+    combo_ids = sorted([cid for cid in combo_products.keys() if combo_products[cid]])
+    if combo_ids:
+        avg_products = [np.mean(combo_products[cid]) for cid in combo_ids]
+        x = np.arange(len(combo_ids))
+        ax.bar(x, avg_products, color=COMBO_COLORS[:len(combo_ids)],
+               alpha=0.8, edgecolor='black')
+        ax.set_xlabel('Combination', fontsize=11)
+        ax.set_ylabel('Product (lower better)', fontsize=11)
+        ax.set_title('Time-Quality Product', fontsize=12)
+        ax.set_xticks(x)
+        ax.set_xticklabels([f"C{cid.split('_')[1]}" for cid in combo_ids], fontsize=10)
+        ax.grid(axis='y', alpha=0.3)
+
+    # Overall title
+    if category:
+        title = f'Performance Metrics - {category.upper()}'
+    else:
+        title = 'Performance Metrics - Overall'
+    fig.suptitle(title, fontsize=14, fontweight='bold')
+
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+
+    # Save
+    filename = f'combined_metrics_{category_label}'
+    save_figure(fig, output_dir / filename)
+    plt.close()
+
 
 # ============================================================================
 # MAIN ORCHESTRATION
@@ -495,26 +706,32 @@ def create_all_plots():
     print("GENERATING OVERALL PLOTS")
     print("=" * 80)
 
-    print("\n[1/7] Best Fitness Convergence")
+    print("\n[1/9] Best Fitness Convergence")
     plot_convergence_best_fitness(results, overall_dir)
 
-    print("\n[2/7] Average Fitness Convergence")
+    print("\n[2/9] Average Fitness Convergence")
     plot_convergence_avg_fitness(results, overall_dir)
 
-    print("\n[3/7] Number of Vehicles Convergence")
+    print("\n[3/9] Number of Vehicles Convergence")
     plot_convergence_num_vehicles(results, overall_dir)
 
-    print("\n[4/7] Total Distance Convergence")
+    print("\n[4/9] Total Distance Convergence")
     plot_convergence_total_distance(results, overall_dir)
 
-    print("\n[5/7] Time to Best Solution")
+    print("\n[5/9] Time to Best Solution")
     plot_time_to_best(results, overall_dir)
 
-    print("\n[6/7] Efficiency Score")
+    print("\n[6/9] Efficiency Score")
     plot_efficiency_score(results, overall_dir)
 
-    print("\n[7/7] Time-Quality Product")
+    print("\n[7/9] Time-Quality Product")
     plot_time_quality_product(results, overall_dir)
+
+    print("\n[8/9] Combined Convergence")
+    plot_combined_convergence(results, overall_dir)
+
+    print("\n[9/9] Combined Metrics")
+    plot_combined_metrics_bars(results, overall_dir)
 
     # ========================================================================
     # PER-CATEGORY PLOTS
@@ -546,26 +763,32 @@ def create_all_plots():
             print(f"  No results for category {category}")
             continue
 
-        print("[1/7] Best Fitness Convergence")
+        print("[1/9] Best Fitness Convergence")
         plot_convergence_best_fitness(category_results, category_dir, category)
 
-        print("[2/7] Average Fitness Convergence")
+        print("[2/9] Average Fitness Convergence")
         plot_convergence_avg_fitness(category_results, category_dir, category)
 
-        print("[3/7] Number of Vehicles Convergence")
+        print("[3/9] Number of Vehicles Convergence")
         plot_convergence_num_vehicles(category_results, category_dir, category)
 
-        print("[4/7] Total Distance Convergence")
+        print("[4/9] Total Distance Convergence")
         plot_convergence_total_distance(category_results, category_dir, category)
 
-        print("[5/7] Time to Best Solution")
+        print("[5/9] Time to Best Solution")
         plot_time_to_best(category_results, category_dir, category)
 
-        print("[6/7] Efficiency Score")
+        print("[6/9] Efficiency Score")
         plot_efficiency_score(category_results, category_dir, category)
 
-        print("[7/7] Time-Quality Product")
+        print("[7/9] Time-Quality Product")
         plot_time_quality_product(category_results, category_dir, category)
+
+        print("[8/9] Combined Convergence")
+        plot_combined_convergence(category_results, category_dir, category)
+
+        print("[9/9] Combined Metrics")
+        plot_combined_metrics_bars(category_results, category_dir, category)
 
     print("\n" + "=" * 80)
     print("VISUALIZATION COMPLETE")
@@ -573,7 +796,9 @@ def create_all_plots():
     print(f"\nPlots saved to: {OUTPUT_BASE_DIR}/")
     print(f"  - Overall plots: {overall_dir}/")
     print(f"  - Individual category plots: {individual_dir}/")
-    print(f"\nTotal plots generated: {7 + (7 * len(categories))}")
+    print(f"\nTotal plots generated: {9 + (9 * len(categories))}")
+    print(f"  (9 overall + 9 per category × {len(categories)} categories)")
+    print(f"  Each plot saved as PNG and PDF")
 
 # ============================================================================
 # ENTRY POINT

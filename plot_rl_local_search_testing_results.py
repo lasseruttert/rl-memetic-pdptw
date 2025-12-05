@@ -7,6 +7,22 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from pathlib import Path
 
+# Thesis-quality plot settings
+plt.rcParams.update({
+    'font.size': 11,
+    'axes.labelsize': 12,
+    'axes.titlesize': 13,
+    'xtick.labelsize': 10,
+    'ytick.labelsize': 10,
+    'legend.fontsize': 10,
+    'figure.titlesize': 14,
+    'font.family': 'serif',
+    'font.serif': ['Times New Roman', 'DejaVu Serif'],
+    'text.usetex': False,
+    'pdf.fonttype': 42,
+    'ps.fonttype': 42,
+})
+
 
 def parse_log_filename(filename):
     """Parse configuration from log filename.
@@ -221,6 +237,25 @@ def organize_testing_data(parsed_testing_logs):
     return organized
 
 
+def save_figure_multi_format(fig, filepath, formats=['png', 'pdf']):
+    """Save figure in multiple formats for thesis use.
+
+    Args:
+        fig: Matplotlib figure object
+        filepath: Base filepath (without extension)
+        formats: List of formats to save ['png', 'pdf']
+    """
+    for fmt in formats:
+        output_path = f"{filepath}.{fmt}"
+        if fmt == 'pdf':
+            fig.savefig(output_path, format='pdf', bbox_inches='tight',
+                       dpi=300, backend='pdf')
+        else:  # png
+            fig.savefig(output_path, format='png', bbox_inches='tight',
+                       dpi=300)
+        print(f'    Saved: {output_path}')
+
+
 def plot_testing_comparison(testing_data_by_acceptance, output_dir):
     """Create plots comparing reward strategies for each acceptance strategy.
 
@@ -254,7 +289,6 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
         # Plot each metric separately
         for metric_key, metric_name, ylabel in [
             ('avg_fitness', 'fitness', 'Average Fitness (lower is better)'),
-            ('avg_improvement', 'improvement', 'Average Improvement (Δ)'),
             ('avg_time', 'time', 'Average Time (seconds)')
         ]:
             fig, ax = plt.subplots(figsize=(12, 6))
@@ -262,43 +296,71 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
             x = np.arange(len(reward_strategies))
             width = 0.6
 
-            colors = plt.cm.tab10(np.linspace(0, 1, len(reward_strategies)))
-
             values = []
             std_values = []
             labels = []
+
+            # Collect baseline values (same across all reward strategies)
+            baseline_values = {}
+            baseline_names = ['Adaptive', 'Naive', 'Naive (best)', 'Random']
 
             for reward in reward_strategies:
                 # Average across all algorithms for this reward strategy
                 algo_results = reward_grouped[reward]
 
-                # Collect RL model results for this reward strategy
-                all_values = []
+                # Collect RL model results - average across ALL model variants
+                rl_values = []
                 for rl_algo, results in algo_results:
-                    # Get the first RL model (e.g., "RL (OneShot)")
                     if results['rl_models']:
-                        first_model = list(results['rl_models'].keys())[0]
-                        all_values.append(results['rl_models'][first_model][metric_key])
+                        # Average across all RL model variants (OneShot, Roulette, Ranking)
+                        model_values = [
+                            model_data[metric_key]
+                            for model_data in results['rl_models'].values()
+                        ]
+                        rl_values.extend(model_values)
 
-                if all_values:
-                    values.append(np.mean(all_values))
-                    std_values.append(np.std(all_values) if len(all_values) > 1 else 0)
+                    # Get baseline values from first result (same across all rewards)
+                    if not baseline_values and results.get('baselines'):
+                        for baseline_name, baseline_data in results['baselines'].items():
+                            baseline_values[baseline_name] = baseline_data[metric_key]
+
+                if rl_values:
+                    values.append(np.mean(rl_values))
+                    std_values.append(np.std(rl_values) if len(rl_values) > 1 else 0)
                 else:
                     values.append(0)
                     std_values.append(0)
 
                 labels.append(reward)
 
-            if metric_key == 'avg_fitness':
-                ax.bar(x, values, width, yerr=std_values, capsize=5,
-                      color=colors[:len(reward_strategies)], alpha=0.8,
-                      edgecolor='black', linewidth=1.5)
-            else:
-                ax.bar(x, values, width,
-                      color=colors[:len(reward_strategies)], alpha=0.8,
-                      edgecolor='black', linewidth=1.5)
+            # Add baselines as separate bars
+            for baseline_name in baseline_names:
+                if baseline_name in baseline_values:
+                    values.append(baseline_values[baseline_name])
+                    std_values.append(0)  # Baselines already averaged
+                    labels.append(baseline_name)
 
-            ax.set_xlabel('Reward Strategy', fontsize=12, fontweight='bold')
+            # Update x positions and colors to include baselines
+            x = np.arange(len(values))
+            num_rl = len(reward_strategies)
+            num_baselines = len(values) - num_rl
+
+            # Separate colors for RL models and baselines
+            rl_colors = plt.cm.tab10(np.linspace(0, 0.7, num_rl))
+            baseline_colors = ['#7f7f7f', '#969696', '#aaaaaa', '#c4c4c4']
+            colors = list(rl_colors) + baseline_colors[:num_baselines]
+
+            # Plot bars
+            ax.bar(x, values, width,
+                  color=colors, alpha=0.8,
+                  edgecolor='black', linewidth=1.5)
+
+            # Add separator line between RL and baselines
+            if num_rl > 0 and num_baselines > 0:
+                ax.axvline(x=num_rl - 0.5, color='black', linestyle='--',
+                          linewidth=1.5, alpha=0.5)
+
+            ax.set_xlabel('Method', fontsize=12, fontweight='bold')
             ax.set_ylabel(ylabel, fontsize=12, fontweight='bold')
             ax.set_title(f'Acceptance: {acceptance_strategy}\nTesting Performance: Reward Strategy Comparison ({metric_name.capitalize()})',
                         fontsize=13, fontweight='bold')
@@ -306,23 +368,150 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
             ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=10)
             ax.grid(True, alpha=0.3, axis='y')
 
-            if metric_key == 'avg_improvement':
-                ax.axhline(y=0, color='black', linestyle='--', linewidth=1, alpha=0.5)
+            # Add legend
+            if num_rl > 0 and num_baselines > 0:
+                from matplotlib.patches import Patch
+                legend_elements = [
+                    Patch(facecolor=rl_colors[0], alpha=0.8, edgecolor='black', label='RL Models'),
+                    Patch(facecolor='#969696', alpha=0.8, edgecolor='black', label='Baselines')
+                ]
+                ax.legend(handles=legend_elements, loc='upper right', fontsize=10)
 
-            filename = f'{acceptance_strategy}_testing_{metric_name}_by_reward_strategy.png'
+            filename = f'{acceptance_strategy}_testing_{metric_name}_by_reward_strategy'
             filepath = os.path.join(output_dir, filename)
             plt.tight_layout()
-            plt.savefig(filepath, dpi=300, bbox_inches='tight')
+            save_figure_multi_format(fig, filepath)
             plt.close()
-            print(f'  Saved: {filename}')
+            print(f'  Saved: {filename}.png and {filename}.pdf')
 
         print()
 
 
+def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, metric_key,
+                                     ylabel, title_suffix):
+    """Create combined figure showing all acceptance strategies for one metric.
+
+    Args:
+        testing_data_by_acceptance: Dict {acceptance_strategy: {(algo, reward): results}}
+        output_dir: Output directory
+        metric_key: 'avg_fitness', 'avg_improvement', or 'avg_time'
+        ylabel: Y-axis label
+        title_suffix: Title suffix (e.g., 'Fitness')
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    acceptance_strategies = sorted(testing_data_by_acceptance.keys())
+    num_strategies = len(acceptance_strategies)
+
+    # Create 2x2 grid for 4 acceptance strategies
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    axes = axes.flatten()
+
+    for idx, acceptance_strategy in enumerate(acceptance_strategies):
+        ax = axes[idx]
+        algo_reward_data = testing_data_by_acceptance[acceptance_strategy]
+
+        # Group by reward strategy
+        reward_grouped = defaultdict(list)
+        for (rl_algo, reward_strategy), results in algo_reward_data.items():
+            reward_grouped[reward_strategy].append((rl_algo, results))
+
+        reward_strategies = sorted(reward_grouped.keys())
+
+        # Collect data
+        values = []
+        labels = []
+
+        # Collect baseline values
+        baseline_values = {}
+        baseline_names = ['Adaptive', 'Naive', 'Naive (best)', 'Random']
+
+        # RL model values per reward strategy
+        for reward in reward_strategies:
+            algo_results = reward_grouped[reward]
+            rl_values = []
+            for rl_algo, results in algo_results:
+                if results['rl_models']:
+                    model_values = [
+                        model_data[metric_key]
+                        for model_data in results['rl_models'].values()
+                    ]
+                    rl_values.extend(model_values)
+
+                # Get baseline values from first result
+                if not baseline_values and results.get('baselines'):
+                    for baseline_name, baseline_data in results['baselines'].items():
+                        baseline_values[baseline_name] = baseline_data[metric_key]
+
+            if rl_values:
+                values.append(np.mean(rl_values))
+            else:
+                values.append(0)
+            labels.append(reward)
+
+        # Add baseline values
+        for baseline_name in baseline_names:
+            if baseline_name in baseline_values:
+                values.append(baseline_values[baseline_name])
+                labels.append(baseline_name)
+
+        # Plot
+        x = np.arange(len(values))
+        width = 0.7
+
+        num_rl = len(reward_strategies)
+        num_baselines = len(values) - num_rl
+
+        # Colors
+        rl_colors = plt.cm.tab10(np.linspace(0, 0.7, num_rl))
+        baseline_colors = ['#7f7f7f', '#969696', '#aaaaaa', '#c4c4c4']
+        colors = list(rl_colors) + baseline_colors[:num_baselines]
+
+        ax.bar(x, values, width, color=colors, alpha=0.8,
+               edgecolor='black', linewidth=1.0)
+
+        # Separator line
+        if num_rl > 0 and num_baselines > 0:
+            ax.axvline(x=num_rl - 0.5, color='black', linestyle='--',
+                      linewidth=1.5, alpha=0.5)
+
+        # Styling
+        ax.set_xlabel('Method', fontsize=11)
+        ax.set_ylabel(ylabel, fontsize=11)
+        ax.set_title(f'{acceptance_strategy.replace("_", " ").title()}', fontsize=12)
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=9)
+        ax.grid(True, alpha=0.3, axis='y')
+
+    # Add legend
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor=rl_colors[0] if len(rl_colors) > 0 else '#1f77b4',
+              alpha=0.8, edgecolor='black', label='RL Models'),
+        Patch(facecolor='#969696', alpha=0.8, edgecolor='black', label='Baselines')
+    ]
+    fig.legend(handles=legend_elements, loc='lower center',
+               ncol=2, fontsize=11, bbox_to_anchor=(0.5, -0.02))
+
+    # Overall title
+    fig.suptitle(f'Testing Performance: {title_suffix} Comparison Across Acceptance Strategies',
+                fontsize=14, fontweight='bold', y=0.995)
+
+    plt.tight_layout(rect=[0, 0.02, 1, 0.99])
+
+    # Save
+    filename = f'combined_testing_{metric_key}_all_acceptance'
+    filepath = os.path.join(output_dir, filename)
+    save_figure_multi_format(fig, filepath)
+    plt.close()
+
+    print(f'  Saved combined {title_suffix} plot')
+
+
 def main():
     """Main function to parse logs and create plots."""
-    log_dir = '_vm_logs'
-    testing_output_dir = 'results/log_plots/testing_by_acceptance'
+    log_dir = 'results/logs/reward_acceptance_testing_logs'
+    testing_output_dir = 'results/plots/reward_acceptance_testing_plots'
 
     print(f'Scanning {log_dir}/ for log files...')
 
@@ -373,6 +562,27 @@ def main():
 
         # Create testing plots
         plot_testing_comparison(testing_data_by_acceptance, testing_output_dir)
+
+        # Create combined plots
+        print('\n' + '='*80)
+        print('CREATING COMBINED PLOTS')
+        print('='*80)
+
+        print('\nCombined Fitness Plot:')
+        plot_testing_comparison_combined(
+            testing_data_by_acceptance, testing_output_dir,
+            metric_key='avg_fitness',
+            ylabel='Average Fitness (lower is better)',
+            title_suffix='Fitness'
+        )
+
+        print('\nCombined Time Plot:')
+        plot_testing_comparison_combined(
+            testing_data_by_acceptance, testing_output_dir,
+            metric_key='avg_time',
+            ylabel='Average Time (seconds)',
+            title_suffix='Time'
+        )
 
         print(f'\n{"="*80}')
         print('ALL PLOTS CREATED SUCCESSFULLY')
