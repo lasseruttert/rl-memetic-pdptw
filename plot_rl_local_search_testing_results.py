@@ -308,14 +308,15 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
                 # Average across all algorithms for this reward strategy
                 algo_results = reward_grouped[reward]
 
-                # Collect RL model results - average across ALL model variants
+                # Collect RL model results - only use OneShot variant
                 rl_values = []
                 for rl_algo, results in algo_results:
                     if results['rl_models']:
-                        # Average across all RL model variants (OneShot, Roulette, Ranking)
+                        # Filter to only OneShot variant
                         model_values = [
                             model_data[metric_key]
-                            for model_data in results['rl_models'].values()
+                            for model_name, model_data in results['rl_models'].items()
+                            if '(OneShot)' in model_name
                         ]
                         rl_values.extend(model_values)
 
@@ -426,15 +427,17 @@ def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, met
         baseline_values = {}
         baseline_names = ['Adaptive', 'Naive', 'Naive (best)', 'Random']
 
-        # RL model values per reward strategy
+        # RL model values per reward strategy (OneShot only)
         for reward in reward_strategies:
             algo_results = reward_grouped[reward]
             rl_values = []
             for rl_algo, results in algo_results:
                 if results['rl_models']:
+                    # Filter to only OneShot variant
                     model_values = [
                         model_data[metric_key]
-                        for model_data in results['rl_models'].values()
+                        for model_name, model_data in results['rl_models'].items()
+                        if '(OneShot)' in model_name
                     ]
                     rl_values.extend(model_values)
 
