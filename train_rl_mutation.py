@@ -63,35 +63,137 @@ from memetic.fitness.fitness import fitness
 from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.solution_operators.route_elimination import RouteEliminationOperator
 from memetic.solution_operators.flip import FlipOperator
+from memetic.solution_operators.merge import MergeOperator
 from memetic.solution_operators.swap_within import SwapWithinOperator
 from memetic.solution_operators.swap_between import SwapBetweenOperator
 from memetic.solution_operators.transfer import TransferOperator
 from memetic.solution_operators.shift import ShiftOperator
 from memetic.solution_operators.two_opt import TwoOptOperator
-from memetic.solution_operators.no_op import NoOpOperator
+from memetic.solution_operators.two_opt_star import TwoOptStarOperator
+from memetic.solution_operators.cls_m1 import CLSM1Operator
+from memetic.solution_operators.cls_m2 import CLSM2Operator
+from memetic.solution_operators.cls_m3 import CLSM3Operator
+from memetic.solution_operators.cls_m4 import CLSM4Operator
+from memetic.solution_operators.request_shift_within import RequestShiftWithinOperator
+from memetic.solution_operators.node_swap_within import NodeSwapWithinOperator
 
 
-def create_operators(include_noop: bool = True):
+def get_operator_presets():
+    """Define available operator presets.
+
+    Returns:
+        Dictionary mapping preset names to operator configurations
+    """
+    presets = {
+        "default": [
+            ReinsertOperator(),
+            RouteEliminationOperator(),
+            FlipOperator(single_route=True),
+            SwapWithinOperator(single_route=True),
+            SwapBetweenOperator(),
+            TransferOperator(single_route=True),
+            RequestShiftWithinOperator(),
+            NodeSwapWithinOperator(),
+        ],
+        "set1": [
+            ReinsertOperator(),
+            ReinsertOperator(clustered=True, max_attempts=5),
+            RouteEliminationOperator(),
+            TwoOptOperator(),
+            SwapWithinOperator(),
+            SwapBetweenOperator(),
+            TransferOperator(),
+        ],
+        "set2": [
+            ReinsertOperator(),
+            ReinsertOperator(clustered=True, max_attempts=5),
+            ReinsertOperator(allow_same_vehicles = False),
+            ReinsertOperator(allow_same_vehicles = False, allow_new_vehicles = False),
+            RouteEliminationOperator(),
+            TwoOptOperator(),
+            SwapBetweenOperator(type="best"),
+            MergeOperator(type = "min"),
+            CLSM2Operator(),
+            CLSM3Operator(),
+            CLSM4Operator(),
+        ],
+        "set3": [
+            ReinsertOperator(),
+            ReinsertOperator(clustered=True, max_attempts=5),
+            RouteEliminationOperator(),
+            FlipOperator(),
+            MergeOperator(type = "min"),
+            MergeOperator(type = "random"),
+            TwoOptOperator(),
+            SwapWithinOperator(),
+            SwapWithinOperator(single_route = True),
+            SwapBetweenOperator(),
+            TransferOperator(),
+            TransferOperator(single_route = True),
+            ShiftOperator(type="random"),
+            ShiftOperator(type="best"),
+            CLSM2Operator(),
+            CLSM3Operator(),
+            CLSM4Operator(),
+        ],
+        "set4": [
+            RouteEliminationOperator(),
+            FlipOperator(),
+            MergeOperator(type = "min"),
+            MergeOperator(type = "random"),
+            TwoOptOperator(),
+            SwapWithinOperator(),
+            SwapWithinOperator(single_route = True),
+            SwapBetweenOperator(),
+            TransferOperator(),
+            TransferOperator(single_route = True),
+            ShiftOperator(type="random"),
+            ShiftOperator(type="best"),
+            CLSM2Operator(),
+            CLSM3Operator(),
+            CLSM4Operator(),
+        ],
+        "set5": [
+            ReinsertOperator(),
+            RouteEliminationOperator(),
+            FlipOperator(single_route=True),
+            SwapWithinOperator(single_route=True),
+            SwapBetweenOperator(),
+            TransferOperator(single_route=True),
+            TwoOptOperator(),
+            CLSM2Operator(),
+            CLSM3Operator(),
+            CLSM4Operator(),
+            RequestShiftWithinOperator(),
+            NodeSwapWithinOperator(),
+        ],
+    }
+    return presets
+
+
+def create_operators(preset: str = "default", include_noop: bool = False):
     """Create a fresh set of mutation operators with independent state.
 
     Args:
+        preset: Name of the operator preset to use
         include_noop: Whether to include NoOp operator
 
     Returns:
         List of operator instances
-    """
-    operators = [
-        ReinsertOperator(),
-        RouteEliminationOperator(),
-        FlipOperator(single_route=True),
-        SwapWithinOperator(),
-        SwapBetweenOperator(),
-        TransferOperator(),
-        ShiftOperator(type="random", segment_length=3, max_shift_distance=5, max_attempts=3),
-        TwoOptOperator(),
-    ]
 
-    # operators.append(NoOpOperator())
+    Note:
+        Returns the operator instances directly from the preset.
+        If operators maintain state between calls, you should create fresh instances.
+    """
+    presets = get_operator_presets()
+
+    if preset not in presets:
+        available = list(presets.keys())
+        raise ValueError(f"Unknown operator preset '{preset}'. Available presets: {available}")
+
+    # Return the operators from the preset directly
+    # If operators were stateful, we'd need a proper cloning mechanism here
+    operators = presets[preset].copy()
 
     return operators
 
@@ -234,6 +336,9 @@ def main():
                         help="Include NoOp operator in operator set")
     parser.add_argument("--no_population_features", action="store_true",
                         help="Disable population-aware features in state (default: enabled)")
+    parser.add_argument("--operator_preset", type=str, default="default",
+                        choices=list(get_operator_presets().keys()),
+                        help="Operator preset to use (default: default)")
 
     # Training loop intervals
     parser.add_argument("--new_instance_interval", type=int, default=6,
@@ -288,7 +393,8 @@ def main():
     seed_suffix = f"_seed{SEED}" if SEED is not None else ""
     noop_suffix = "_noop" if args.include_noop else ""
     pop_features_suffix = "_nopopfeat" if args.no_population_features else ""
-    RUN_NAME = f"rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}{pop_features_suffix}{seed_suffix}_{int(time.time())}"
+    preset_suffix = f"_{args.operator_preset}" if args.operator_preset != "default" else ""
+    RUN_NAME = f"rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{preset_suffix}{noop_suffix}{pop_features_suffix}{seed_suffix}_{int(time.time())}"
 
     # Setup logging to file
     log_dir = "logs"
@@ -310,7 +416,7 @@ def main():
         batch_size = args.dqn_batch_size if RL_ALGORITHM == "dqn" else args.ppo_batch_size
 
         rl_mutation = RLMutation(
-            operators=create_operators(include_noop=args.include_noop),
+            operators=create_operators(preset=args.operator_preset, include_noop=args.include_noop),
             rl_algorithm=RL_ALGORITHM,
             hidden_dims=[128, 128, 64],
             learning_rate=1e-3,
@@ -373,7 +479,8 @@ def main():
         print(f"Population size: {POPULATION_SIZE}")
         print(f"Population features: {'DISABLED' if args.no_population_features else 'ENABLED'}")
         print(f"Include NoOp: {args.include_noop}")
-        print(f"Operators: {[op.name if hasattr(op, 'name') else type(op).__name__ for op in create_operators(args.include_noop)]}")
+        print(f"Operator preset: {args.operator_preset}")
+        print(f"Operators: {[op.name if hasattr(op, 'name') else type(op).__name__ for op in create_operators(preset=args.operator_preset, include_noop=args.include_noop)]}")
 
         training_history = rl_mutation.train(
             problem_generator=problem_generator,
@@ -385,7 +492,7 @@ def main():
             update_interval=1,
             warmup_episodes=10,
             save_interval=500,
-            save_path=f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}{pop_features_suffix}_{SEED}",
+            save_path=f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{preset_suffix}{noop_suffix}{pop_features_suffix}_{SEED}",
             tensorboard_dir=f"runs/{RUN_NAME}",
             seed=SEED,
             log_interval=10
@@ -396,7 +503,7 @@ def main():
         print(f"Final average fitness (last 100): {np.mean(training_history['episode_best_fitness'][-100:]):.2f}")
 
         # Save final model
-        final_model_path = f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}{pop_features_suffix}_{SEED}_final.pt"
+        final_model_path = f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{preset_suffix}{noop_suffix}{pop_features_suffix}_{SEED}_final.pt"
         rl_mutation.save(final_model_path)
         print(f"\nSaved final model to: {final_model_path}")
 
@@ -410,7 +517,7 @@ def main():
 
     # Load trained models for evaluation
     MODEL_PATHS = [
-        f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{noop_suffix}{pop_features_suffix}_{SEED}_final.pt",
+        f"models/rl_mutation_{RL_ALGORITHM}_{PROBLEM_SIZE}_pop{POPULATION_SIZE}_{ACCEPTANCE_STRATEGY}_{REWARD_STRATEGY}{preset_suffix}{noop_suffix}{pop_features_suffix}_{SEED}_final.pt",
     ]
 
     # Test by running mutation episodes and comparing best solutions
@@ -444,7 +551,7 @@ def main():
     distance_measure = DistanceMeasure()
 
     # Create naive mutation with single iteration (will call 100 times)
-    baseline_operators = create_operators(include_noop=args.include_noop)
+    baseline_operators = create_operators(preset=args.operator_preset, include_noop=args.include_noop)
     naive_mutation = NaiveMutation(operators=baseline_operators, max_iterations=30)
     baseline_results = []
 
@@ -566,7 +673,7 @@ def main():
         eval_batch_size = args.dqn_batch_size if model_algorithm == "dqn" else args.ppo_batch_size
 
         eval_model = RLMutation(
-            operators=create_operators(include_noop=args.include_noop),
+            operators=create_operators(preset=args.operator_preset, include_noop=args.include_noop),
             rl_algorithm=model_algorithm,
             hidden_dims=[128, 128, 64],
             learning_rate=1e-3,
