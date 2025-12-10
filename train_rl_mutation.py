@@ -107,8 +107,8 @@ def get_operator_presets():
         "set2": [
             ReinsertOperator(),
             ReinsertOperator(clustered=True, max_attempts=5),
-            ReinsertOperator(allow_same_vehicles = False),
-            ReinsertOperator(allow_same_vehicles = False, allow_new_vehicles = False),
+            ReinsertOperator(allow_same_vehicle = False),
+            ReinsertOperator(allow_same_vehicle = False, allow_new_vehicles = False),
             RouteEliminationOperator(),
             TwoOptOperator(),
             SwapBetweenOperator(type="best"),

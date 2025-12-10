@@ -120,7 +120,7 @@ operators:
 
 # Path configuration (supports placeholders: {algorithm}, {problem_size}, {acceptance}, {reward}, {attention}, {seed}, {suffix}, {run_name})
 paths:
-  suffix: set4
+  suffix: set5
   save_path: models/rl_local_search_{algorithm}_{problem_size}_{acceptance}_{reward}{attention}_{seed}_{suffix}
   tensorboard_dir: runs/{run_name}
   log_dir: logs
