@@ -11,11 +11,13 @@ from memetic.crossover.dummy_crossover import DummyCrossover
 
 from memetic.mutation.naive_mutation import NaiveMutation
 from memetic.mutation.dummy_mutation import DummyMutation
+from memetic.mutation.rl_mutation.rl_mutation import RLMutation
 
 from memetic.local_search.naive_local_search import NaiveLocalSearch
 from memetic.local_search.adaptive_local_search import AdaptiveLocalSearch
 from memetic.local_search.random_local_search import RandomLocalSearch
 from memetic.local_search.dummy_local_search import DummyLocalSearch
+from memetic.local_search.rl_local_search.rl_local_search import RLLocalSearch
 
 from memetic.solution_operators.reinsert import ReinsertOperator
 from memetic.solution_operators.route_elimination import RouteEliminationOperator
@@ -65,38 +67,125 @@ SUMMARY_CSV_FILE = "results/memetic_component_summary.csv"
 # ============================================================================
 # COMPONENT CREATION FUNCTIONS
 # ============================================================================
-
-def create_mutation_operators():
-    """Create and return list of operators for mutation.
-
-    Returns:
-        list: List of operator instances to be used in mutation
-    """
-    return [
-        RequestShiftWithinOperator(),
-        NodeSwapWithinOperator(),
-        SwapBetweenOperator(),
-        SwapWithinOperator(),
-        ShiftOperator(),
-    ]
-
-def create_local_search_operators():
-    """Create and return list of operators for local search.
-
-    Returns:
-        list: List of operator instances to be used in local search
-    """
-    return [
-        ReinsertOperator(),
-        ReinsertOperator(max_attempts=5, clustered=True),
-        ReinsertOperator(allow_same_vehicle=False),
-        RouteEliminationOperator(),
-        TransferOperator(),
-        CLSM1Operator(),
-        CLSM2Operator(),
-        CLSM3Operator(),
-        CLSM4Operator(),
-    ]
+def create_operators():
+    operator_dict = {}
+    
+    reinsert_base = ReinsertOperator()
+    reinsert_5c = ReinsertOperator(max_attempts=5, clustered=True)
+    reinsert_no_same = ReinsertOperator(allow_same_vehicle=False)
+    reinsert_no_same_no_new = ReinsertOperator(allow_new_vehicles=False, allow_same_vehicle=False)
+    route_elim = RouteEliminationOperator()
+    flip = FlipOperator()
+    flip_sr = FlipOperator(single_route=True)
+    merge_min = MergeOperator(type="min")
+    merge_random = MergeOperator(type="random")
+    two_opt = TwoOptOperator()
+    swap_within = SwapWithinOperator()
+    swap_within_sr = SwapWithinOperator(single_route=True)
+    transfer = TransferOperator()
+    transfer_sr = TransferOperator(single_route=True)
+    shift_random = ShiftOperator(type="random")
+    shift_best = ShiftOperator(type="best")
+    cls_m2 = CLSM2Operator()
+    cls_m3 = CLSM3Operator()
+    cls_m4 = CLSM4Operator()
+    request_shift_within = RequestShiftWithinOperator()
+    node_swap_within = NodeSwapWithinOperator()
+    
+    operator_dict["local_search_default"] = [
+            ReinsertOperator(),
+            ReinsertOperator(clustered=True, max_attempts=5),
+            RouteEliminationOperator(),
+            TwoOptOperator(),
+            SwapWithinOperator(),
+            SwapBetweenOperator(),
+            TransferOperator(),
+        ]
+    
+    operator_dict["mutation_default"] = [
+            ReinsertOperator(),
+            RouteEliminationOperator(),
+            FlipOperator(single_route=True),
+            SwapWithinOperator(single_route=True),
+            SwapBetweenOperator(),
+            TransferOperator(single_route=True),
+            RequestShiftWithinOperator(),
+            NodeSwapWithinOperator(),
+        ]
+    
+    operator_dict["set1"] = [
+            ReinsertOperator(),
+            ReinsertOperator(clustered=True, max_attempts=5),
+            RouteEliminationOperator(),
+            TwoOptOperator(),
+            SwapWithinOperator(),
+            SwapBetweenOperator(),
+            TransferOperator(),
+        ]
+    operator_dict["set2"] = [
+            ReinsertOperator(),
+            ReinsertOperator(clustered=True, max_attempts=5),
+            ReinsertOperator(allow_same_vehicle = False),
+            ReinsertOperator(allow_same_vehicle = False, allow_new_vehicles = False),
+            RouteEliminationOperator(),
+            TwoOptOperator(),
+            SwapBetweenOperator(type="best"),
+            MergeOperator(type = "min"),
+            CLSM2Operator(),
+            CLSM3Operator(),
+            CLSM4Operator(),
+        ]
+    operator_dict["set3"] = [
+            ReinsertOperator(),
+            ReinsertOperator(clustered=True, max_attempts=5),
+            RouteEliminationOperator(),
+            FlipOperator(),
+            MergeOperator(type = "min"),
+            MergeOperator(type = "random"),
+            TwoOptOperator(),
+            SwapWithinOperator(),
+            SwapWithinOperator(single_route = True),
+            SwapBetweenOperator(),
+            TransferOperator(),
+            TransferOperator(single_route = True),
+            ShiftOperator(type="random"),
+            ShiftOperator(type="best"),
+            CLSM2Operator(),
+            CLSM3Operator(),
+            CLSM4Operator(),
+        ]
+    operator_dict["set4"] = [
+            RouteEliminationOperator(),
+            FlipOperator(),
+            MergeOperator(type = "min"),
+            MergeOperator(type = "random"),
+            TwoOptOperator(),
+            SwapWithinOperator(),
+            SwapWithinOperator(single_route = True),
+            SwapBetweenOperator(),
+            TransferOperator(),
+            TransferOperator(single_route = True),
+            ShiftOperator(type="random"),
+            ShiftOperator(type="best"),
+            CLSM2Operator(),
+            CLSM3Operator(),
+            CLSM4Operator(),
+        ]
+    operator_dict["set5"] = [
+            ReinsertOperator(),
+            RouteEliminationOperator(),
+            FlipOperator(single_route=True),
+            SwapWithinOperator(single_route=True),
+            SwapBetweenOperator(),
+            TransferOperator(single_route=True),
+            TwoOptOperator(),
+            CLSM2Operator(),
+            CLSM3Operator(),
+            CLSM4Operator(),
+            RequestShiftWithinOperator(),
+            NodeSwapWithinOperator(),
+        ]
+    return operator_dict
 
 def create_selection_instances():
     """Create and return list of selection operator instances.
@@ -120,7 +209,7 @@ def create_crossover_instances():
         DummyCrossover(),
     ]
 
-def create_mutation_instances(mutation_operators):
+def create_mutation_instances(operator_dict):
     """Create and return list of mutation wrapper instances.
 
     Args:
@@ -129,13 +218,15 @@ def create_mutation_instances(mutation_operators):
     Returns:
         list: List of mutation wrapper instances
     """
-    return [
-        NaiveMutation(operators=mutation_operators, max_iterations=1),
-        NaiveMutation(operators=mutation_operators, max_iterations=10),
+    mutations = [
         DummyMutation(),
+        NaiveMutation(operators=operator_dict["mutation_default"], max_iterations=1),
+        NaiveMutation(operators=operator_dict["mutation_default"], max_iterations=10),
     ]
+    
+    return mutations
 
-def create_local_search_instances(local_search_operators):
+def create_local_search_instances(operator_dict):
     """Create and return list of local search wrapper instances.
 
     Args:
@@ -144,12 +235,283 @@ def create_local_search_instances(local_search_operators):
     Returns:
         list: List of local search wrapper instances
     """
-    return [
-        NaiveLocalSearch(operators=local_search_operators, max_no_improvement=10, max_iterations=30),
-        NaiveLocalSearch(operators=local_search_operators, max_no_improvement=10, max_iterations=30, first_improvement=False),
-        RandomLocalSearch(operators=local_search_operators, max_no_improvement=10, max_iterations=30),
+    local_searches = [
         DummyLocalSearch(),
+        NaiveLocalSearch(operators=operator_dict["local_search_default"], max_no_improvement=10, max_iterations=30),
+        NaiveLocalSearch(operators=operator_dict["local_search_default"], max_no_improvement=10, max_iterations=30, first_improvement=False),
+        RandomLocalSearch(operators=operator_dict["local_search_default"], max_no_improvement=10, max_iterations=30),
     ]
+    rl_set1_one_shot = RLLocalSearch(
+            operators=operator_dict["set1"],
+            rl_algorithm="dqn",
+            hidden_dims=[128, 128, 64],
+            learning_rate=0.0001,
+            gamma=0.90,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            alpha=10,
+            beta=0,
+            acceptance_strategy="greedy",
+            type="OneShot",
+            max_iterations=30,
+            max_no_improvement=10,
+            replay_buffer_capacity=10000,
+            batch_size=64,
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=False,
+            device="cuda",
+            verbose=False
+        )
+    rl_set1_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set1_final.pt")
+    local_searches.append(rl_set1_one_shot)
+    
+    rl_set1_ranking = RLLocalSearch(
+            operators=operator_dict["set1"],
+            rl_algorithm="dqn",
+            hidden_dims=[128, 128, 64],
+            learning_rate=0.0001,
+            gamma=0.90,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            alpha=10,
+            beta=0,
+            acceptance_strategy="greedy",
+            type="Ranking",
+            max_iterations=30,
+            max_no_improvement=10,
+            replay_buffer_capacity=10000,
+            batch_size=64,
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=False,
+            device="cuda",
+            verbose=False
+        )
+    rl_set1_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set1_final.pt")
+    local_searches.append(rl_set1_ranking)
+    
+    rl_set2_one_shot = RLLocalSearch(
+            operators=operator_dict["set2"],
+            rl_algorithm="dqn",
+            hidden_dims=[128, 128, 64],
+            learning_rate=0.0001,
+            gamma=0.90,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            alpha=10,
+            beta=0,
+            acceptance_strategy="greedy",
+            type="OneShot",
+            max_iterations=30,
+            max_no_improvement=10,
+            replay_buffer_capacity=10000,
+            batch_size=64,
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=False,
+            device="cuda",
+            verbose=False
+        )
+    rl_set2_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
+    local_searches.append(rl_set2_one_shot)
+    
+    rl_set2_ranking = RLLocalSearch(
+            operators=operator_dict["set2"],
+            rl_algorithm="dqn",
+            hidden_dims=[128, 128, 64],
+            learning_rate=0.0001,
+            gamma=0.90,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            alpha=10,
+            beta=0,
+            acceptance_strategy="greedy",
+            type="Ranking",
+            max_iterations=30,
+            max_no_improvement=10,
+            replay_buffer_capacity=10000,
+            batch_size=64,
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=False,
+            device="cuda",
+            verbose=False
+        )
+    rl_set2_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
+    local_searches.append(rl_set2_ranking)
+    
+    rl_set3_one_shot = RLLocalSearch(
+            operators=operator_dict["set3"],
+            rl_algorithm="dqn",
+            hidden_dims=[128, 128, 64],
+            learning_rate=0.0001,
+            gamma=0.90,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            alpha=10,
+            beta=0,
+            acceptance_strategy="greedy",
+            type="OneShot",
+            max_iterations=30,
+            max_no_improvement=10,
+            replay_buffer_capacity=10000,
+            batch_size=64,
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=False,
+            device="cuda",
+            verbose=False
+        )
+    rl_set3_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt")
+    local_searches.append(rl_set3_one_shot)
+    
+    rl_set3_ranking = RLLocalSearch(
+            operators=operator_dict["set3"],
+            rl_algorithm="dqn",
+            hidden_dims=[128, 128, 64],
+            learning_rate=0.0001,
+            gamma=0.90,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            alpha=10,
+            beta=0,
+            acceptance_strategy="greedy",
+            type="Ranking",
+            max_iterations=30,
+            max_no_improvement=10,
+            replay_buffer_capacity=10000,
+            batch_size=64,
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=False,
+            device="cuda",
+            verbose=False
+        )
+    rl_set3_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt")
+    local_searches.append(rl_set3_ranking)
+    
+    rl_set4_one_shot = RLLocalSearch(
+            operators=operator_dict["set4"],
+            rl_algorithm="dqn",
+            hidden_dims=[128, 128, 64],
+            learning_rate=0.0001,
+            gamma=0.90,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            alpha=10,
+            beta=0,
+            acceptance_strategy="greedy",
+            type="OneShot",
+            max_iterations=30,
+            max_no_improvement=10,
+            replay_buffer_capacity=10000,
+            batch_size=64,
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=False,
+            device="cuda",
+            verbose=False
+        )
+    rl_set4_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set4_final.pt")
+    local_searches.append(rl_set4_one_shot)
+    
+    rl_set4_ranking = RLLocalSearch(
+            operators=operator_dict["set4"],
+            rl_algorithm="dqn",
+            hidden_dims=[128, 128, 64],
+            learning_rate=0.0001,
+            gamma=0.90,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            alpha=10,
+            beta=0,
+            acceptance_strategy="greedy",
+            type="Ranking",
+            max_iterations=30,
+            max_no_improvement=10,
+            replay_buffer_capacity=10000,
+            batch_size=64,
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=False,
+            device="cuda",
+            verbose=False
+        )
+    rl_set4_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set4_final.pt")
+    local_searches.append(rl_set4_ranking)
+    
+    rl_set5_one_shot = RLLocalSearch(
+            operators=operator_dict["set5"],
+            rl_algorithm="dqn",
+            hidden_dims=[128, 128, 64],
+            learning_rate=0.0001,
+            gamma=0.90,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            alpha=10,
+            beta=0,
+            acceptance_strategy="greedy",
+            type="OneShot",
+            max_iterations=30,
+            max_no_improvement=10,
+            replay_buffer_capacity=10000,
+            batch_size=64,
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=False,
+            device="cuda",
+            verbose=False
+        )
+    rl_set5_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set5_final.pt")
+    local_searches.append(rl_set5_one_shot)
+    
+    rl_set5_ranking = RLLocalSearch(
+            operators=operator_dict["set5"],
+            rl_algorithm="dqn",
+            hidden_dims=[128, 128, 64],
+            learning_rate=0.0001,
+            gamma=0.90,
+            epsilon_start=1.0,
+            epsilon_end=0.05,
+            epsilon_decay=0.9975,
+            target_update_interval=100,
+            alpha=10,
+            beta=0,
+            acceptance_strategy="greedy",
+            type="Ranking",
+            max_iterations=30,
+            max_no_improvement=10,
+            replay_buffer_capacity=10000,
+            batch_size=64,
+            n_step=3,
+            use_prioritized_replay=False,
+            use_operator_attention=False,
+            device="cuda",
+            verbose=False
+        )
+    rl_set5_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set5_final.pt")
+    local_searches.append(rl_set5_ranking)
+    
+    return local_searches
 
 # ============================================================================
 # COMBINATIONS TO TEST
@@ -158,8 +520,14 @@ def create_local_search_instances(local_search_operators):
 # Each combination specifies indices into the component lists
 # Format: {'name': str, 'selection': idx, 'crossover': idx, 'mutation': idx, 'local_search': idx}
 COMBINATIONS = [
-    {'name': 'Baseline', 'selection': 0, 'crossover': 0, 'mutation': 0, 'local_search': 0},
-    {'name': 'No_Mutation', 'selection': 0, 'crossover': 0, 'mutation': 2, 'local_search': 0},
+    {'name': 'Baseline', 'selection': 1, 'crossover': 1, 'mutation': 1, 'local_search': 1},
+    {'name': 'No_Mutation', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 1},
+    {'name': 'No_LocalSearch', 'selection': 1, 'crossover': 1, 'mutation': 1, 'local_search': 0},
+    {'name': 'LS_Set2_OneShot', 'selection': 1, 'crossover': 1, 'mutation': 1, 'local_search': 6},
+    {'name': 'LS_Set2_Ranking', 'selection': 1, 'crossover': 1, 'mutation': 1, 'local_search': 7},
+    {'name': 'LS_Set5_OneShot', 'selection': 1, 'crossover': 1, 'mutation': 1, 'local_search': 12},
+    {'name': 'LS_Set5_Ranking', 'selection': 1, 'crossover': 1, 'mutation': 1, 'local_search': 13},
+    
 ]
 
 # ============================================================================
@@ -182,12 +550,11 @@ def run_experiment():
     print("=" * 80)
 
     # Create component instances
-    mutation_operators = create_mutation_operators()
-    local_search_operators = create_local_search_operators()
+    operator_dict = create_operators()
     selection_instances = create_selection_instances()
     crossover_instances = create_crossover_instances()
-    mutation_instances = create_mutation_instances(mutation_operators)
-    local_search_instances = create_local_search_instances(local_search_operators)
+    mutation_instances = create_mutation_instances(operator_dict)
+    local_search_instances = create_local_search_instances(operator_dict)
 
     # Initialize instance managers
     li_lim_manager = LiLimInstanceManager()
