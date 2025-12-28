@@ -9,7 +9,7 @@ build/
 *.so
 *.pyd
 # any json files
-*.json
+
 
 # ignore all .md except README.md
 *.md

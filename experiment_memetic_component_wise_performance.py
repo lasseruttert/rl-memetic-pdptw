@@ -683,8 +683,11 @@ def run_experiment():
         # Store results
         all_results[combo_id] = combination_results
 
-        # Save results incrementally
-        save_results(all_results)
+        # Save individual combo file
+        combo_file = f"{RESULTS_BASE_DIR}/combo_{combo_idx}_{combo_name}.json"
+        with open(combo_file, 'w') as f:
+            json.dump(combination_results, f, indent=2)
+        print(f"  Saved to {combo_file}")
 
     print("\n" + "=" * 80)
     print("EXPERIMENT COMPLETE")
