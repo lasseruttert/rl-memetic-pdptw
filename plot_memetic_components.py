@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 # CONFIGURATION
 # ============================================================================
 
-RESULTS_FILE = "results/memetic_component_results.json"
+RESULTS_FOLDER = "results/memetic_component_wise"
 OUTPUT_BASE_DIR = "results/memetic_component_plots"
 
 # Plot styling - Thesis quality
@@ -100,10 +100,45 @@ def parse_instance_name(instance_name):
         'instance_name': instance_name,
     }
 
-def load_results(filepath):
-    """Load results from JSON file."""
-    with open(filepath, 'r') as f:
-        return json.load(f)
+def load_results(folder_path):
+    """Load results from all combo JSON files in the specified folder.
+
+    Args:
+        folder_path: Path to folder containing combo_*.json files
+
+    Returns:
+        dict: Aggregated results with structure {combo_id: combo_data}
+    """
+    folder = Path(folder_path)
+    if not folder.exists():
+        raise FileNotFoundError(f"Results folder not found: {folder_path}")
+
+    # Find all combo JSON files
+    combo_files = sorted(folder.glob("combo_*.json"))
+
+    if not combo_files:
+        raise FileNotFoundError(f"No combo_*.json files found in {folder_path}")
+
+    # Load and aggregate all combo files
+    aggregated_results = {}
+
+    for combo_file in combo_files:
+        with open(combo_file, 'r') as f:
+            combo_data = json.load(f)
+
+        # Extract combo_id from the data itself (more reliable than filename)
+        combo_id = combo_data.get('combination_id')
+
+        if combo_id is None:
+            # Fallback: extract from filename (e.g., "combo_0_Baseline.json" -> "combo_0")
+            filename = combo_file.stem  # "combo_0_Baseline"
+            combo_id = filename.split('_')[0] + '_' + filename.split('_')[1]  # "combo_0"
+
+        aggregated_results[combo_id] = combo_data
+
+    print(f"Loaded {len(aggregated_results)} combinations from {folder_path}")
+
+    return aggregated_results
 
 def organize_by_category(results):
     """
@@ -686,9 +721,8 @@ def create_all_plots():
     print("=" * 80)
 
     # Load results
-    print(f"\nLoading results from {RESULTS_FILE}...")
-    results = load_results(RESULTS_FILE)
-    print(f"Loaded {len(results)} combinations")
+    print(f"\nLoading results from {RESULTS_FOLDER}...")
+    results = load_results(RESULTS_FOLDER)
 
     # Organize by category
     by_category = organize_by_category(results)
@@ -809,7 +843,7 @@ if __name__ == "__main__":
         create_all_plots()
         print("\nAll visualizations generated successfully!")
     except FileNotFoundError as e:
-        print(f"\nError: Results file not found: {RESULTS_FILE}")
+        print(f"\nError: Results folder not found or no combo files: {RESULTS_FOLDER}")
         print("Please run the experiment first to generate results.")
     except Exception as e:
         print(f"\nError during visualization: {e}")

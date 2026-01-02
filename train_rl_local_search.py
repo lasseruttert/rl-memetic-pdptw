@@ -164,6 +164,18 @@ def create_solution_generator(problem: PDPTWProblem) -> PDPTWSolution:
     solution = generator.generate(problem, num_solutions=1)[0]
     return solution
 
+def create_solution_generator_with_ls(problem: PDPTWProblem) -> PDPTWSolution:
+    """Generate initial solution for a problem instance."""
+    generator = RandomGenerator()
+    solution = generator.generate(problem, num_solutions=1)[0]
+    num_iterations = random.randint(0, 30)
+    ls = NaiveLocalSearch(
+        operators = [ReinsertOperator()],
+        max_iterations = num_iterations,
+        max_no_improvement=num_iterations,
+    )
+    solution = ls.search(problem, solution)
+    return solution
 
 def get_validation_instance_names(size: int, num_instances: int) -> list[str]:
     """Get fixed list of validation instance names for reproducible evaluation.
@@ -313,6 +325,8 @@ def main():
                         help="Skip testing after training")
     parser.add_argument("--skip_testing", action="store_true",
                         help="Alias for --train_only (deprecated)")
+    parser.add_argument("--ls_initial_solution", action="store_true",
+                        help="Use initial solution with local search")
 
     args = parser.parse_args()
 
@@ -446,7 +460,7 @@ def main():
             instance_manager = LiLimInstanceManager()
             validation_set = create_validation_set(
                 instance_manager=instance_manager,
-                solution_generator=create_solution_generator,
+                solution_generator=create_solution_generator if not args.ls_initial_solution else create_solution_generator_with_ls,
                 size=PROBLEM_SIZE,
                 mode=config.validation['mode'],
                 num_instances=config.validation['num_instances'],
@@ -490,7 +504,7 @@ def main():
 
         training_history = rl_local_search.train(
             problem_generator=problem_generator,
-            initial_solution_generator=create_solution_generator,
+            initial_solution_generator=create_solution_generator if not args.ls_initial_solution else create_solution_generator_with_ls,
             num_episodes=config.training['num_episodes'],
             new_instance_interval=config.training['new_instance_interval'],
             new_solution_interval=config.training['new_solution_interval'],

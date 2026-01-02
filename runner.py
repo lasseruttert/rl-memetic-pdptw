@@ -16,15 +16,8 @@ from typing import List, Tuple, Union
 # ]
 # ------------------------------------------------------------
 TASKS: List[Union[str, List[str]]] = [
-    "train_rl_mutation.py --operator_preset default",
-    "train_rl_mutation.py --operator_preset set1",
-    "train_rl_mutation.py --operator_preset set2",
-    "train_rl_mutation.py --operator_preset set3",
-    "train_rl_mutation.py --operator_preset set4",
-    "train_rl_mutation.py --operator_preset set5",
-    
-    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set4.yaml",
-    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set5.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2.yaml --ls_initial_solution",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2_shorter.yaml",
 ]
 
 
