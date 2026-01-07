@@ -174,7 +174,7 @@ def create_solution_generator_with_ls(problem: PDPTWProblem) -> PDPTWSolution:
         max_iterations = num_iterations,
         max_no_improvement=num_iterations,
     )
-    solution = ls.search(problem, solution)
+    solution, _ = ls.search(problem, solution)
     return solution
 
 def get_validation_instance_names(size: int, num_instances: int) -> list[str]:
