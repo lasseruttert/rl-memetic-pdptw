@@ -99,13 +99,15 @@ def create_problem_generator(size: int = 100, categories: list[str] = None, inst
     instance_manager = LiLimInstanceManager()
 
     if categories is None:
-        categories = list(instance_manager.CATEGORIES.keys())
+        categories = list(instance_manager._get_categories(size).keys())
 
     # If instance_subset is provided, use only those instances
     if instance_subset is None:
-        available_instances = {cat: instance_manager.CATEGORIES[cat] for cat in categories}
+        available_instances = {cat: instance_manager._get_categories(size)[cat] for cat in categories}
     else:
         available_instances = instance_subset
+        
+    print(available_instances)
 
     def generator():
         # Randomly select category and instance from available subset
@@ -122,7 +124,7 @@ def create_problem_generator(size: int = 100, categories: list[str] = None, inst
     return generator
 
 
-def split_instances_by_ratio(categories: list[str], train_ratio: float) -> tuple[dict, dict]:
+def split_instances_by_ratio(size: int, categories: list[str], train_ratio: float) -> tuple[dict, dict]:
     """Split instances within each category by ratio.
 
     Args:
@@ -137,7 +139,7 @@ def split_instances_by_ratio(categories: list[str], train_ratio: float) -> tuple
     test_instances = {}
 
     for category in categories:
-        all_instances = instance_manager.CATEGORIES[category]
+        all_instances = instance_manager._get_categories(size)[category]
 
         if train_ratio >= 1.0:
             # Use all instances for both training and testing
@@ -426,6 +428,7 @@ def main():
 
     # Create train/test split
     train_instances, test_instances = split_instances_by_ratio(
+        size=PROBLEM_SIZE,
         categories=CATEGORIES,
         train_ratio=config.problem['train_ratio']
     )

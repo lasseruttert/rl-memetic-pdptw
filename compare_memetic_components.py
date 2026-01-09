@@ -264,7 +264,7 @@ def create_comparison_plots(agg_df, category_name):
     # Prepare data
     combos = agg_df['Combination'].tolist()
     x = np.arange(len(combos))
-    colors = [COMBO_COLORS.get(c, '#gray') for c in combos]
+    colors = [COMBO_COLORS.get(c, 'gray') for c in combos]
 
     # Plot 1: Average Fitness
     ax = axes[0]

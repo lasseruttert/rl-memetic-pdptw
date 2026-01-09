@@ -1,6 +1,6 @@
 # Problem configuration
 problem:
-  size: 100
+  size: 200
   categories: ['lc1', 'lc2', 'lr1', 'lr2']
   train_ratio: 0.8  # 80% train, 20% test split
 
@@ -121,7 +121,7 @@ operators:
 
 # Path configuration (supports placeholders: {algorithm}, {problem_size}, {acceptance}, {reward}, {attention}, {seed}, {suffix}, {run_name})
 paths:
-  suffix: set2
+  suffix: set2_200
   save_path: models/rl_local_search_{algorithm}_{problem_size}_{acceptance}_{reward}{attention}_{seed}_{suffix}
   tensorboard_dir: runs/{run_name}
   log_dir: logs

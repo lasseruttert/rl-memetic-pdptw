@@ -16,8 +16,11 @@ from typing import List, Tuple, Union
 # ]
 # ------------------------------------------------------------
 TASKS: List[Union[str, List[str]]] = [
-    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2.yaml --ls_initial_solution",
-    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2_shorter.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2_200.yaml",
+    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2_400.yaml",
+    "experiment_memetic_component_wise_performance.py",
+    "experiment_memetic_component_wise_performance_200.py",
+    "experiment_memetic_component_wise_performance_400.py",
 ]
 
 
