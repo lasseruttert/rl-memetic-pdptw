@@ -277,8 +277,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_06_rl_set1_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set1_final.pt")
     local_searches.append(ls_06_rl_set1_one_shot)
@@ -304,8 +303,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_07_rl_set1_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set1_final.pt")
     local_searches.append(ls_07_rl_set1_ranking)
@@ -331,8 +329,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_08_rl_set2_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
     local_searches.append(ls_08_rl_set2_one_shot)
@@ -358,8 +355,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_09_rl_set2_ls_init.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_ls_init_final.pt")
     local_searches.append(ls_09_rl_set2_ls_init)
@@ -385,8 +381,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_10_rl_set2_shorter.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_shorter_final.pt")
     local_searches.append(ls_10_rl_set2_shorter)
@@ -412,8 +407,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_11_rl_set2_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
     local_searches.append(ls_11_rl_set2_ranking)
@@ -439,8 +433,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_12_rl_set3_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt")
     local_searches.append(ls_12_rl_set3_one_shot)
@@ -466,8 +459,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_13_rl_set3_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt")
     local_searches.append(ls_13_rl_set3_ranking)
@@ -493,8 +485,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_14_rl_set4_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set4_final.pt")
     local_searches.append(ls_14_rl_set4_one_shot)
@@ -520,8 +511,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_15_rl_set4_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set4_final.pt")
     local_searches.append(ls_15_rl_set4_ranking)
@@ -547,8 +537,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_16_rl_set5_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set5_final.pt")
     local_searches.append(ls_16_rl_set5_one_shot)
@@ -574,8 +563,7 @@ def create_local_search_instances(operator_dict):
             n_step=3,
             use_prioritized_replay=False,
             use_operator_attention=False,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
     ls_17_rl_set5_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set5_final.pt")
     local_searches.append(ls_17_rl_set5_ranking)

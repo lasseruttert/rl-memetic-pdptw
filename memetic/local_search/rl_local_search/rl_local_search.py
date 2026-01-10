@@ -4,6 +4,7 @@ import numpy as np
 import random
 import time
 from typing import Callable, Optional, Dict, List, Tuple
+import torch
 
 from utils.pdptw_problem import PDPTWProblem
 from utils.pdptw_solution import PDPTWSolution
@@ -70,7 +71,7 @@ class RLLocalSearch(BaseLocalSearch):
         max_iterations: int = 100,
         max_no_improvement: Optional[int] = None,
         use_operator_attention: bool = False,
-        device: str = "cuda",
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
         verbose: bool = False,
         tracking: bool = False
     ):
@@ -115,7 +116,8 @@ class RLLocalSearch(BaseLocalSearch):
                 max_iterations: Maximum iterations for both training episodes and inference
                 max_no_improvement: Early stopping after N steps without improvement (None to disable)
                 use_operator_attention: Whether to use operator attention mechanism
-                device: Device for training ("cuda" or "cpu")
+                device: Device for training ("cuda" or "cpu"). Auto-detects CUDA availability by default.
+                       Set explicitly to override (e.g., device="cpu" to force CPU even when CUDA is available)
                 verbose: Whether to print training progress
         """
         super().__init__()
@@ -133,6 +135,11 @@ class RLLocalSearch(BaseLocalSearch):
         self.batch_size = batch_size
         self.use_operator_attention = use_operator_attention
         self.verbose = verbose
+        self.device = device
+
+        # Log device selection if verbose
+        if self.verbose:
+            print(f"Device: {device} (CUDA available: {torch.cuda.is_available()})")
 
         # Algorithm-specific parameters
         if rl_algorithm == "dqn":

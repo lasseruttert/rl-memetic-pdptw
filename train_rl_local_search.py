@@ -422,8 +422,7 @@ def main():
             max_iterations=config.training['max_iterations'],
             max_no_improvement=config.training['max_no_improvement'],
             use_operator_attention=USE_OPERATOR_ATTENTION,
-            device="cuda",
-            verbose=True
+            verbose=True  # device uses auto-detection (CUDA if available, else CPU)
         )
 
     # Create train/test split
@@ -638,8 +637,7 @@ def main():
             n_step=config.dqn['n_step'],
             use_prioritized_replay=False,
             use_operator_attention=model_uses_attention,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
         # Roulette model (probabilistic sampling based on Q-values/policy logits)
         model_roulette = RLLocalSearch(
@@ -663,8 +661,7 @@ def main():
             n_step=config.dqn['n_step'],
             use_prioritized_replay=False,
             use_operator_attention=model_uses_attention,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
         # Ranking model (strict Q-value/policy order, best first)
         model_ranking = RLLocalSearch(
@@ -688,8 +685,7 @@ def main():
             n_step=config.dqn['n_step'],
             use_prioritized_replay=False,
             use_operator_attention=model_uses_attention,
-            device="cuda",
-            verbose=False
+            verbose=False  # device uses auto-detection
         )
         try:
             model_oneshot.load(path)
