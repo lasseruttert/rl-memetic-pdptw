@@ -8,7 +8,7 @@ class BestKnownSolutions:
         self.bks_path = bks_path
 
     def get_bks_as_tuple(self, problem: PDPTWProblem) -> tuple:
-        problem_name = problem.name
+        problem_name = problem.name.lower()
         dataset = problem.dataset
         subfolder = ""
         if dataset == "Li & Lim":
@@ -26,7 +26,7 @@ class BestKnownSolutions:
 
     
     def get_bks_as_solution(self, problem: PDPTWProblem) -> PDPTWSolution:
-        problem_name = problem.name
+        problem_name = problem.name.lower()
         dataset = problem.dataset
         subfolder = ""
         if dataset == "Li & Lim":

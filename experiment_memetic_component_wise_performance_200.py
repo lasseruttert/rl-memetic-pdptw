@@ -428,6 +428,7 @@ def run_experiment():
                 bks_fitness = bks_total_distance * (1 + bks_num_vehicles / instance.num_vehicles)
             except Exception as e:
                 print(f"    Warning: Could not retrieve BKS for {clean_instance_name}: {e}")
+                print(instance.name)
                 bks_fitness = None
                 bks_num_vehicles = None
                 bks_total_distance = None
