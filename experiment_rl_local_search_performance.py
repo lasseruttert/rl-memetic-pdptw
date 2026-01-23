@@ -34,10 +34,10 @@ PROBLEM_SIZES = [100]
 NUM_RUNS = 10
 
 # Path to trained RL local search model
-MODEL_PATH = "models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt"
+MODEL_PATH = "models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt"
 
 # Results directory
-RESULTS_DIR = "results/rl_local_search_performance"
+RESULTS_DIR = "results/rl_local_search_performance_set2"
 
 # Random seed for reproducibility
 SEED = 42

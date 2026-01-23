@@ -1,0 +1,97 @@
+# Target Network Update Interval = 50
+# Baseline: 100
+
+# Problem configuration
+problem:
+  size: 100
+  categories: ['lc1', 'lc2', 'lr1', 'lr2']
+  train_ratio: 0.8
+
+rl_algorithm: dqn
+
+algorithm:
+  acceptance_strategy: greedy
+  reward_strategy: binary
+
+network:
+  hidden_dims: [128, 128, 64]
+  learning_rate: 0.0001
+  gamma: 0.90
+  use_operator_attention: false
+
+# DQN-specific parameters - MODIFIED: target_update_interval = 50
+dqn:
+  epsilon_start: 1.0
+  epsilon_end: 0.05
+  epsilon_decay: 0.9975
+  target_update_interval: 50  # (baseline: 100)
+  batch_size: 64
+  n_step: 3
+  use_prioritized_replay: true
+  per_alpha: 0.6
+  per_beta_start: 0.4
+  replay_buffer_capacity: 100000
+
+ppo:
+  batch_size: 2048
+  clip_epsilon: 0.2
+  entropy_coef: 0.01
+  num_epochs: 2
+  num_minibatches: 2
+
+training:
+  num_episodes: 1000
+  max_iterations: 200
+  max_no_improvement: 50
+  warmup_episodes: 10
+  save_interval: 1000
+  new_instance_interval: 5
+  new_solution_interval: 1
+  update_interval: 1
+  alpha: 10.0
+  beta: 0.0
+  seed: 100
+  device: cuda
+  verbose: true
+
+validation:
+  skip_validation: true
+  mode: fixed_benchmark
+  num_instances: 10
+  interval: 50
+  seeds: [42, 111, 222, 333, 444]
+  runs_per_seed: 1
+
+testing:
+  skip_testing: false
+  test_only: false
+  num_test_problems: 50
+  runs_per_problem: 3
+  deterministic_test_rng: false
+  test_seeds: [42, 422, 100, 200, 300]
+
+operators:
+  preset: custom
+  custom:
+    - type: ReinsertOperator
+      params: {}
+    - type: ReinsertOperator
+      params:
+        max_attempts: 5
+        clustered: True
+    - type: RouteEliminationOperator
+      params: {}
+    - type: TwoOptOperator
+      params: {}
+    - type: SwapWithinOperator
+      params: {}
+    - type: SwapBetweenOperator
+      params: {}
+    - type: TransferOperator
+      params: {}
+
+paths:
+  suffix: hp_tuning_target_update_50
+  save_path: models/hyperparameter_tuning/rl_local_search_{algorithm}_{problem_size}_{acceptance}_{reward}{attention}_{seed}_{suffix}
+  tensorboard_dir: runs/hyperparameter_tuning/{run_name}
+  log_dir: logs/hyperparameter_tuning
