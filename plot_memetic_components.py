@@ -23,8 +23,8 @@ import re
 # CONFIGURATION
 # ============================================================================
 
-CSV_FILE = "results/memetic_component_wise/memetic_component_summary.csv"
-OUTPUT_DIR = "results/memetic_component_comparison"
+CSV_FILE = "results/memetic_component_summary_100.csv"
+OUTPUT_DIR = "results/memetic_component_comparison_100"
 
 # Plot styling - Thesis quality
 plt.rcParams.update({

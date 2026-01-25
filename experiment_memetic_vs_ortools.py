@@ -34,8 +34,8 @@ from pathlib import Path
 # ============================================================================
 
 PROBLEM_SIZES = [100, 200, 400]
-MEMETIC_MAX_TIME_SECONDS = 60
-ORTOOLS_MAX_TIME_SECONDS = 60
+MEMETIC_MAX_TIME_SECONDS = 180
+ORTOOLS_MAX_TIME_SECONDS = 180
 NUM_RUNS = 3
 POPULATION_SIZE = 10
 

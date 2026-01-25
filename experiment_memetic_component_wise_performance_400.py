@@ -61,8 +61,8 @@ NUM_RUNS = 5
 
 # Output files
 RESULTS_BASE_DIR = "results"
-RESULTS_OUTPUT_FILE = "results/memetic_component_results.json"
-SUMMARY_CSV_FILE = "results/memetic_component_summary.csv"
+RESULTS_OUTPUT_FILE = "results/memetic_component_results_400.json"
+SUMMARY_CSV_FILE = "results/memetic_component_summary_400.csv"
 
 # ============================================================================
 # COMPONENT CREATION FUNCTIONS
