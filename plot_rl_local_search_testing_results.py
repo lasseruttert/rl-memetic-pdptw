@@ -4,8 +4,15 @@ import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from collections import defaultdict
 from pathlib import Path
+
+
+def darken_color(color, factor=0.6):
+    """Make a color darker by the given factor (0=black, 1=original)."""
+    rgb = mcolors.to_rgb(color)
+    return tuple(c * factor for c in rgb)
 
 # Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
@@ -42,6 +49,68 @@ METHOD_COLORS = [
 ]
 
 BASELINE_COLORS = ['#5A5A5A', '#7A7A7A', '#9A9A9A', '#BABABA']
+
+
+def compute_axis_limits_with_outlier_truncation(values, std_values=None, start_at_zero=False, outlier_threshold=2.0):
+    """Compute y-axis limits, truncating outliers that are > threshold * next highest.
+
+    Args:
+        values: List of values to plot
+        std_values: List of std values for error bars (optional)
+        start_at_zero: Whether y-axis should start at 0
+        outlier_threshold: Truncate bars > this multiple of next highest value
+
+    Returns:
+        tuple: (y_min, y_max, truncated_indices) where truncated_indices are bars to clip
+    """
+    if std_values is None:
+        std_values = [0] * len(values)
+
+    # Calculate upper bounds (value + std) for proper axis scaling
+    upper_bounds = [v + s for v, s in zip(values, std_values)]
+    lower_bounds = [v - s for v, s in zip(values, std_values)]
+
+    valid_upper = [u for u in upper_bounds if u > 0]
+    if len(valid_upper) < 2:
+        y_min = 0 if start_at_zero else min(lower_bounds) * 0.9
+        y_max = max(upper_bounds) * 1.1
+        return y_min, y_max, []
+
+    sorted_upper = sorted(valid_upper, reverse=True)
+    max_upper = sorted_upper[0]
+    second_max_upper = sorted_upper[1]
+
+    truncated_indices = []
+
+    # Check if max is an outlier (more than threshold * second highest)
+    if max_upper > outlier_threshold * second_max_upper:
+        # Find all outlier values
+        truncation_limit = second_max_upper * 1.5  # Show up to 1.5x the second highest
+        for i, u in enumerate(upper_bounds):
+            if u > truncation_limit:
+                truncated_indices.append(i)
+
+        if start_at_zero:
+            y_min = 0
+            y_max = truncation_limit  # No padding - bars go right to the edge
+        else:
+            non_outlier_lower = [lower_bounds[i] for i, u in enumerate(upper_bounds) if u <= truncation_limit]
+            if non_outlier_lower:
+                y_min = min(non_outlier_lower) * 0.95
+                y_max = truncation_limit  # No padding - bars go right to the edge
+            else:
+                y_min = 0
+                y_max = truncation_limit  # No padding - bars go right to the edge
+    else:
+        # No outliers - normal scaling with error bars accounted for
+        if start_at_zero:
+            y_min = 0
+            y_max = max(upper_bounds) * 1.1
+        else:
+            y_min = min(lower_bounds) * 0.95
+            y_max = max(upper_bounds) * 1.1
+
+    return y_min, y_max, truncated_indices
 
 
 def parse_log_filename(filename):
@@ -307,9 +376,9 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
         reward_strategies = sorted(reward_grouped.keys())
 
         # Plot each metric separately
-        for metric_key, metric_name, ylabel in [
-            ('avg_fitness', 'fitness', 'Average Fitness (lower is better)'),
-            ('avg_time', 'time', 'Average Time (seconds)')
+        for metric_key, metric_name, ylabel, std_key in [
+            ('avg_fitness', 'fitness', 'Average Fitness (lower is better)', 'std_fitness'),
+            ('avg_time', 'time', 'Average Time (seconds)', None)
         ]:
             fig, ax = plt.subplots(figsize=(16, 10))
 
@@ -322,6 +391,7 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
 
             # Collect baseline values (same across all reward strategies)
             baseline_values = {}
+            baseline_std = {}
             baseline_names = ['Adaptive', 'Naive', 'Naive (best)', 'Random']
 
             for reward in reward_strategies:
@@ -330,24 +400,27 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
 
                 # Collect RL model results - only use OneShot variant
                 rl_values = []
+                rl_std_values = []
                 for rl_algo, results in algo_results:
                     if results['rl_models']:
                         # Filter to only OneShot variant
-                        model_values = [
-                            model_data[metric_key]
-                            for model_name, model_data in results['rl_models'].items()
-                            if '(OneShot)' in model_name
-                        ]
-                        rl_values.extend(model_values)
+                        for model_name, model_data in results['rl_models'].items():
+                            if '(OneShot)' in model_name:
+                                rl_values.append(model_data[metric_key])
+                                if std_key and std_key in model_data:
+                                    rl_std_values.append(model_data[std_key])
 
                     # Get baseline values from first result (same across all rewards)
                     if not baseline_values and results.get('baselines'):
                         for baseline_name, baseline_data in results['baselines'].items():
                             baseline_values[baseline_name] = baseline_data[metric_key]
+                            if std_key and std_key in baseline_data:
+                                baseline_std[baseline_name] = baseline_data[std_key]
 
                 if rl_values:
                     values.append(np.mean(rl_values))
-                    std_values.append(np.std(rl_values) if len(rl_values) > 1 else 0)
+                    # Use std from logs (average if multiple models)
+                    std_values.append(np.mean(rl_std_values) if rl_std_values else 0)
                 else:
                     values.append(0)
                     std_values.append(0)
@@ -358,7 +431,7 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
             for baseline_name in baseline_names:
                 if baseline_name in baseline_values:
                     values.append(baseline_values[baseline_name])
-                    std_values.append(0)  # Baselines already averaged
+                    std_values.append(baseline_std.get(baseline_name, 0))
                     labels.append(baseline_name)
 
             # Update x positions and colors to include baselines
@@ -370,10 +443,29 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
             rl_colors = METHOD_COLORS[:num_rl]
             colors = rl_colors + BASELINE_COLORS[:num_baselines]
 
+            # Compute axis limits with outlier truncation (accounting for error bars)
+            start_at_zero = True
+            show_error = (std_key is not None)
+            y_min, y_max, truncated_indices = compute_axis_limits_with_outlier_truncation(
+                values, std_values=std_values if show_error else None, start_at_zero=start_at_zero
+            )
+
             # Plot bars
-            ax.bar(x, values, width,
-                  color=colors, alpha=0.8,
-                  edgecolor='black', linewidth=1.5)
+            bars = ax.bar(x, values, width,
+                         color=colors, alpha=0.8,
+                         edgecolor='black', linewidth=1.5)
+
+            # Draw error bars separately with matching darkened colors
+            if show_error:
+                for i, (val, std, color) in enumerate(zip(values, std_values, colors)):
+                    if std > 0:
+                        dark_color = darken_color(color, factor=0.66)
+                        ax.errorbar(x[i], val, yerr=std, fmt='none',
+                                   capsize=12, capthick=2.5, elinewidth=2.5,
+                                   ecolor=dark_color)
+
+            # Set y-axis limits
+            ax.set_ylim(bottom=y_min, top=y_max)
 
             # Add separator line between RL and baselines
             if num_rl > 0 and num_baselines > 0:
@@ -408,7 +500,7 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
 
 
 def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, metric_key,
-                                     ylabel, title_suffix):
+                                     ylabel, title_suffix, std_key=None):
     """Create combined figure showing all acceptance strategies for one metric.
 
     Args:
@@ -417,6 +509,7 @@ def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, met
         metric_key: 'avg_fitness', 'avg_improvement', or 'avg_time'
         ylabel: Y-axis label
         title_suffix: Title suffix (e.g., 'Fitness')
+        std_key: Key for std values (e.g., 'std_fitness') or None
     """
     os.makedirs(output_dir, exist_ok=True)
 
@@ -440,41 +533,49 @@ def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, met
 
         # Collect data
         values = []
+        std_values = []
         labels = []
 
         # Collect baseline values
         baseline_values = {}
+        baseline_std = {}
         baseline_names = ['Adaptive', 'Naive', 'Naive (best)', 'Random']
 
         # RL model values per reward strategy (OneShot only)
         for reward in reward_strategies:
             algo_results = reward_grouped[reward]
             rl_values = []
+            rl_std_values = []
             for rl_algo, results in algo_results:
                 if results['rl_models']:
                     # Filter to only OneShot variant
-                    model_values = [
-                        model_data[metric_key]
-                        for model_name, model_data in results['rl_models'].items()
-                        if '(OneShot)' in model_name
-                    ]
-                    rl_values.extend(model_values)
+                    for model_name, model_data in results['rl_models'].items():
+                        if '(OneShot)' in model_name:
+                            rl_values.append(model_data[metric_key])
+                            if std_key and std_key in model_data:
+                                rl_std_values.append(model_data[std_key])
 
                 # Get baseline values from first result
                 if not baseline_values and results.get('baselines'):
                     for baseline_name, baseline_data in results['baselines'].items():
                         baseline_values[baseline_name] = baseline_data[metric_key]
+                        if std_key and std_key in baseline_data:
+                            baseline_std[baseline_name] = baseline_data[std_key]
 
             if rl_values:
                 values.append(np.mean(rl_values))
+                # Use std from logs (average if multiple models)
+                std_values.append(np.mean(rl_std_values) if rl_std_values else 0)
             else:
                 values.append(0)
+                std_values.append(0)
             labels.append(reward)
 
         # Add baseline values
         for baseline_name in baseline_names:
             if baseline_name in baseline_values:
                 values.append(baseline_values[baseline_name])
+                std_values.append(baseline_std.get(baseline_name, 0))
                 labels.append(baseline_name)
 
         # Plot
@@ -488,8 +589,28 @@ def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, met
         rl_colors = METHOD_COLORS[:num_rl]
         colors = rl_colors + BASELINE_COLORS[:num_baselines]
 
-        ax.bar(x, values, width, color=colors, alpha=0.8,
-               edgecolor='black', linewidth=1.0)
+        # Compute axis limits with outlier truncation (accounting for error bars)
+        start_at_zero = True
+        show_error = (std_key is not None)
+        y_min, y_max, truncated_indices = compute_axis_limits_with_outlier_truncation(
+            values, std_values=std_values if show_error else None, start_at_zero=start_at_zero
+        )
+
+        # Draw bars
+        bars = ax.bar(x, values, width, color=colors, alpha=0.8,
+                      edgecolor='black', linewidth=1.0)
+
+        # Draw error bars separately with matching darkened colors
+        if show_error:
+            for i, (val, std, color) in enumerate(zip(values, std_values, colors)):
+                if std > 0:
+                    dark_color = darken_color(color, factor=0.66)
+                    ax.errorbar(x[i], val, yerr=std, fmt='none',
+                               capsize=10, capthick=2.0, elinewidth=2.0,
+                               ecolor=dark_color)
+
+        # Set y-axis limits
+        ax.set_ylim(bottom=y_min, top=y_max)
 
         # Separator line
         if num_rl > 0 and num_baselines > 0:
@@ -593,7 +714,8 @@ def main():
             testing_data_by_acceptance, testing_output_dir,
             metric_key='avg_fitness',
             ylabel='Average Fitness (lower is better)',
-            title_suffix='Fitness'
+            title_suffix='Fitness',
+            std_key='std_fitness'
         )
 
         print('\nCombined Time Plot:')
@@ -601,7 +723,8 @@ def main():
             testing_data_by_acceptance, testing_output_dir,
             metric_key='avg_time',
             ylabel='Average Time (seconds)',
-            title_suffix='Time'
+            title_suffix='Time',
+            std_key=None
         )
 
         print(f'\n{"="*80}')

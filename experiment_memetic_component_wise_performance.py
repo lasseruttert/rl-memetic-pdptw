@@ -57,12 +57,12 @@ MAX_TIME_SECONDS = 60
 EVALUATION_INTERVAL = 5
 
 # Run parameters
-NUM_RUNS = 5
+NUM_RUNS = 3
 
 # Output files
 RESULTS_BASE_DIR = "results"
-RESULTS_OUTPUT_FILE = "results/memetic_component_results.json"
-SUMMARY_CSV_FILE = "results/memetic_component_summary.csv"
+RESULTS_OUTPUT_FILE = "results/memetic_component_results_100.json"
+SUMMARY_CSV_FILE = "results/memetic_component_summary_100.csv"
 
 # ============================================================================
 # COMPONENT CREATION FUNCTIONS
@@ -256,316 +256,40 @@ def create_local_search_instances(operator_dict):
     ls_05_random_10_30 = RandomLocalSearch(operators=operator_dict["set2"], max_no_improvement=10, max_iterations=30)
     local_searches.append(ls_05_random_10_30)
     
-    ls_06_rl_set1_one_shot = RLLocalSearch(
-            operators=operator_dict["set1"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="OneShot",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_06_rl_set1_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set1_final.pt")
+    ls_06_rl_set1_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set1_final.pt")
     local_searches.append(ls_06_rl_set1_one_shot)
     
-    ls_07_rl_set1_ranking = RLLocalSearch(
-            operators=operator_dict["set1"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="Ranking",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_07_rl_set1_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set1_final.pt")
+    ls_07_rl_set1_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set1_final.pt")
     local_searches.append(ls_07_rl_set1_ranking)
     
-    ls_08_rl_set2_one_shot = RLLocalSearch(
-            operators=operator_dict["set2"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="OneShot",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_08_rl_set2_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
+    ls_08_rl_set2_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
     local_searches.append(ls_08_rl_set2_one_shot)
     
-    ls_09_rl_set2_ls_init = RLLocalSearch(
-            operators=operator_dict["set2"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="OneShot",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_09_rl_set2_ls_init.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_ls_init_final.pt")
+    ls_09_rl_set2_ls_init = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_ls_init_final.pt")
     local_searches.append(ls_09_rl_set2_ls_init)
     
-    ls_10_rl_set2_shorter = RLLocalSearch(
-            operators=operator_dict["set2"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="OneShot",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_10_rl_set2_shorter.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_shorter_final.pt")
+    ls_10_rl_set2_shorter = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_shorter_final.pt")
     local_searches.append(ls_10_rl_set2_shorter)
     
-    ls_11_rl_set2_ranking = RLLocalSearch(
-            operators=operator_dict["set2"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="Ranking",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_11_rl_set2_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
+    ls_11_rl_set2_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
     local_searches.append(ls_11_rl_set2_ranking)
     
-    ls_12_rl_set3_one_shot = RLLocalSearch(
-            operators=operator_dict["set3"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="OneShot",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_12_rl_set3_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt")
+    ls_12_rl_set3_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt")
     local_searches.append(ls_12_rl_set3_one_shot)
     
-    ls_13_rl_set3_ranking = RLLocalSearch(
-            operators=operator_dict["set3"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="Ranking",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_13_rl_set3_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt")
+    ls_13_rl_set3_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt")
     local_searches.append(ls_13_rl_set3_ranking)
     
-    ls_14_rl_set4_one_shot = RLLocalSearch(
-            operators=operator_dict["set4"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="OneShot",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_14_rl_set4_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set4_final.pt")
+    ls_14_rl_set4_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set4_final.pt")
     local_searches.append(ls_14_rl_set4_one_shot)
     
-    ls_15_rl_set4_ranking = RLLocalSearch(
-            operators=operator_dict["set4"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="Ranking",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_15_rl_set4_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set4_final.pt")
+    ls_15_rl_set4_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set4_final.pt")
     local_searches.append(ls_15_rl_set4_ranking)
-    
-    ls_16_rl_set5_one_shot = RLLocalSearch(
-            operators=operator_dict["set5"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="OneShot",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_16_rl_set5_one_shot.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set5_final.pt")
+
+    ls_16_rl_set5_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set5_final.pt")
     local_searches.append(ls_16_rl_set5_one_shot)
     
-    ls_17_rl_set5_ranking = RLLocalSearch(
-            operators=operator_dict["set5"],
-            rl_algorithm="dqn",
-            hidden_dims=[128, 128, 64],
-            learning_rate=0.0001,
-            gamma=0.90,
-            epsilon_start=1.0,
-            epsilon_end=0.05,
-            epsilon_decay=0.9975,
-            target_update_interval=100,
-            alpha=10,
-            beta=0,
-            acceptance_strategy="greedy",
-            type="Ranking",
-            max_iterations=200,
-            max_no_improvement=50,
-            replay_buffer_capacity=10000,
-            batch_size=64,
-            n_step=3,
-            use_prioritized_replay=False,
-            use_operator_attention=False,
-            verbose=False  # device uses auto-detection
-        )
-    ls_17_rl_set5_ranking.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set5_final.pt")
+    ls_17_rl_set5_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set5_final.pt")
     local_searches.append(ls_17_rl_set5_ranking)
     
     return local_searches
@@ -582,6 +306,9 @@ COMBINATIONS = [
     {'name': 'No_LocalSearch', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 0},
     {'name': 'LS_Set2_OneShot', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 8},
     {'name': 'LS_Set2_Ranking', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 11},
+    {'name': 'LS_Set4_OneShot', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 14},
+    {'name': 'LS_Set4_Ranking', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 15},
+    
     
 ]
 

@@ -16,44 +16,8 @@ from typing import List, Tuple, Union
 # ]
 # ------------------------------------------------------------
 TASKS: List[Union[str, List[str]]] = [
-    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2_200.yaml",
-    "train_rl_local_search.py --config config/experiment_rl_algo/dqn_set2_400.yaml",
     "experiment_memetic_component_wise_performance.py",
-    "experiment_memetic_component_wise_performance_200.py",
-    "experiment_memetic_component_wise_performance_400.py",
-    "experiment_memetic_vs_ortools.py",
-    
-    # Hyperparameter tuning experiments
-    "train_rl_local_search.py --config config/hyperparameter_tuning/baseline.yaml",
-    # Learning rate variations
-    "train_rl_local_search.py --config config/hyperparameter_tuning/lr_1e3.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/lr_5e4.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/lr_5e5.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/lr_1e5.yaml",
-    # Gamma variations
-    "train_rl_local_search.py --config config/hyperparameter_tuning/gamma_099.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/gamma_095.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/gamma_085.yaml",
-    # Epsilon decay variations
-    "train_rl_local_search.py --config config/hyperparameter_tuning/eps_decay_slow.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/eps_decay_fast.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/eps_decay_vfast.yaml",
-    # Batch size variations
-    "train_rl_local_search.py --config config/hyperparameter_tuning/batch_32.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/batch_128.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/batch_256.yaml",
-    # N-step variations
-    "train_rl_local_search.py --config config/hyperparameter_tuning/nstep_1.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/nstep_5.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/nstep_7.yaml",
-    # Target update interval variations
-    "train_rl_local_search.py --config config/hyperparameter_tuning/target_update_25.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/target_update_50.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/target_update_200.yaml",
-    # Network architecture variations
-    "train_rl_local_search.py --config config/hyperparameter_tuning/net_small.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/net_wide.yaml",
-    "train_rl_local_search.py --config config/hyperparameter_tuning/net_large.yaml",
+    "plot_memetic_components.py"
 ]
 
 

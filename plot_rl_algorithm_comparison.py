@@ -11,7 +11,14 @@ import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from collections import defaultdict
+
+
+def darken_color(color, factor=0.6):
+    """Make a color darker by the given factor (0=black, 1=original)."""
+    rgb = mcolors.to_rgb(color)
+    return tuple(c * factor for c in rgb)
 
 # Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
@@ -285,6 +292,68 @@ def save_figure_multi_format(fig, filepath, formats=['png', 'pdf']):
         print(f'    Saved: {output_path}')
 
 
+def compute_axis_limits_with_outlier_truncation(values, std_values=None, start_at_zero=False, outlier_threshold=2.0):
+    """Compute y-axis limits, truncating outliers that are > threshold * next highest.
+
+    Args:
+        values: List of values to plot
+        std_values: List of std values for error bars (optional)
+        start_at_zero: Whether y-axis should start at 0
+        outlier_threshold: Truncate bars > this multiple of next highest value
+
+    Returns:
+        tuple: (y_min, y_max, truncated_indices) where truncated_indices are bars to clip
+    """
+    if std_values is None:
+        std_values = [0] * len(values)
+
+    # Calculate upper bounds (value + std) for proper axis scaling
+    upper_bounds = [v + s for v, s in zip(values, std_values)]
+    lower_bounds = [v - s for v, s in zip(values, std_values)]
+
+    valid_upper = [u for u in upper_bounds if u > 0]
+    if len(valid_upper) < 2:
+        y_min = 0 if start_at_zero else min(lower_bounds) * 0.9
+        y_max = max(upper_bounds) * 1.1
+        return y_min, y_max, []
+
+    sorted_upper = sorted(valid_upper, reverse=True)
+    max_upper = sorted_upper[0]
+    second_max_upper = sorted_upper[1]
+
+    truncated_indices = []
+
+    # Check if max is an outlier (more than threshold * second highest)
+    if max_upper > outlier_threshold * second_max_upper:
+        # Find all outlier values
+        truncation_limit = second_max_upper * 1.5  # Show up to 1.5x the second highest
+        for i, u in enumerate(upper_bounds):
+            if u > truncation_limit:
+                truncated_indices.append(i)
+
+        if start_at_zero:
+            y_min = 0
+            y_max = truncation_limit  # No padding - bars go right to the edge
+        else:
+            non_outlier_lower = [lower_bounds[i] for i, u in enumerate(upper_bounds) if u <= truncation_limit]
+            if non_outlier_lower:
+                y_min = min(non_outlier_lower) * 0.95
+                y_max = truncation_limit  # No padding - bars go right to the edge
+            else:
+                y_min = 0
+                y_max = truncation_limit  # No padding - bars go right to the edge
+    else:
+        # No outliers - normal scaling with error bars accounted for
+        if start_at_zero:
+            y_min = 0
+            y_max = max(upper_bounds) * 1.1
+        else:
+            y_min = min(lower_bounds) * 0.95
+            y_max = max(upper_bounds) * 1.1
+
+    return y_min, y_max, truncated_indices
+
+
 def plot_metric(methods, colors, metric_key, std_key, ylabel, title, filename,
                 output_dir, show_error_bars=True, start_at_zero=False):
     """Create a single bar chart for one metric.
@@ -322,8 +391,23 @@ def plot_metric(methods, colors, metric_key, std_key, ylabel, title, filename,
     x = np.arange(len(method_names))
     width = 0.7
 
-    ax.bar(x, values, width,
-          color=colors, alpha=0.85, edgecolor='black', linewidth=1.5)
+    # Compute axis limits with outlier truncation (accounting for error bars)
+    y_min, y_max, truncated_indices = compute_axis_limits_with_outlier_truncation(
+        values, std_values=std_values if show_error_bars else None, start_at_zero=start_at_zero
+    )
+
+    # Draw bars
+    bars = ax.bar(x, values, width,
+                  color=colors, alpha=0.85, edgecolor='black', linewidth=1.5)
+
+    # Draw error bars separately with matching darkened colors
+    if show_error_bars:
+        for i, (val, std, color) in enumerate(zip(values, std_values, colors)):
+            if std > 0:
+                dark_color = darken_color(color, factor=0.66)
+                ax.errorbar(x[i], val, yerr=std, fmt='none',
+                           capsize=12, capthick=2.5, elinewidth=2.5,
+                           ecolor=dark_color)
 
     # Styling
     ax.set_xlabel('Method')
@@ -337,12 +421,7 @@ def plot_metric(methods, colors, metric_key, std_key, ylabel, title, filename,
     ax.axvline(x=5.5, color='black', linestyle='--', linewidth=1.5, alpha=0.5)
 
     # Set y-axis limits
-    if start_at_zero:
-        ax.set_ylim(bottom=0, top=max(values) * 1.1)
-    else:
-        # Auto-scale y-axis to show differences better (don't force start at 0)
-        y_range = max(values) - min(values)
-        ax.set_ylim(bottom=min(values) - 0.1 * y_range, top=max(values) + 0.1 * y_range)
+    ax.set_ylim(bottom=y_min, top=y_max)
 
     # Add legend to distinguish algorithm types
     from matplotlib.patches import Patch
@@ -397,12 +476,12 @@ def plot_algorithm_comparison_by_set(data_by_set, output_dir):
         plot_metric(
             methods, colors,
             metric_key='avg_fitness',
-            std_key=None,
+            std_key='std_fitness',
             ylabel='Fitness',
             title=f'Algorithm Comparison: Fitness (Set {set_num})',
             filename=f'set{set_num}_algorithm_comparison_fitness.png',
             output_dir=output_dir,
-            show_error_bars=False
+            show_error_bars=True
         )
 
         # Plot 2: Time Comparison
@@ -463,19 +542,42 @@ def plot_algorithm_comparison_combined_by_metric(data_by_set, output_dir, metric
 
         method_names = []
         values = []
+        std_values = []
 
         for method_name, results in methods:
             method_names.append(method_name)
             if results:
                 values.append(results[metric_key])
+                # Add std for fitness metric
+                if metric_key == 'avg_fitness' and 'std_fitness' in results:
+                    std_values.append(results['std_fitness'])
+                else:
+                    std_values.append(0)
             else:
                 values.append(0)
+                std_values.append(0)
 
         x = np.arange(len(method_names))
         width = 0.7
 
-        ax.bar(x, values, width, color=colors, alpha=0.85,
-               edgecolor='black', linewidth=1.0)
+        # Compute axis limits with outlier truncation (accounting for error bars)
+        show_error = (metric_key == 'avg_fitness')
+        y_min, y_max, truncated_indices = compute_axis_limits_with_outlier_truncation(
+            values, std_values=std_values if show_error else None, start_at_zero=start_at_zero
+        )
+
+        # Draw bars
+        bars = ax.bar(x, values, width, color=colors, alpha=0.85,
+                      edgecolor='black', linewidth=1.0)
+
+        # Draw error bars separately with matching darkened colors
+        if show_error:
+            for i, (val, std, color) in enumerate(zip(values, std_values, colors)):
+                if std > 0:
+                    dark_color = darken_color(color, factor=0.66)
+                    ax.errorbar(x[i], val, yerr=std, fmt='none',
+                               capsize=10, capthick=2.0, elinewidth=2.0,
+                               ecolor=dark_color)
 
         # Styling
         ax.set_xlabel('Method')
@@ -489,12 +591,7 @@ def plot_algorithm_comparison_combined_by_metric(data_by_set, output_dir, metric
         ax.axvline(x=5.5, color='black', linestyle='--', linewidth=1.5, alpha=0.5)
 
         # Set y-axis limits
-        if start_at_zero:
-            ax.set_ylim(bottom=0, top=max(values) * 1.1)
-        else:
-            y_range = max(values) - min(values)
-            ax.set_ylim(bottom=min(values) - 0.1 * y_range,
-                       top=max(values) + 0.1 * y_range)
+        ax.set_ylim(bottom=y_min, top=y_max)
 
     # Add common legend below subplots
     from matplotlib.patches import Patch

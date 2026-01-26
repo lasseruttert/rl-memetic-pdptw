@@ -97,7 +97,7 @@ def create_rl_local_search(size, operators):
         use_operator_attention=False,
         verbose=False
     )
-    rl_local_search.load_from_checkpoint(MODEL_PATHS[size])
+    rl_local_search = RLLocalSearch.load_from_checkpoint(MODEL_PATHS[size])
     return rl_local_search
 
 
