@@ -17,42 +17,60 @@ from collections import defaultdict
 import argparse
 import yaml
 
-# Thesis-quality plot settings
-plt.rcParams.update({
-    'font.size': 12,
-    'axes.labelsize': 13,
-    'axes.titlesize': 14,
-    'xtick.labelsize': 10,
-    'ytick.labelsize': 10,
-    'legend.fontsize': 11,
-    'figure.titlesize': 14,
+# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
+PLOT_STYLE = {
+    'font.size': 18,
+    'axes.labelsize': 22,
+    'axes.titlesize': 26,
+    'xtick.labelsize': 18,
+    'ytick.labelsize': 18,
+    'legend.fontsize': 18,
+    'figure.titlesize': 28,
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
     'text.usetex': False,
     'pdf.fonttype': 42,
     'ps.fonttype': 42,
-    'figure.constrained_layout.use': False,  # We'll use tight_layout for better control
-    'axes.labelpad': 8,
-    'xtick.major.pad': 6,
-    'ytick.major.pad': 6,
-})
+    'figure.constrained_layout.use': False,
+    'axes.labelpad': 12,
+    'xtick.major.pad': 10,
+    'ytick.major.pad': 10,
+    'lines.linewidth': 3.0,
+    'axes.linewidth': 1.5,
+}
+plt.rcParams.update(PLOT_STYLE)
 
 # Constants
 RESULTS_DIR = "results/rl_local_search_performance"
 OUTPUT_DIR = "results/plots/rl_local_search_performance_plots"
 
-# Color schemes
+# Unified color palette
+METHOD_COLORS = [
+    '#2E86AB',  # Steel Blue
+    '#A23B72',  # Plum Purple
+    '#1D7874',  # Teal
+    '#E8A838',  # Muted Gold
+    '#6B4C9A',  # Violet
+    '#D64550',  # Soft Red
+    '#44AF69',  # Sage Green
+    '#8B5E3C',  # Brown
+]
+
+BASELINE_COLORS = ['#5A5A5A', '#7A7A7A', '#9A9A9A', '#BABABA']
+
+# Initialization type colors
 INIT_COLORS = {
-    'random': '#2E86AB',  # Blue
-    'greedy': '#A23B72'   # Purple
+    'random': '#2E86AB',   # Steel Blue
+    'greedy': '#A23B72',   # Plum Purple
 }
 
+# Operator colors (use METHOD_COLORS for consistency)
 OPERATOR_COLORS = {
-    0: '#E63946',   # Red
-    4: '#F77F00',   # Orange
-    12: '#06A77D',  # Green
-    13: '#118AB2',  # Blue
-    14: '#073B4C'   # Dark blue
+    0: METHOD_COLORS[5],   # Soft Red
+    4: METHOD_COLORS[3],   # Muted Gold
+    12: METHOD_COLORS[6],  # Sage Green
+    13: METHOD_COLORS[0],  # Steel Blue
+    14: METHOD_COLORS[2],  # Teal
 }
 
 FAMILY_COLORS = {
@@ -91,9 +109,20 @@ def load_operator_names_from_config(config_path: str) -> Dict[int, str]:
             # Add parameter info for variants if needed
             if 'params' in op_config and op_config['params']:
                 params = op_config['params']
-                if 'type' in params:
+
+                # Special handling for ReinsertOperator
+                if op_type == 'ReinsertOperator':
+                    param_parts = []
+                    if params.get('clustered'):
+                        param_parts.append('C')
+                    if 'max_attempts' in params:
+                        param_parts.append(f"k{params['max_attempts']}")
+                    if param_parts:
+                        name = f"{name}({','.join(param_parts)})"
+                # Existing handling for other operators
+                elif 'type' in params:
                     name = f"{name}({params['type']})"
-                elif 'single_route' in params and params['single_route']:
+                elif params.get('single_route'):
                     name = f"{name}(SR)"
             operator_names[idx] = name
 
@@ -407,31 +436,31 @@ def plot_convergence_trajectories_averaged(all_histories: Dict, output_dir: str)
     iter_random, mean_random, std_random = compute_averaged_convergence(all_histories, 'random')
     iter_greedy, mean_greedy, std_greedy = compute_averaged_convergence(all_histories, 'greedy')
 
-    # Create figure with 1x2 subplots - larger size
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    # Create figure with 1x2 subplots - thesis-ready size
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 8))
 
     # Random initialization
     ax1.plot(iter_random, mean_random, color=INIT_COLORS['random'], linewidth=2, label='Mean')
     ax1.fill_between(iter_random, mean_random - std_random, mean_random + std_random,
                      color=INIT_COLORS['random'], alpha=0.3, label='± 1 Std Dev')
-    ax1.set_xlabel('Iteration', fontweight='bold')
-    ax1.set_ylabel('Fitness', fontweight='bold')
+    ax1.set_xlabel('Iteration')
+    ax1.set_ylabel('Fitness')
     ax1.set_title('Random Initialization', fontweight='bold')
-    ax1.grid(True, alpha=0.3)
-    ax1.legend()
+    ax1.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+    ax1.legend(framealpha=0.9, edgecolor='gray')
 
     # Greedy initialization
     ax2.plot(iter_greedy, mean_greedy, color=INIT_COLORS['greedy'], linewidth=2, label='Mean')
     ax2.fill_between(iter_greedy, mean_greedy - std_greedy, mean_greedy + std_greedy,
                      color=INIT_COLORS['greedy'], alpha=0.3, label='± 1 Std Dev')
-    ax2.set_xlabel('Iteration', fontweight='bold')
-    ax2.set_ylabel('Fitness', fontweight='bold')
+    ax2.set_xlabel('Iteration')
+    ax2.set_ylabel('Fitness')
     ax2.set_title('Greedy Initialization', fontweight='bold')
-    ax2.grid(True, alpha=0.3)
-    ax2.legend()
+    ax2.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+    ax2.legend(framealpha=0.9, edgecolor='gray')
 
-    plt.suptitle('Convergence Trajectories: Random vs Greedy Initialization',
-                 fontsize=14, fontweight='bold')
+    plt.suptitle('Convergence: Random vs Greedy',
+                 fontsize=24)
     plt.tight_layout(pad=1.5)
 
     filepath = os.path.join(output_dir, 'convergence_averaged_random_vs_greedy')
@@ -453,8 +482,8 @@ def plot_convergence_top_bottom_instances(histories: Dict, top_instances: List[s
     """
     print(f"  Creating top/bottom convergence plots for {init_type}...")
 
-    # Create 2x5 subplot grid with larger size
-    fig, axes = plt.subplots(2, 5, figsize=(20, 9))
+    # Create 2x5 subplot grid - thesis-ready size
+    fig, axes = plt.subplots(2, 5, figsize=(24, 12))
 
     color = INIT_COLORS[init_type]
 
@@ -464,10 +493,10 @@ def plot_convergence_top_bottom_instances(histories: Dict, top_instances: List[s
         if instance in histories and init_type in histories[instance]:
             iterations, fitness = extract_convergence_data(histories[instance][init_type])
             ax.plot(iterations, fitness, color=color, linewidth=1.5)
-            ax.set_title(f'{instance}', fontsize=10)
-            ax.grid(True, alpha=0.3)
+            ax.set_title(f'{instance}', fontweight='bold')
+            ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
             if idx == 0:
-                ax.set_ylabel('Fitness', fontweight='bold')
+                ax.set_ylabel('Fitness')
 
     # Plot bottom 5 instances
     for idx, instance in enumerate(bottom_instances):
@@ -475,15 +504,15 @@ def plot_convergence_top_bottom_instances(histories: Dict, top_instances: List[s
         if instance in histories and init_type in histories[instance]:
             iterations, fitness = extract_convergence_data(histories[instance][init_type])
             ax.plot(iterations, fitness, color=color, linewidth=1.5)
-            ax.set_title(f'{instance}', fontsize=10)
-            ax.grid(True, alpha=0.3)
+            ax.set_title(f'{instance}', fontweight='bold')
+            ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
             ax.set_xlabel('Iteration')
             if idx == 0:
-                ax.set_ylabel('Fitness', fontweight='bold')
+                ax.set_ylabel('Fitness')
 
     # Overall title
-    fig.suptitle(f'Convergence: Top 5 (top) vs Bottom 5 (bottom) - {init_type.capitalize()} Initialization',
-                 fontsize=14, fontweight='bold')
+    fig.suptitle(f'Convergence: Top vs Bottom ({init_type.capitalize()})',
+                 fontsize=24)
     plt.tight_layout(pad=1.5)
 
     filepath = os.path.join(output_dir, f'convergence_top5_bottom5_{init_type}')
@@ -516,7 +545,7 @@ def plot_operator_usage_frequency(operator_stats: Dict, output_dir: str):
 
     # Create plot with dynamic height based on number of operators
     n_operators = len(operators_sorted)
-    fig, ax = plt.subplots(figsize=(10, max(8, n_operators * 0.5)))
+    fig, ax = plt.subplots(figsize=(14, max(10, n_operators * 0.7)))
 
     y = np.arange(len(operators_sorted))
     height = 0.35
@@ -524,13 +553,13 @@ def plot_operator_usage_frequency(operator_stats: Dict, output_dir: str):
     ax.barh(y + height/2, random_uses, height, label='Random', color=INIT_COLORS['random'], alpha=0.8)
     ax.barh(y - height/2, greedy_uses, height, label='Greedy', color=INIT_COLORS['greedy'], alpha=0.8)
 
-    ax.set_ylabel('Operator', fontweight='bold')
-    ax.set_xlabel('Usage Frequency', fontweight='bold')
-    ax.set_title('Operator Usage Frequency: Random vs Greedy', fontweight='bold')
+    ax.set_ylabel('Operator')
+    ax.set_xlabel('Usage Frequency')
+    ax.set_title('Operator Usage: Frequency', fontweight='bold')
     ax.set_yticks(y)
-    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted])
-    ax.legend()
-    ax.grid(True, alpha=0.3, axis='x')
+    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
+    ax.legend(framealpha=0.9, edgecolor='gray')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     plt.tight_layout(pad=1.5)
     filepath = os.path.join(output_dir, 'operator_usage_frequency')
@@ -559,7 +588,7 @@ def plot_operator_success_rates(operator_stats: Dict, output_dir: str):
 
     # Create plot with dynamic height based on number of operators
     n_operators = len(operators_sorted)
-    fig, ax = plt.subplots(figsize=(10, max(8, n_operators * 0.5)))
+    fig, ax = plt.subplots(figsize=(14, max(10, n_operators * 0.7)))
 
     y = np.arange(len(operators_sorted))
     height = 0.35
@@ -567,14 +596,14 @@ def plot_operator_success_rates(operator_stats: Dict, output_dir: str):
     ax.barh(y + height/2, random_rates, height, label='Random', color=INIT_COLORS['random'], alpha=0.8)
     ax.barh(y - height/2, greedy_rates, height, label='Greedy', color=INIT_COLORS['greedy'], alpha=0.8)
 
-    ax.set_ylabel('Operator', fontweight='bold')
-    ax.set_xlabel('Success Rate', fontweight='bold')
-    ax.set_title('Operator Success Rates: Random vs Greedy', fontweight='bold')
+    ax.set_ylabel('Operator')
+    ax.set_xlabel('Success Rate')
+    ax.set_title('Operator Analysis: Success Rates', fontweight='bold')
     ax.set_yticks(y)
-    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted])
+    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
     ax.set_xlim([0, 1])
-    ax.legend()
-    ax.grid(True, alpha=0.3, axis='x')
+    ax.legend(framealpha=0.9, edgecolor='gray')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     plt.tight_layout(pad=1.5)
     filepath = os.path.join(output_dir, 'operator_success_rates')
@@ -619,27 +648,27 @@ def plot_operator_heatmap(all_histories: Dict, init_type: str, output_dir: str):
         for j, operator in enumerate(operators_sorted):
             matrix[i, j] = instance_operator_usage[instance].get(operator, 0)
 
-    # Create heatmap with dynamic sizing
-    fig, ax = plt.subplots(figsize=(12, max(10, len(instances_sorted) * 0.4)))
+    # Create heatmap with dynamic sizing - thesis-ready
+    fig, ax = plt.subplots(figsize=(16, max(14, len(instances_sorted) * 0.5)))
 
     im = ax.imshow(matrix, cmap='YlOrRd', aspect='auto')
 
     # Set ticks with larger font
     ax.set_xticks(np.arange(len(operators_sorted)))
     ax.set_yticks(np.arange(len(instances_sorted)))
-    ax.set_xticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=9)
-    ax.set_yticklabels(instances_sorted, fontsize=9)
+    ax.set_xticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
+    ax.set_yticklabels(instances_sorted, fontsize=16)
 
     # Rotate x labels to 45 degrees for full readability
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
     # Add colorbar
     cbar = plt.colorbar(im, ax=ax)
-    cbar.set_label('Usage Frequency', rotation=270, labelpad=20, fontweight='bold')
+    cbar.set_label('Usage Frequency', rotation=270, labelpad=20)
 
-    ax.set_xlabel('Operator', fontweight='bold')
-    ax.set_ylabel('Instance', fontweight='bold')
-    ax.set_title(f'Operator Usage Heatmap: {init_type.capitalize()} Initialization',
+    ax.set_xlabel('Operator')
+    ax.set_ylabel('Instance')
+    ax.set_title(f'Operator Heatmap: {init_type.capitalize()}',
                  fontweight='bold')
 
     plt.tight_layout(pad=2.0)
@@ -700,8 +729,8 @@ def plot_operator_temporal_usage(all_histories: Dict, init_type: str, output_dir
         else:
             bin_data_normalized.append([0] * len(operators_sorted))
 
-    # Create stacked bar chart with larger size
-    fig, ax = plt.subplots(figsize=(12, 8))
+    # Create stacked bar chart - thesis-ready size
+    fig, ax = plt.subplots(figsize=(16, 10))
 
     x = np.arange(len(bin_labels))
     width = 0.6
@@ -723,9 +752,9 @@ def plot_operator_temporal_usage(all_histories: Dict, init_type: str, output_dir
                bottom=bottom, color=color, alpha=0.8)
         bottom += values
 
-    ax.set_xlabel('Iteration Range', fontweight='bold')
-    ax.set_ylabel('Operator Usage Proportion', fontweight='bold')
-    ax.set_title(f'Operator Temporal Usage: {init_type.capitalize()} Initialization',
+    ax.set_xlabel('Iteration Range')
+    ax.set_ylabel('Operator Usage Proportion')
+    ax.set_title(f'Operator Temporal: {init_type.capitalize()}',
                  fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(bin_labels)
@@ -734,7 +763,7 @@ def plot_operator_temporal_usage(all_histories: Dict, init_type: str, output_dir
     legend_ncol = 2 if len(operators_sorted) > 8 else 1
     ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1),
              framealpha=0.9, edgecolor='gray', ncol=legend_ncol)
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     plt.tight_layout(rect=[0, 0, 0.85, 1])
     filepath = os.path.join(output_dir, f'operator_temporal_{init_type}')
@@ -755,7 +784,7 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     """
     print("  Creating fitness distributions plot...")
 
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    fig, axes = plt.subplots(2, 2, figsize=(16, 14))
 
     # Random - Initial Fitness
     ax = axes[0, 0]
@@ -763,8 +792,8 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     ax.hist(data, bins=20, color=INIT_COLORS['random'], alpha=0.7, edgecolor='black')
     ax.set_xlabel('Initial Fitness')
     ax.set_ylabel('Frequency')
-    ax.set_title('Random Init: Initial Fitness', fontweight='bold')
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_title('Random: Initial', fontweight='bold')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     # Random - Final Fitness
     ax = axes[0, 1]
@@ -772,8 +801,8 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     ax.hist(data, bins=20, color=INIT_COLORS['random'], alpha=0.7, edgecolor='black')
     ax.set_xlabel('Final Fitness')
     ax.set_ylabel('Frequency')
-    ax.set_title('Random Init: Final Fitness', fontweight='bold')
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_title('Random: Final', fontweight='bold')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     # Greedy - Initial Fitness
     ax = axes[1, 0]
@@ -781,8 +810,8 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     ax.hist(data, bins=20, color=INIT_COLORS['greedy'], alpha=0.7, edgecolor='black')
     ax.set_xlabel('Initial Fitness')
     ax.set_ylabel('Frequency')
-    ax.set_title('Greedy Init: Initial Fitness', fontweight='bold')
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_title('Greedy: Initial', fontweight='bold')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     # Greedy - Final Fitness
     ax = axes[1, 1]
@@ -790,10 +819,10 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     ax.hist(data, bins=20, color=INIT_COLORS['greedy'], alpha=0.7, edgecolor='black')
     ax.set_xlabel('Final Fitness')
     ax.set_ylabel('Frequency')
-    ax.set_title('Greedy Init: Final Fitness', fontweight='bold')
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_title('Greedy: Final', fontweight='bold')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
-    plt.suptitle('Fitness Distributions', fontsize=14, fontweight='bold')
+    plt.suptitle('Distribution: Fitness', fontsize=24)
     plt.tight_layout(pad=1.5)
 
     filepath = os.path.join(output_dir, 'fitness_distributions')
@@ -810,7 +839,7 @@ def plot_time_distributions(df: pd.DataFrame, output_dir: str):
     """
     print("  Creating time distribution plot...")
 
-    fig, ax = plt.subplots(figsize=(10, 7))
+    fig, ax = plt.subplots(figsize=(12, 10))
 
     # Prepare data
     data_random = df[df['Initialization'] == 'random']['Mean_Time_Seconds']
@@ -824,10 +853,10 @@ def plot_time_distributions(df: pd.DataFrame, output_dir: str):
         patch.set_facecolor(color)
         patch.set_alpha(0.7)
 
-    ax.set_ylabel('Execution Time (seconds)', fontweight='bold')
-    ax.set_title('Execution Time Distribution: Random vs Greedy Initialization',
+    ax.set_ylabel('Time (s)')
+    ax.set_title('Distribution: Execution Time',
                  fontweight='bold')
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     plt.tight_layout(pad=1.5)
     filepath = os.path.join(output_dir, 'time_distribution')
@@ -864,9 +893,9 @@ def plot_operator_average_improvement(all_histories: Dict, init_type: str, outpu
     avg_improvements = [np.mean(operator_improvements[op]) for op in operators_sorted]
     std_improvements = [np.std(operator_improvements[op]) for op in operators_sorted]
 
-    # Create horizontal bar chart with dynamic height
+    # Create horizontal bar chart with dynamic height - thesis-ready
     n_operators = len(operators_sorted)
-    fig, ax = plt.subplots(figsize=(10, max(8, n_operators * 0.5)))
+    fig, ax = plt.subplots(figsize=(14, max(10, n_operators * 0.7)))
 
     y = np.arange(len(operators_sorted))
     colors = [OPERATOR_COLORS.get(op, plt.cm.tab10(i % 10)) for i, op in enumerate(operators_sorted)]
@@ -874,13 +903,13 @@ def plot_operator_average_improvement(all_histories: Dict, init_type: str, outpu
     ax.barh(y, avg_improvements, color=colors, alpha=0.8, xerr=std_improvements,
            capsize=5, error_kw={'linewidth': 1.5}, edgecolor='black')
 
-    ax.set_ylabel('Operator', fontweight='bold')
-    ax.set_xlabel('Average Fitness Improvement', fontweight='bold')
-    ax.set_title(f'Average Fitness Improvement per Operator: {init_type.capitalize()} Initialization',
+    ax.set_ylabel('Operator')
+    ax.set_xlabel('Average Fitness Improvement')
+    ax.set_title(f'Operator Improvement: {init_type.capitalize()}',
                  fontweight='bold')
     ax.set_yticks(y)
-    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted])
-    ax.grid(True, alpha=0.3, axis='x')
+    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
     ax.axvline(x=0, color='black', linestyle='-', linewidth=0.5)
 
     plt.tight_layout(pad=1.5)
@@ -933,27 +962,27 @@ def plot_operator_transition_matrix(all_histories: Dict, init_type: str, output_
     row_sums = matrix.sum(axis=1, keepdims=True)
     matrix_normalized = np.divide(matrix, row_sums, where=row_sums != 0)
 
-    # Create larger square heatmap
-    fig, ax = plt.subplots(figsize=(12, 12))
+    # Create larger square heatmap - thesis-ready
+    fig, ax = plt.subplots(figsize=(16, 16))
 
     im = ax.imshow(matrix_normalized, cmap='YlOrRd', aspect='auto', vmin=0, vmax=1)
 
     # Set ticks with larger font for readability
     ax.set_xticks(np.arange(n_operators))
     ax.set_yticks(np.arange(n_operators))
-    ax.set_xticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=9)
-    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=9)
+    ax.set_xticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
+    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
 
     # Rotate x labels to 45 degrees for full readability
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
     # Add colorbar
     cbar = plt.colorbar(im, ax=ax)
-    cbar.set_label('Transition Probability', rotation=270, labelpad=20, fontweight='bold')
+    cbar.set_label('Transition Probability', rotation=270, labelpad=20)
 
-    ax.set_xlabel('Next Operator', fontweight='bold')
-    ax.set_ylabel('Current Operator', fontweight='bold')
-    ax.set_title(f'Directed Operator Transition Matrix: {init_type.capitalize()} Initialization',
+    ax.set_xlabel('Next Operator')
+    ax.set_ylabel('Current Operator')
+    ax.set_title(f'Transition Matrix: {init_type.capitalize()}',
                  fontweight='bold')
 
     plt.tight_layout(pad=2.0)
@@ -1008,27 +1037,27 @@ def plot_operator_cooccurrence_matrix(all_histories: Dict, init_type: str, outpu
     row_sums = matrix.sum(axis=1, keepdims=True)
     matrix_normalized = np.divide(matrix, row_sums, where=row_sums != 0)
 
-    # Create larger square heatmap
-    fig, ax = plt.subplots(figsize=(12, 12))
+    # Create larger square heatmap - thesis-ready
+    fig, ax = plt.subplots(figsize=(16, 16))
 
     im = ax.imshow(matrix_normalized, cmap='YlOrRd', aspect='auto', vmin=0, vmax=1)
 
     # Set ticks with larger font for readability
     ax.set_xticks(np.arange(n_operators))
     ax.set_yticks(np.arange(n_operators))
-    ax.set_xticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=9)
-    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=9)
+    ax.set_xticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
+    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
 
     # Rotate x labels to 45 degrees for full readability
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
     # Add colorbar
     cbar = plt.colorbar(im, ax=ax)
-    cbar.set_label('Co-occurrence Frequency', rotation=270, labelpad=20, fontweight='bold')
+    cbar.set_label('Co-occurrence Frequency', rotation=270, labelpad=20)
 
-    ax.set_xlabel('Operator', fontweight='bold')
-    ax.set_ylabel('Operator', fontweight='bold')
-    ax.set_title(f'Operator Co-occurrence Matrix (Symmetric): {init_type.capitalize()} Initialization',
+    ax.set_xlabel('Operator')
+    ax.set_ylabel('Operator')
+    ax.set_title(f'Co-occurrence Matrix: {init_type.capitalize()}',
                  fontweight='bold')
 
     plt.tight_layout(pad=2.0)
@@ -1082,28 +1111,121 @@ def plot_operator_usage_heatmap_aggregate(all_histories: Dict, init_type: str, o
         for j, bin_idx in enumerate(range(n_bins)):
             matrix[i, j] = bin_operator_usage[bin_idx].get(operator, 0)
 
-    # Create heatmap with dynamic height
-    fig, ax = plt.subplots(figsize=(10, max(8, n_operators * 0.6)))
+    # Create heatmap with dynamic height - thesis-ready
+    fig, ax = plt.subplots(figsize=(14, max(12, n_operators * 0.8)))
 
     im = ax.imshow(matrix, cmap='YlOrRd', aspect='auto')
 
     # Set ticks with larger font
     ax.set_xticks(np.arange(n_bins))
     ax.set_yticks(np.arange(n_operators))
-    ax.set_xticklabels(bin_labels, fontsize=10)
-    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=9)
+    ax.set_xticklabels(bin_labels, fontsize=20)
+    ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
 
     # Add colorbar
     cbar = plt.colorbar(im, ax=ax)
-    cbar.set_label('Usage Count', rotation=270, labelpad=20, fontweight='bold')
+    cbar.set_label('Usage Count', rotation=270, labelpad=20)
 
-    ax.set_xlabel('Iteration Range', fontweight='bold')
-    ax.set_ylabel('Operator', fontweight='bold')
-    ax.set_title(f'Operator Usage Over Time (Aggregated): {init_type.capitalize()} Initialization',
+    ax.set_xlabel('Iteration Range')
+    ax.set_ylabel('Operator')
+    ax.set_title(f'Usage Heatmap: {init_type.capitalize()}',
                  fontweight='bold')
 
     plt.tight_layout(pad=2.0)
     filepath = os.path.join(output_dir, f'operator_usage_aggregate_heatmap_{init_type}')
+    save_figure_multi_format(fig, filepath)
+    plt.close()
+
+
+def plot_operator_quartile_distribution(all_histories: Dict, init_type: str, output_dir: str):
+    """Create grouped bar chart showing operator usage across percentage-based quartiles.
+
+    Uses percentage-based quartiles (0-25%, 25-50%, 50-75%, 75-100%) of max_iterations,
+    adapting to different max_iterations values across instances.
+
+    Args:
+        all_histories: All best run histories
+        init_type: 'random' or 'greedy'
+        output_dir: Output directory path
+    """
+    print(f"  Creating operator quartile distribution plot for {init_type}...")
+
+    # Collect operator usage per quartile across all instances
+    quartile_operator_usage = [defaultdict(int) for _ in range(4)]
+    all_operators = set()
+
+    for instance_name, init_data in all_histories.items():
+        if init_type not in init_data:
+            continue
+
+        history = init_data[init_type]['iteration_history']
+
+        # Find max iteration for this instance
+        iterations = [int(k) for k in history.keys()]
+        if not iterations:
+            continue
+        max_iter = max(iterations)
+
+        # Define percentage-based quartile boundaries
+        q1_end = max_iter * 0.25
+        q2_end = max_iter * 0.50
+        q3_end = max_iter * 0.75
+
+        for iter_key, iter_data in history.items():
+            iteration = int(iter_key)
+            action = iter_data['action']
+            all_operators.add(action)
+
+            # Determine which quartile this iteration belongs to
+            if iteration <= q1_end:
+                quartile_operator_usage[0][action] += 1
+            elif iteration <= q2_end:
+                quartile_operator_usage[1][action] += 1
+            elif iteration <= q3_end:
+                quartile_operator_usage[2][action] += 1
+            else:
+                quartile_operator_usage[3][action] += 1
+
+    # Prepare data for grouped bar chart
+    operators_sorted = sorted(all_operators)
+    quartile_labels = ['Q1 (0-25%)', 'Q2 (25-50%)', 'Q3 (50-75%)', 'Q4 (75-100%)']
+    n_operators = len(operators_sorted)
+    n_quartiles = 4
+
+    # Create matrix of usage counts
+    usage_matrix = np.zeros((n_operators, n_quartiles))
+    for i, operator in enumerate(operators_sorted):
+        for q in range(n_quartiles):
+            usage_matrix[i, q] = quartile_operator_usage[q].get(operator, 0)
+
+    # Normalize to proportions per quartile (column-wise)
+    quartile_totals = usage_matrix.sum(axis=0)
+    usage_normalized = np.divide(usage_matrix, quartile_totals, where=quartile_totals != 0)
+
+    # Create grouped bar chart - thesis-ready
+    fig, ax = plt.subplots(figsize=(18, max(10, n_operators * 0.6)))
+
+    x = np.arange(n_operators)
+    width = 0.2
+    quartile_colors = ['#2E86AB', '#A23B72', '#E8A838', '#44AF69']
+
+    for q in range(n_quartiles):
+        offset = (q - 1.5) * width
+        bars = ax.bar(x + offset, usage_normalized[:, q], width,
+                     label=quartile_labels[q], color=quartile_colors[q], alpha=0.8)
+
+    ax.set_xlabel('Operator')
+    ax.set_ylabel('Usage Proportion')
+    ax.set_title(f'Operator Quartile Distribution: {init_type.capitalize()}',
+                 fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted],
+                       rotation=45, ha='right', fontsize=18)
+    ax.legend(loc='upper right', framealpha=0.9, edgecolor='gray')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5, axis='y')
+
+    plt.tight_layout(pad=1.5)
+    filepath = os.path.join(output_dir, f'operator_quartile_distribution_{init_type}')
     save_figure_multi_format(fig, filepath)
     plt.close()
 
@@ -1136,8 +1258,8 @@ def plot_random_vs_greedy_comparison(df: pd.DataFrame, output_dir: str):
     greedy_means = [df[df['Initialization'] == 'greedy'][m].mean() for m in metrics]
     greedy_stds = [df[df['Initialization'] == 'greedy'][m].std() for m in metrics]
 
-    # Create subplots for each metric (different scales) with larger size
-    fig, axes = plt.subplots(2, 2, figsize=(14, 11))
+    # Create subplots for each metric (different scales) - thesis-ready size
+    fig, axes = plt.subplots(2, 2, figsize=(18, 16))
     axes = axes.flatten()
 
     for idx, (metric_label, r_mean, r_std, g_mean, g_std) in enumerate(
@@ -1153,12 +1275,12 @@ def plot_random_vs_greedy_comparison(df: pd.DataFrame, output_dir: str):
                capsize=5, error_kw={'linewidth': 2})
         ax.set_xticks(x)
         ax.set_xticklabels(['Random', 'Greedy'])
-        ax.set_ylabel(metric_label, fontweight='bold')
+        ax.set_ylabel(metric_label)
         ax.set_title(metric_label, fontweight='bold')
-        ax.grid(True, alpha=0.3, axis='y')
+        ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
-    plt.suptitle('Random vs Greedy Initialization: Key Metrics Comparison',
-                 fontsize=14, fontweight='bold')
+    plt.suptitle('Comparison: Random vs Greedy',
+                 fontsize=24)
     plt.tight_layout(pad=1.5)
 
     filepath = os.path.join(output_dir, 'random_vs_greedy_comparison')
@@ -1239,8 +1361,6 @@ def main():
     print("CONVERGENCE ANALYSIS")
     print("=" * 80)
     plot_convergence_trajectories_averaged(all_histories, output_dir)
-    plot_convergence_top_bottom_instances(all_histories, top_random, bottom_random, 'random', output_dir)
-    plot_convergence_top_bottom_instances(all_histories, top_greedy, bottom_greedy, 'greedy', output_dir)
 
     print("\n" + "=" * 80)
     print("OPERATOR SELECTION ANALYSIS")
@@ -1249,27 +1369,19 @@ def main():
     plot_operator_success_rates({'random': operator_stats_random, 'greedy': operator_stats_greedy}, output_dir)
     plot_operator_heatmap(all_histories, 'random', output_dir)
     plot_operator_heatmap(all_histories, 'greedy', output_dir)
-    plot_operator_temporal_usage(all_histories, 'random', output_dir)
-    plot_operator_temporal_usage(all_histories, 'greedy', output_dir)
-    plot_operator_average_improvement(all_histories, 'random', output_dir)
-    plot_operator_average_improvement(all_histories, 'greedy', output_dir)
     plot_operator_usage_heatmap_aggregate(all_histories, 'random', output_dir)
     plot_operator_usage_heatmap_aggregate(all_histories, 'greedy', output_dir)
     plot_operator_transition_matrix(all_histories, 'random', output_dir)
     plot_operator_transition_matrix(all_histories, 'greedy', output_dir)
     plot_operator_cooccurrence_matrix(all_histories, 'random', output_dir)
     plot_operator_cooccurrence_matrix(all_histories, 'greedy', output_dir)
+    plot_operator_quartile_distribution(all_histories, 'random', output_dir)
+    plot_operator_quartile_distribution(all_histories, 'greedy', output_dir)
 
     print("\n" + "=" * 80)
     print("DISTRIBUTION ANALYSIS")
     print("=" * 80)
     plot_fitness_distributions(df, output_dir)
-    plot_time_distributions(df, output_dir)
-
-    print("\n" + "=" * 80)
-    print("SUMMARY COMPARISONS")
-    print("=" * 80)
-    plot_random_vs_greedy_comparison(df, output_dir)
 
     print("\n" + "=" * 80)
     print("ALL PLOTS CREATED SUCCESSFULLY")

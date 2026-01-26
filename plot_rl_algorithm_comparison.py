@@ -13,21 +13,47 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-# Thesis-quality plot settings
-plt.rcParams.update({
-    'font.size': 11,
-    'axes.labelsize': 12,
-    'axes.titlesize': 13,
-    'xtick.labelsize': 10,
-    'ytick.labelsize': 10,
-    'legend.fontsize': 10,
-    'figure.titlesize': 14,
+# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
+PLOT_STYLE = {
+    'font.size': 18,
+    'axes.labelsize': 22,
+    'axes.titlesize': 26,
+    'xtick.labelsize': 18,
+    'ytick.labelsize': 18,
+    'legend.fontsize': 18,
+    'figure.titlesize': 28,
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
-    'text.usetex': False,  # Set to True if LaTeX is installed
-    'pdf.fonttype': 42,  # TrueType fonts in PDF
+    'text.usetex': False,
+    'pdf.fonttype': 42,
     'ps.fonttype': 42,
-})
+    'axes.labelpad': 12,
+    'xtick.major.pad': 10,
+    'ytick.major.pad': 10,
+    'lines.linewidth': 3.0,
+    'axes.linewidth': 1.5,
+}
+plt.rcParams.update(PLOT_STYLE)
+
+# Unified color palette
+METHOD_COLORS = [
+    '#2E86AB',  # Steel Blue
+    '#A23B72',  # Plum Purple
+    '#1D7874',  # Teal
+    '#E8A838',  # Muted Gold
+    '#6B4C9A',  # Violet
+    '#D64550',  # Soft Red
+    '#44AF69',  # Sage Green
+    '#8B5E3C',  # Brown
+]
+
+# DQN color family (blue shades)
+DQN_COLORS = ['#1A5276', '#2E86AB', '#5DADE2']  # Dark blue, Steel blue, Light blue
+
+# PPO color family (purple shades)
+PPO_COLORS = ['#6C3483', '#A23B72', '#D98880']  # Dark purple, Plum, Light rose
+
+BASELINE_COLORS = ['#5A5A5A', '#7A7A7A', '#9A9A9A', '#BABABA']
 
 
 def parse_log_filename(filename):
@@ -275,7 +301,7 @@ def plot_metric(methods, colors, metric_key, std_key, ylabel, title, filename,
         show_error_bars: Whether to show error bars
         start_at_zero: Whether to start y-axis at 0
     """
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(16, 10))
 
     method_names = []
     values = []
@@ -304,8 +330,11 @@ def plot_metric(methods, colors, metric_key, std_key, ylabel, title, filename,
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     ax.set_xticks(x)
-    ax.set_xticklabels(method_names, rotation=45, ha='right', fontsize=9)
-    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_xticklabels(method_names, rotation=45, ha='right')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+
+    # Add separator line between RL methods and baselines (6 RL methods: 3 DQN + 3 PPO)
+    ax.axvline(x=5.5, color='black', linestyle='--', linewidth=1.5, alpha=0.5)
 
     # Set y-axis limits
     if start_at_zero:
@@ -318,11 +347,11 @@ def plot_metric(methods, colors, metric_key, std_key, ylabel, title, filename,
     # Add legend to distinguish algorithm types
     from matplotlib.patches import Patch
     legend_elements = [
-        Patch(facecolor='#1f77b4', alpha=0.85, label='DQN'),
-        Patch(facecolor='#ff7f0e', alpha=0.85, label='PPO'),
-        Patch(facecolor='#7f7f7f', alpha=0.85, label='Baselines')
+        Patch(facecolor=DQN_COLORS[1], alpha=0.85, label='DQN'),
+        Patch(facecolor=PPO_COLORS[1], alpha=0.85, label='PPO'),
+        Patch(facecolor=BASELINE_COLORS[0], alpha=0.85, label='Baselines')
     ]
-    ax.legend(handles=legend_elements, loc='upper right', fontsize=11)
+    ax.legend(handles=legend_elements, loc='upper right', framealpha=0.9, edgecolor='gray')
 
     filepath = os.path.join(output_dir, filename.replace('.png', ''))
     plt.tight_layout()
@@ -361,20 +390,16 @@ def plot_algorithm_comparison_by_set(data_by_set, output_dir):
             ('Random', set_data['baselines'].get('Random'))
         ]
 
-        # Define colors: DQN (blue shades), PPO (orange shades), Baselines (gray shades)
-        colors = [
-            '#1f77b4', '#5a9bd5', '#8bb5e0',  # DQN
-            '#ff7f0e', '#ffa347', '#ffc780',  # PPO
-            '#7f7f7f', '#969696', '#aaaaaa', '#c4c4c4'  # Baselines
-        ]
+        # Define colors: DQN (blue shades), PPO (purple shades), Baselines (gray shades)
+        colors = DQN_COLORS + PPO_COLORS + BASELINE_COLORS
 
         # Plot 1: Fitness Comparison
         plot_metric(
             methods, colors,
             metric_key='avg_fitness',
             std_key=None,
-            ylabel='Average Fitness (lower is better)',
-            title=f'Set {set_num}: Algorithm Comparison - Fitness\n({num_ops} operators)',
+            ylabel='Fitness',
+            title=f'Algorithm Comparison: Fitness (Set {set_num})',
             filename=f'set{set_num}_algorithm_comparison_fitness.png',
             output_dir=output_dir,
             show_error_bars=False
@@ -385,8 +410,8 @@ def plot_algorithm_comparison_by_set(data_by_set, output_dir):
             methods, colors,
             metric_key='avg_time',
             std_key=None,
-            ylabel='Average Time (seconds)',
-            title=f'Set {set_num}: Algorithm Comparison - Time\n({num_ops} operators)',
+            ylabel='Time (s)',
+            title=f'Algorithm Comparison: Time (Set {set_num})',
             filename=f'set{set_num}_algorithm_comparison_time.png',
             output_dir=output_dir,
             show_error_bars=False,
@@ -411,15 +436,11 @@ def plot_algorithm_comparison_combined_by_metric(data_by_set, output_dir, metric
     sets = sorted(data_by_set.keys())
     num_sets = len(sets)
 
-    # Create figure with subplots (2x2 grid for 4 sets)
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    # Create figure with subplots (2x2 grid for 4 sets) - thesis-ready size
+    fig, axes = plt.subplots(2, 2, figsize=(20, 16))
     axes = axes.flatten()
 
-    colors = [
-        '#1f77b4', '#5a9bd5', '#8bb5e0',  # DQN
-        '#ff7f0e', '#ffa347', '#ffc780',  # PPO
-        '#7f7f7f', '#969696', '#aaaaaa', '#c4c4c4'  # Baselines
-    ]
+    colors = DQN_COLORS + PPO_COLORS + BASELINE_COLORS
 
     for idx, set_num in enumerate(sets):
         ax = axes[idx]
@@ -457,12 +478,15 @@ def plot_algorithm_comparison_combined_by_metric(data_by_set, output_dir, metric
                edgecolor='black', linewidth=1.0)
 
         # Styling
-        ax.set_xlabel('Method', fontsize=11)
-        ax.set_ylabel(ylabel, fontsize=11)
-        ax.set_title(f'Set {set_num} ({num_ops} operators)', fontsize=12)
+        ax.set_xlabel('Method')
+        ax.set_ylabel(ylabel)
+        ax.set_title(f'Set {set_num} ({num_ops} operators)', fontweight='bold')
         ax.set_xticks(x)
-        ax.set_xticklabels(method_names, rotation=45, ha='right', fontsize=9)
-        ax.grid(True, alpha=0.3, axis='y')
+        ax.set_xticklabels(method_names, rotation=45, ha='right')
+        ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+
+        # Add separator line between RL methods and baselines
+        ax.axvline(x=5.5, color='black', linestyle='--', linewidth=1.5, alpha=0.5)
 
         # Set y-axis limits
         if start_at_zero:
@@ -475,16 +499,16 @@ def plot_algorithm_comparison_combined_by_metric(data_by_set, output_dir, metric
     # Add common legend below subplots
     from matplotlib.patches import Patch
     legend_elements = [
-        Patch(facecolor='#1f77b4', alpha=0.85, label='DQN'),
-        Patch(facecolor='#ff7f0e', alpha=0.85, label='PPO'),
-        Patch(facecolor='#7f7f7f', alpha=0.85, label='Baselines')
+        Patch(facecolor=DQN_COLORS[1], alpha=0.85, label='DQN'),
+        Patch(facecolor=PPO_COLORS[1], alpha=0.85, label='PPO'),
+        Patch(facecolor=BASELINE_COLORS[0], alpha=0.85, label='Baselines')
     ]
     fig.legend(handles=legend_elements, loc='lower center',
-               ncol=3, fontsize=11, bbox_to_anchor=(0.5, -0.02))
+               ncol=3, bbox_to_anchor=(0.5, -0.02), framealpha=0.9, edgecolor='gray')
 
     # Overall title
-    fig.suptitle(f'{title_prefix} Comparison Across All Operator Sets',
-                 fontsize=14, fontweight='bold', y=0.995)
+    fig.suptitle(f'Algorithm Comparison: {title_prefix} Overview',
+                 fontsize=28, y=0.995)
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.99])
 

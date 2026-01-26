@@ -26,33 +26,53 @@ import re
 CSV_FILE = "results/memetic_component_summary_100.csv"
 OUTPUT_DIR = "results/memetic_component_comparison_100"
 
-# Plot styling - Thesis quality
-plt.rcParams.update({
+# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
+PLOT_STYLE = {
     'figure.dpi': 300,
     'savefig.dpi': 300,
-    'font.size': 11,
-    'axes.labelsize': 12,
-    'axes.titlesize': 13,
-    'xtick.labelsize': 10,
-    'ytick.labelsize': 10,
-    'legend.fontsize': 10,
-    'figure.titlesize': 14,
+    'font.size': 18,
+    'axes.labelsize': 22,
+    'axes.titlesize': 26,
+    'xtick.labelsize': 18,
+    'ytick.labelsize': 18,
+    'legend.fontsize': 18,
+    'figure.titlesize': 28,
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
     'text.usetex': False,
     'pdf.fonttype': 42,
     'ps.fonttype': 42,
-})
+    'axes.labelpad': 12,
+    'xtick.major.pad': 10,
+    'ytick.major.pad': 10,
+    'lines.linewidth': 3.0,
+    'axes.linewidth': 1.5,
+}
+plt.rcParams.update(PLOT_STYLE)
 
-# Color scheme for combinations
+# Unified color palette
+METHOD_COLORS = [
+    '#2E86AB',  # Steel Blue
+    '#A23B72',  # Plum Purple
+    '#1D7874',  # Teal
+    '#E8A838',  # Muted Gold
+    '#6B4C9A',  # Violet
+    '#D64550',  # Soft Red
+    '#44AF69',  # Sage Green
+    '#8B5E3C',  # Brown
+]
+
+BASELINE_COLORS = ['#5A5A5A', '#7A7A7A', '#9A9A9A', '#BABABA']
+
+# Color scheme for combinations (using unified palette)
 COMBO_COLORS = {
-    'Baseline': '#1f77b4',
-    'No_Mutation': '#ff7f0e',
-    'No_LocalSearch': '#2ca02c',
-    'LS_Set2_OneShot': '#d62728',
-    'LS_Set2_Ranking': '#9467bd',
-    'LS_Set5_OneShot': '#8c564b',
-    'LS_Set5_Ranking': '#e377c2',
+    'Baseline': METHOD_COLORS[0],       # Steel Blue
+    'No_Mutation': METHOD_COLORS[1],    # Plum Purple
+    'No_LocalSearch': METHOD_COLORS[2], # Teal
+    'LS_Set2_OneShot': METHOD_COLORS[3],# Muted Gold
+    'LS_Set2_Ranking': METHOD_COLORS[4],# Violet
+    'LS_Set5_OneShot': METHOD_COLORS[5],# Soft Red
+    'LS_Set5_Ranking': METHOD_COLORS[6],# Sage Green
 }
 
 # ============================================================================
@@ -185,7 +205,7 @@ def create_comparison_table(agg_df, category_name):
     Returns:
         matplotlib.figure.Figure: Table figure
     """
-    fig, ax = plt.subplots(figsize=(10, len(agg_df) * 0.6 + 1.5))
+    fig, ax = plt.subplots(figsize=(14, len(agg_df) * 0.8 + 2))
     ax.axis('tight')
     ax.axis('off')
 
@@ -211,8 +231,8 @@ def create_comparison_table(agg_df, category_name):
 
     # Style table
     table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1, 2)
+    table.set_fontsize(16)
+    table.scale(1, 2.5)
 
     # Format header row
     for i in range(len(headers)):
@@ -237,11 +257,11 @@ def create_comparison_table(agg_df, category_name):
 
     # Title
     if category_name == 'overall':
-        title = 'Overall Performance Comparison'
+        title = 'Component Comparison: Overall'
     else:
-        title = f'Performance Comparison - {category_name.upper()}'
+        title = f'Component Comparison: {category_name.upper()}'
 
-    plt.title(title, fontsize=14, fontweight='bold', pad=20)
+    plt.title(title, fontsize=24, fontweight='bold', pad=20)
 
     return fig
 
@@ -259,7 +279,7 @@ def create_comparison_plots(agg_df, category_name):
     Returns:
         matplotlib.figure.Figure: Plot figure
     """
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(22, 8))
 
     # Prepare data
     combos = agg_df['Combination'].tolist()
@@ -270,58 +290,58 @@ def create_comparison_plots(agg_df, category_name):
     ax = axes[0]
     bars = ax.bar(x, agg_df['Avg_Fitness'], color=colors, alpha=0.8, edgecolor='black')
     ax.set_xlabel('Combination')
-    ax.set_ylabel('Average Best Fitness')
-    ax.set_title('Average Best Fitness')
+    ax.set_ylabel('Fitness')
+    ax.set_title('Fitness', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(combos, rotation=45, ha='right')
-    ax.grid(axis='y', alpha=0.3)
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     # Add value labels
     for bar in bars:
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2., height,
-                f'{height:.1f}', ha='center', va='bottom', fontsize=8)
+                f'{height:.1f}', ha='center', va='bottom', fontsize=14)
 
     # Plot 2: Average Time to Best
     ax = axes[1]
     bars = ax.bar(x, agg_df['Avg_Time'], color=colors, alpha=0.8, edgecolor='black')
     ax.set_xlabel('Combination')
-    ax.set_ylabel('Average Time (seconds)')
-    ax.set_title('Average Time to Best')
+    ax.set_ylabel('Time (s)')
+    ax.set_title('Time to Best', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(combos, rotation=45, ha='right')
-    ax.grid(axis='y', alpha=0.3)
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     # Add value labels
     for bar in bars:
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2., height,
-                f'{height:.1f}', ha='center', va='bottom', fontsize=8)
+                f'{height:.1f}', ha='center', va='bottom', fontsize=14)
 
     # Plot 3: Average Gap to BKS
     ax = axes[2]
     bars = ax.bar(x, agg_df['Avg_Gap'], color=colors, alpha=0.8, edgecolor='black')
     ax.set_xlabel('Combination')
-    ax.set_ylabel('Average Gap (%)')
-    ax.set_title('Average Gap to BKS')
+    ax.set_ylabel('Gap to BKS (%)')
+    ax.set_title('Gap to BKS', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(combos, rotation=45, ha='right')
-    ax.grid(axis='y', alpha=0.3)
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     # Add value labels
     for bar in bars:
         height = bar.get_height()
         ax.text(bar.get_x() + bar.get_width()/2., height,
-                f'{height:.2f}%', ha='center', va='bottom', fontsize=8)
+                f'{height:.2f}%', ha='center', va='bottom', fontsize=14)
 
     # Overall title
     if category_name == 'overall':
-        suptitle = 'Overall Performance Comparison'
+        suptitle = 'Component Comparison: Overall'
     else:
-        suptitle = f'Performance Comparison - {category_name.upper()}'
+        suptitle = f'Component Comparison: {category_name.upper()}'
 
-    fig.suptitle(suptitle, fontsize=14, fontweight='bold')
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.suptitle(suptitle, fontsize=28)
+    plt.tight_layout(rect=[0, 0, 1, 0.94])
 
     return fig
 
@@ -360,7 +380,7 @@ def create_ranking_table(df):
         })
 
     # Create figure
-    fig, ax = plt.subplots(figsize=(12, len(ranking_data) * 0.6 + 1.5))
+    fig, ax = plt.subplots(figsize=(16, len(ranking_data) * 0.8 + 2))
     ax.axis('tight')
     ax.axis('off')
 
@@ -383,8 +403,8 @@ def create_ranking_table(df):
 
     # Style table
     table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1, 2)
+    table.set_fontsize(16)
+    table.scale(1, 2.5)
 
     # Format header row
     for i in range(len(headers)):
@@ -393,7 +413,7 @@ def create_ranking_table(df):
         cell.set_text_props(weight='bold', color='white')
 
     # Title
-    plt.title('Summary Rankings by Category', fontsize=14, fontweight='bold', pad=20)
+    plt.title('Component Comparison: Rankings', fontsize=24, fontweight='bold', pad=20)
 
     return fig
 

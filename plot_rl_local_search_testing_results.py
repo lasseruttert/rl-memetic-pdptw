@@ -7,21 +7,41 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from pathlib import Path
 
-# Thesis-quality plot settings
-plt.rcParams.update({
-    'font.size': 11,
-    'axes.labelsize': 12,
-    'axes.titlesize': 13,
-    'xtick.labelsize': 10,
-    'ytick.labelsize': 10,
-    'legend.fontsize': 10,
-    'figure.titlesize': 14,
+# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
+PLOT_STYLE = {
+    'font.size': 18,
+    'axes.labelsize': 22,
+    'axes.titlesize': 26,
+    'xtick.labelsize': 18,
+    'ytick.labelsize': 18,
+    'legend.fontsize': 18,
+    'figure.titlesize': 28,
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
     'text.usetex': False,
     'pdf.fonttype': 42,
     'ps.fonttype': 42,
-})
+    'axes.labelpad': 12,
+    'xtick.major.pad': 10,
+    'ytick.major.pad': 10,
+    'lines.linewidth': 3.0,
+    'axes.linewidth': 1.5,
+}
+plt.rcParams.update(PLOT_STYLE)
+
+# Unified color palette
+METHOD_COLORS = [
+    '#2E86AB',  # Steel Blue
+    '#A23B72',  # Plum Purple
+    '#1D7874',  # Teal
+    '#E8A838',  # Muted Gold
+    '#6B4C9A',  # Violet
+    '#D64550',  # Soft Red
+    '#44AF69',  # Sage Green
+    '#8B5E3C',  # Brown
+]
+
+BASELINE_COLORS = ['#5A5A5A', '#7A7A7A', '#9A9A9A', '#BABABA']
 
 
 def parse_log_filename(filename):
@@ -291,7 +311,7 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
             ('avg_fitness', 'fitness', 'Average Fitness (lower is better)'),
             ('avg_time', 'time', 'Average Time (seconds)')
         ]:
-            fig, ax = plt.subplots(figsize=(12, 6))
+            fig, ax = plt.subplots(figsize=(16, 10))
 
             x = np.arange(len(reward_strategies))
             width = 0.6
@@ -347,9 +367,8 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
             num_baselines = len(values) - num_rl
 
             # Separate colors for RL models and baselines
-            rl_colors = plt.cm.tab10(np.linspace(0, 0.7, num_rl))
-            baseline_colors = ['#7f7f7f', '#969696', '#aaaaaa', '#c4c4c4']
-            colors = list(rl_colors) + baseline_colors[:num_baselines]
+            rl_colors = METHOD_COLORS[:num_rl]
+            colors = rl_colors + BASELINE_COLORS[:num_baselines]
 
             # Plot bars
             ax.bar(x, values, width,
@@ -361,22 +380,22 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
                 ax.axvline(x=num_rl - 0.5, color='black', linestyle='--',
                           linewidth=1.5, alpha=0.5)
 
-            ax.set_xlabel('Method', fontsize=12, fontweight='bold')
-            ax.set_ylabel(ylabel, fontsize=12, fontweight='bold')
-            ax.set_title(f'Acceptance: {acceptance_strategy}\nTesting Performance: Reward Strategy Comparison ({metric_name.capitalize()})',
-                        fontsize=13, fontweight='bold')
+            ax.set_xlabel('Method')
+            ax.set_ylabel(ylabel)
+            ax.set_title(f'Reward Strategy: {metric_name.capitalize()} ({acceptance_strategy})',
+                        fontweight='bold')
             ax.set_xticks(x)
-            ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=10)
-            ax.grid(True, alpha=0.3, axis='y')
+            ax.set_xticklabels(labels, rotation=45, ha='right')
+            ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
             # Add legend
             if num_rl > 0 and num_baselines > 0:
                 from matplotlib.patches import Patch
                 legend_elements = [
-                    Patch(facecolor=rl_colors[0], alpha=0.8, edgecolor='black', label='RL Models'),
-                    Patch(facecolor='#969696', alpha=0.8, edgecolor='black', label='Baselines')
+                    Patch(facecolor=METHOD_COLORS[0], alpha=0.8, edgecolor='black', label='RL Models'),
+                    Patch(facecolor=BASELINE_COLORS[1], alpha=0.8, edgecolor='black', label='Baselines')
                 ]
-                ax.legend(handles=legend_elements, loc='upper right', fontsize=10)
+                ax.legend(handles=legend_elements, loc='upper right', framealpha=0.9, edgecolor='gray')
 
             filename = f'{acceptance_strategy}_testing_{metric_name}_by_reward_strategy'
             filepath = os.path.join(output_dir, filename)
@@ -404,8 +423,8 @@ def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, met
     acceptance_strategies = sorted(testing_data_by_acceptance.keys())
     num_strategies = len(acceptance_strategies)
 
-    # Create 2x2 grid for 4 acceptance strategies
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    # Create 2x2 grid for 4 acceptance strategies - thesis-ready size
+    fig, axes = plt.subplots(2, 2, figsize=(20, 16))
     axes = axes.flatten()
 
     for idx, acceptance_strategy in enumerate(acceptance_strategies):
@@ -466,9 +485,8 @@ def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, met
         num_baselines = len(values) - num_rl
 
         # Colors
-        rl_colors = plt.cm.tab10(np.linspace(0, 0.7, num_rl))
-        baseline_colors = ['#7f7f7f', '#969696', '#aaaaaa', '#c4c4c4']
-        colors = list(rl_colors) + baseline_colors[:num_baselines]
+        rl_colors = METHOD_COLORS[:num_rl]
+        colors = rl_colors + BASELINE_COLORS[:num_baselines]
 
         ax.bar(x, values, width, color=colors, alpha=0.8,
                edgecolor='black', linewidth=1.0)
@@ -479,26 +497,25 @@ def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, met
                       linewidth=1.5, alpha=0.5)
 
         # Styling
-        ax.set_xlabel('Method', fontsize=11)
-        ax.set_ylabel(ylabel, fontsize=11)
-        ax.set_title(f'{acceptance_strategy.replace("_", " ").title()}', fontsize=12)
+        ax.set_xlabel('Method')
+        ax.set_ylabel(ylabel)
+        ax.set_title(f'{acceptance_strategy.replace("_", " ").title()}', fontweight='bold')
         ax.set_xticks(x)
-        ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=9)
-        ax.grid(True, alpha=0.3, axis='y')
+        ax.set_xticklabels(labels, rotation=45, ha='right')
+        ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     # Add legend
     from matplotlib.patches import Patch
     legend_elements = [
-        Patch(facecolor=rl_colors[0] if len(rl_colors) > 0 else '#1f77b4',
-              alpha=0.8, edgecolor='black', label='RL Models'),
-        Patch(facecolor='#969696', alpha=0.8, edgecolor='black', label='Baselines')
+        Patch(facecolor=METHOD_COLORS[0], alpha=0.8, edgecolor='black', label='RL Models'),
+        Patch(facecolor=BASELINE_COLORS[1], alpha=0.8, edgecolor='black', label='Baselines')
     ]
     fig.legend(handles=legend_elements, loc='lower center',
-               ncol=2, fontsize=11, bbox_to_anchor=(0.5, -0.02))
+               ncol=2, bbox_to_anchor=(0.5, -0.02), framealpha=0.9, edgecolor='gray')
 
     # Overall title
-    fig.suptitle(f'Testing Performance: {title_suffix} Comparison Across Acceptance Strategies',
-                fontsize=14, fontweight='bold', y=0.995)
+    fig.suptitle(f'Reward Strategy: {title_suffix} Overview',
+                fontsize=28, y=0.995)
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.99])
 
