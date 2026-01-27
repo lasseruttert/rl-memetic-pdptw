@@ -31,7 +31,6 @@ import os
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 from pathlib import Path
 
 # ============================================================================
@@ -55,8 +54,52 @@ RESULTS_OUTPUT_FILE = "results/operator_convergence_results.json"
 
 # Plotting configuration
 PLOTS_OUTPUT_DIR = "results/operator_convergence_plots"
-PLOT_DPI = 150
-PLOT_STYLE = "seaborn-v0_8-darkgrid"
+
+# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
+PLOT_STYLE = {
+    'font.size': 18,
+    'axes.labelsize': 22,
+    'axes.titlesize': 26,
+    'xtick.labelsize': 18,
+    'ytick.labelsize': 18,
+    'legend.fontsize': 18,
+    'figure.titlesize': 28,
+    'font.family': 'serif',
+    'font.serif': ['Times New Roman', 'DejaVu Serif'],
+    'text.usetex': False,
+    'pdf.fonttype': 42,
+    'ps.fonttype': 42,
+    'axes.labelpad': 12,
+    'xtick.major.pad': 10,
+    'ytick.major.pad': 10,
+    'lines.linewidth': 3.0,
+    'axes.linewidth': 1.5,
+}
+plt.rcParams.update(PLOT_STYLE)
+
+# Unified color palette
+METHOD_COLORS = [
+    '#2E86AB',  # Steel Blue
+    '#A23B72',  # Plum Purple
+    '#1D7874',  # Teal
+    '#E8A838',  # Muted Gold
+    '#6B4C9A',  # Violet
+    '#D64550',  # Soft Red
+    '#44AF69',  # Sage Green
+    '#8B5E3C',  # Brown
+]
+
+# Extended colors for many operators (cycle through with different line styles)
+EXTENDED_COLORS = METHOD_COLORS + [
+    '#C44536',  # Rust
+    '#3A7D44',  # Forest Green
+    '#7B68EE',  # Medium Slate Blue
+    '#CD853F',  # Peru
+    '#4682B4',  # Steel Blue 2
+    '#9370DB',  # Medium Purple
+    '#20B2AA',  # Light Sea Green
+    '#DAA520',  # Goldenrod
+]
 
 # Line styles for multi-operator plots
 LINE_STYLES = ['-', '--', '-.', ':']  # solid, dashed, dash-dot, dotted
@@ -281,6 +324,25 @@ def _compute_average_convergence(runs_data, metric='fitnesses', num_bins=100):
 
     return time_bins, mean_values, std_values
 
+def save_figure_multi_format(fig, filepath, formats=['png', 'pdf']):
+    """Save figure in multiple formats for thesis use.
+
+    Args:
+        fig: Matplotlib figure object
+        filepath: Base filepath (without extension)
+        formats: List of formats to save ['png', 'pdf']
+    """
+    for fmt in formats:
+        output_path = f"{filepath}.{fmt}"
+        if fmt == 'pdf':
+            fig.savefig(output_path, format='pdf', bbox_inches='tight',
+                       dpi=300, backend='pdf')
+        else:  # png
+            fig.savefig(output_path, format='png', bbox_inches='tight',
+                       dpi=300)
+        print(f'    Saved: {output_path}')
+
+
 def plot_all_results(results):
     """Generate all plots from experiment results.
 
@@ -290,305 +352,21 @@ def plot_all_results(results):
     # Create output directory (with parents)
     Path(PLOTS_OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
-    # Set plot style
-    try:
-        plt.style.use(PLOT_STYLE)
-    except:
-        plt.style.use('default')
-
     print("\n" + "=" * 80)
     print("GENERATING PLOTS")
     print("=" * 80)
 
-    # 1. Plot convergence curves for each operator
-    print("Plotting individual operator convergence curves...")
-    plot_operator_convergence_curves(results)
-
-    # 2. Plot operator comparison (final fitness)
-    print("Plotting operator comparison (final fitness)...")
-    plot_operator_comparison(results)
-
-    # 3. Plot operator comparison (improvement from initial)
-    print("Plotting operator improvement comparison...")
-    plot_operator_improvements(results)
-
-    # 4. Plot time analysis
-    print("Plotting time analysis...")
-    plot_time_analysis(results)
-
-    # 5. Plot aggregated convergence curves
+    # 1. Plot aggregated convergence curves (all operators on one plot)
     print("Plotting aggregated convergence curves...")
     plot_aggregated_convergence(results)
 
-    # 6. Plot per-operator average across all instances
+    # 2. Plot per-operator average across all instances
     print("Plotting per-operator averages across all instances...")
     plot_per_operator_average_all_instances(results)
 
     print(f"\nAll plots saved to: {PLOTS_OUTPUT_DIR}/")
     print("=" * 80)
 
-def plot_operator_convergence_curves(results):
-    """Plot convergence curves for each operator on each instance.
-
-    Shows average across runs with standard deviation as shaded region.
-
-    Args:
-        results: Dictionary containing all experiment results
-    """
-    for operator_name, operator_results in results.items():
-        # Create subfolder for this operator
-        operator_dir = Path(PLOTS_OUTPUT_DIR) / operator_name.replace('/', '_').replace('\\', '_')
-        operator_dir.mkdir(parents=True, exist_ok=True)
-
-        for instance_name, instance_data in operator_results.items():
-            fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-
-            # Compute average convergence for fitness
-            time_bins_fitness, mean_fitness, std_fitness = _compute_average_convergence(
-                instance_data['runs'], metric='fitnesses'
-            )
-
-            # Plot fitness convergence
-            ax1 = axes[0]
-            if len(time_bins_fitness) > 0:
-                # Plot mean line
-                ax1.plot(time_bins_fitness, mean_fitness, color='blue',
-                        linewidth=2, label='Average', alpha=0.8)
-                # Plot shaded std deviation
-                mean_fitness_array = np.array(mean_fitness)
-                std_fitness_array = np.array(std_fitness)
-                ax1.fill_between(time_bins_fitness,
-                                mean_fitness_array - std_fitness_array,
-                                mean_fitness_array + std_fitness_array,
-                                color='blue', alpha=0.2, label='±1 Std Dev')
-
-            ax1.set_xlabel('Time (seconds)', fontsize=12)
-            ax1.set_ylabel('Fitness', fontsize=12)
-            ax1.set_title(f'Fitness Convergence - {instance_name}', fontsize=13, fontweight='bold')
-            ax1.grid(True, alpha=0.3)
-
-            # Add BKS line if available
-            if instance_data['bks_fitness'] is not None:
-                ax1.axhline(y=instance_data['bks_fitness'], color='red',
-                           linestyle='--', linewidth=2, label='BKS', alpha=0.7)
-
-            ax1.legend()
-
-            # Compute average convergence for number of vehicles
-            time_bins_vehicles, mean_vehicles, std_vehicles = _compute_average_convergence(
-                instance_data['runs'], metric='num_vehicles'
-            )
-
-            # Plot number of vehicles convergence
-            ax2 = axes[1]
-            if len(time_bins_vehicles) > 0:
-                # Plot mean line
-                ax2.plot(time_bins_vehicles, mean_vehicles, color='green',
-                        linewidth=2, label='Average', alpha=0.8)
-                # Plot shaded std deviation
-                mean_vehicles_array = np.array(mean_vehicles)
-                std_vehicles_array = np.array(std_vehicles)
-                ax2.fill_between(time_bins_vehicles,
-                                mean_vehicles_array - std_vehicles_array,
-                                mean_vehicles_array + std_vehicles_array,
-                                color='green', alpha=0.2, label='±1 Std Dev')
-
-            ax2.set_xlabel('Time (seconds)', fontsize=12)
-            ax2.set_ylabel('Number of Vehicles', fontsize=12)
-            ax2.set_title(f'Vehicles Convergence - {instance_name}', fontsize=13, fontweight='bold')
-            ax2.grid(True, alpha=0.3)
-
-            # Add BKS line if available
-            if instance_data['bks_num_vehicles'] is not None:
-                ax2.axhline(y=instance_data['bks_num_vehicles'], color='red',
-                           linestyle='--', linewidth=2, label='BKS', alpha=0.7)
-
-            ax2.legend()
-
-            plt.suptitle(f'Operator: {operator_name}', fontsize=14, fontweight='bold')
-            plt.tight_layout()
-
-            # Save plot
-            safe_filename = instance_name.replace('/', '_').replace('\\', '_')
-            plt.savefig(operator_dir / f'{safe_filename}.png', dpi=PLOT_DPI, bbox_inches='tight')
-            plt.close()
-
-def plot_operator_comparison(results):
-    """Create boxplot comparing final fitness across operators.
-
-    Args:
-        results: Dictionary containing all experiment results
-    """
-    # Collect data
-    data = []
-    for operator_name, operator_results in results.items():
-        for instance_name, instance_data in operator_results.items():
-            for run_data in instance_data['runs']:
-                data.append({
-                    'Operator': operator_name,
-                    'Instance': instance_name,
-                    'Final Fitness': run_data['final_fitness'],
-                    'Final Vehicles': run_data['final_num_vehicles']
-                })
-
-    if not data:
-        return
-
-    # Create figure with subplots
-    fig, axes = plt.subplots(2, 1, figsize=(max(15, len(results) * 0.8), 12))
-
-    # Boxplot for fitness
-    ax1 = axes[0]
-    operator_names = list(results.keys())
-    fitness_data = [[d['Final Fitness'] for d in data if d['Operator'] == op]
-                    for op in operator_names]
-
-    bp1 = ax1.boxplot(fitness_data, labels=operator_names, patch_artist=True)
-    for patch in bp1['boxes']:
-        patch.set_facecolor('lightblue')
-
-    ax1.set_ylabel('Final Fitness', fontsize=12)
-    ax1.set_title('Operator Comparison - Final Fitness', fontsize=14, fontweight='bold')
-    ax1.tick_params(axis='x', rotation=45)
-    ax1.grid(True, alpha=0.3, axis='y')
-
-    # Boxplot for vehicles
-    ax2 = axes[1]
-    vehicles_data = [[d['Final Vehicles'] for d in data if d['Operator'] == op]
-                     for op in operator_names]
-
-    bp2 = ax2.boxplot(vehicles_data, labels=operator_names, patch_artist=True)
-    for patch in bp2['boxes']:
-        patch.set_facecolor('lightgreen')
-
-    ax2.set_ylabel('Final Number of Vehicles', fontsize=12)
-    ax2.set_xlabel('Operator', fontsize=12)
-    ax2.set_title('Operator Comparison - Final Number of Vehicles', fontsize=14, fontweight='bold')
-    ax2.tick_params(axis='x', rotation=45)
-    ax2.grid(True, alpha=0.3, axis='y')
-
-    plt.tight_layout()
-    plt.savefig(Path(PLOTS_OUTPUT_DIR) / 'operator_comparison.png', dpi=PLOT_DPI, bbox_inches='tight')
-    plt.close()
-
-def plot_operator_improvements(results):
-    """Plot the improvement achieved by each operator (initial vs final).
-
-    Args:
-        results: Dictionary containing all experiment results
-    """
-    # Collect data
-    improvements = []
-    for operator_name, operator_results in results.items():
-        for instance_name, instance_data in operator_results.items():
-            for run_data in instance_data['runs']:
-                improvement = run_data['initial_fitness'] - run_data['final_fitness']
-                improvement_pct = (improvement / run_data['initial_fitness']) * 100 if run_data['initial_fitness'] > 0 else 0
-                improvements.append({
-                    'Operator': operator_name,
-                    'Improvement': improvement,
-                    'Improvement %': improvement_pct,
-                    'Num Improvements': run_data['num_improvements']
-                })
-
-    if not improvements:
-        return
-
-    # Create figure
-    fig, axes = plt.subplots(2, 1, figsize=(max(15, len(results) * 0.8), 12))
-
-    # Absolute improvement
-    ax1 = axes[0]
-    operator_names = list(results.keys())
-    improvement_data = [[d['Improvement'] for d in improvements if d['Operator'] == op]
-                        for op in operator_names]
-
-    bp1 = ax1.boxplot(improvement_data, labels=operator_names, patch_artist=True)
-    for patch in bp1['boxes']:
-        patch.set_facecolor('lightcoral')
-
-    ax1.set_ylabel('Fitness Improvement', fontsize=12)
-    ax1.set_title('Operator Performance - Absolute Improvement', fontsize=14, fontweight='bold')
-    ax1.tick_params(axis='x', rotation=45)
-    ax1.grid(True, alpha=0.3, axis='y')
-    ax1.axhline(y=0, color='black', linestyle='-', linewidth=0.5)
-
-    # Number of improvements found
-    ax2 = axes[1]
-    num_improvements_data = [[d['Num Improvements'] for d in improvements if d['Operator'] == op]
-                             for op in operator_names]
-
-    bp2 = ax2.boxplot(num_improvements_data, labels=operator_names, patch_artist=True)
-    for patch in bp2['boxes']:
-        patch.set_facecolor('lightyellow')
-
-    ax2.set_ylabel('Number of Improvements Found', fontsize=12)
-    ax2.set_xlabel('Operator', fontsize=12)
-    ax2.set_title('Operator Performance - Number of Improvements', fontsize=14, fontweight='bold')
-    ax2.tick_params(axis='x', rotation=45)
-    ax2.grid(True, alpha=0.3, axis='y')
-
-    plt.tight_layout()
-    plt.savefig(Path(PLOTS_OUTPUT_DIR) / 'operator_improvements.png', dpi=PLOT_DPI, bbox_inches='tight')
-    plt.close()
-
-def plot_time_analysis(results):
-    """Plot time-related metrics for each operator.
-
-    Args:
-        results: Dictionary containing all experiment results
-    """
-    # Collect data
-    time_data = []
-    for operator_name, operator_results in results.items():
-        for instance_name, instance_data in operator_results.items():
-            for run_data in instance_data['runs']:
-                time_data.append({
-                    'Operator': operator_name,
-                    'Total Time': run_data['total_time'],
-                    'Time per Improvement': run_data['total_time'] / max(run_data['num_improvements'], 1)
-                })
-
-    if not time_data:
-        return
-
-    # Create figure
-    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
-
-    # Total time
-    ax1 = axes[0]
-    operator_names = list(results.keys())
-    total_time_data = [[d['Total Time'] for d in time_data if d['Operator'] == op]
-                       for op in operator_names]
-
-    bp1 = ax1.boxplot(total_time_data, labels=operator_names, patch_artist=True)
-    for patch in bp1['boxes']:
-        patch.set_facecolor('plum')
-
-    ax1.set_ylabel('Time (seconds)', fontsize=12)
-    ax1.set_xlabel('Operator', fontsize=12)
-    ax1.set_title('Total Runtime per Run', fontsize=14, fontweight='bold')
-    ax1.tick_params(axis='x', rotation=45)
-    ax1.grid(True, alpha=0.3, axis='y')
-
-    # Time per improvement
-    ax2 = axes[1]
-    time_per_imp_data = [[d['Time per Improvement'] for d in time_data if d['Operator'] == op]
-                         for op in operator_names]
-
-    bp2 = ax2.boxplot(time_per_imp_data, labels=operator_names, patch_artist=True)
-    for patch in bp2['boxes']:
-        patch.set_facecolor('palegreen')
-
-    ax2.set_ylabel('Time per Improvement (seconds)', fontsize=12)
-    ax2.set_xlabel('Operator', fontsize=12)
-    ax2.set_title('Average Time per Improvement', fontsize=14, fontweight='bold')
-    ax2.tick_params(axis='x', rotation=45)
-    ax2.grid(True, alpha=0.3, axis='y')
-
-    plt.tight_layout()
-    plt.savefig(Path(PLOTS_OUTPUT_DIR) / 'time_analysis.png', dpi=PLOT_DPI, bbox_inches='tight')
-    plt.close()
 
 def plot_aggregated_convergence(results):
     """Plot aggregated convergence curves across all instances for each operator.
@@ -596,7 +374,7 @@ def plot_aggregated_convergence(results):
     Args:
         results: Dictionary containing all experiment results
     """
-    fig, ax = plt.subplots(figsize=(14, 8))
+    fig, ax = plt.subplots(figsize=(18, 10))
 
     # Compute optimal x-axis cutoff
     cutoff_time, has_outliers = _compute_optimal_x_cutoff(results)
@@ -613,7 +391,9 @@ def plot_aggregated_convergence(results):
                     if run_data['convergence_times']:
                         max_time = max(max_time, run_data['convergence_times'][-1])
 
-    colors = plt.cm.tab20(np.linspace(0, 1, len(results)))
+    # Use extended colors for many operators
+    num_operators = len(results)
+    colors = EXTENDED_COLORS * ((num_operators // len(EXTENDED_COLORS)) + 1)
 
     for idx, (operator_name, operator_results) in enumerate(results.items()):
         all_fitness_curves = []
@@ -659,24 +439,24 @@ def plot_aggregated_convergence(results):
 
         # Plot median curve
         ax.plot(time_bins, aggregated_fitness, label=operator_name,
-               color=colors[idx], linestyle=line_style, linewidth=2, alpha=0.8)
+               color=colors[idx], linestyle=line_style, linewidth=2.5, alpha=0.85)
 
-    ax.set_xlabel('Time (seconds)', fontsize=12)
-    ax.set_ylabel('Median Fitness', fontsize=12)
+    ax.set_xlabel('Time (seconds)')
+    ax.set_ylabel('Median Fitness')
     ax.set_title('Aggregated Convergence Curves (Median across all runs)',
-                fontsize=14, fontweight='bold')
-    ax.grid(True, alpha=0.3)
-    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=9)
+                fontweight='bold')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', framealpha=0.9, edgecolor='gray')
 
     # Add annotation if cutoff was applied
     if has_outliers and cutoff_time is not None:
         ax.text(0.02, 0.98, f'Note: X-axis limited to {cutoff_time:.2f}s\n(some operators continue beyond)',
-                transform=ax.transAxes, fontsize=9, verticalalignment='top',
-                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+                transform=ax.transAxes, fontsize=14, verticalalignment='top',
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.7))
 
     plt.tight_layout()
-    plt.savefig(Path(PLOTS_OUTPUT_DIR) / 'aggregated_convergence.png',
-               dpi=PLOT_DPI, bbox_inches='tight')
+    filepath = Path(PLOTS_OUTPUT_DIR) / 'aggregated_convergence'
+    save_figure_multi_format(fig, str(filepath))
     plt.close()
 
 def plot_per_operator_average_all_instances(results):
@@ -702,7 +482,7 @@ def plot_per_operator_average_all_instances(results):
             continue
 
         # Create figure with two subplots
-        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+        fig, axes = plt.subplots(1, 2, figsize=(16, 7))
 
         # Compute average convergence for fitness
         time_bins_fitness, mean_fitness, std_fitness = _compute_average_convergence(
@@ -713,22 +493,22 @@ def plot_per_operator_average_all_instances(results):
         ax1 = axes[0]
         if len(time_bins_fitness) > 0:
             # Plot mean line
-            ax1.plot(time_bins_fitness, mean_fitness, color='blue',
-                    linewidth=2.5, label='Mean', alpha=0.9)
+            ax1.plot(time_bins_fitness, mean_fitness, color=METHOD_COLORS[0],
+                    linewidth=3, label='Mean', alpha=0.9)
             # Plot shaded std deviation
             mean_fitness_array = np.array(mean_fitness)
             std_fitness_array = np.array(std_fitness)
             ax1.fill_between(time_bins_fitness,
                             mean_fitness_array - std_fitness_array,
                             mean_fitness_array + std_fitness_array,
-                            color='blue', alpha=0.3, label='±1 Std Dev')
+                            color=METHOD_COLORS[0], alpha=0.25, label='±1 Std Dev')
 
-        ax1.set_xlabel('Time (seconds)', fontsize=12)
-        ax1.set_ylabel('Fitness', fontsize=12)
-        ax1.set_title(f'Average Fitness Convergence Across All Instances',
-                     fontsize=13, fontweight='bold')
-        ax1.grid(True, alpha=0.3)
-        ax1.legend()
+        ax1.set_xlabel('Time (seconds)')
+        ax1.set_ylabel('Fitness')
+        ax1.set_title('Average Fitness Convergence Across All Instances',
+                     fontweight='bold')
+        ax1.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+        ax1.legend(framealpha=0.9, edgecolor='gray')
 
         # Compute average convergence for number of vehicles
         time_bins_vehicles, mean_vehicles, std_vehicles = _compute_average_convergence(
@@ -739,34 +519,34 @@ def plot_per_operator_average_all_instances(results):
         ax2 = axes[1]
         if len(time_bins_vehicles) > 0:
             # Plot mean line
-            ax2.plot(time_bins_vehicles, mean_vehicles, color='green',
-                    linewidth=2.5, label='Mean', alpha=0.9)
+            ax2.plot(time_bins_vehicles, mean_vehicles, color=METHOD_COLORS[2],
+                    linewidth=3, label='Mean', alpha=0.9)
             # Plot shaded std deviation
             mean_vehicles_array = np.array(mean_vehicles)
             std_vehicles_array = np.array(std_vehicles)
             ax2.fill_between(time_bins_vehicles,
                             mean_vehicles_array - std_vehicles_array,
                             mean_vehicles_array + std_vehicles_array,
-                            color='green', alpha=0.3, label='±1 Std Dev')
+                            color=METHOD_COLORS[2], alpha=0.25, label='±1 Std Dev')
 
-        ax2.set_xlabel('Time (seconds)', fontsize=12)
-        ax2.set_ylabel('Number of Vehicles', fontsize=12)
-        ax2.set_title(f'Average Vehicles Convergence Across All Instances',
-                     fontsize=13, fontweight='bold')
-        ax2.grid(True, alpha=0.3)
-        ax2.legend()
+        ax2.set_xlabel('Time (seconds)')
+        ax2.set_ylabel('Number of Vehicles')
+        ax2.set_title('Average Vehicles Convergence Across All Instances',
+                     fontweight='bold')
+        ax2.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+        ax2.legend(framealpha=0.9, edgecolor='gray')
 
         # Add suptitle with operator name and number of instances/runs
         num_instances = len(operator_results)
         num_runs = len(all_runs)
         plt.suptitle(f'Operator: {operator_name}\n({num_instances} instances, {num_runs} runs)',
-                    fontsize=14, fontweight='bold')
+                    fontsize=28, fontweight='bold')
         plt.tight_layout()
 
         # Save plot
         safe_filename = operator_name.replace('/', '_').replace('\\', '_')
-        plt.savefig(per_operator_avg_dir / f'{safe_filename}_avg_all_instances.png',
-                   dpi=PLOT_DPI, bbox_inches='tight')
+        filepath = per_operator_avg_dir / f'{safe_filename}_avg_all_instances'
+        save_figure_multi_format(fig, str(filepath))
         plt.close()
 
 def _create_operators():
@@ -920,18 +700,15 @@ def _run_operator_experiment(operator, li_lim_manager, mendeley_manager, best_kn
 if __name__ == "__main__":
     import sys
 
-    # Check if user wants to only plot existing results
-    if len(sys.argv) > 1 and sys.argv[1] == "--plot-only":
-    # if True:
+    # Check if results file already exists
+    if os.path.exists(RESULTS_OUTPUT_FILE):
+        print(f"Results file found: {RESULTS_OUTPUT_FILE}")
         print("Loading existing results and generating plots...")
         try:
             with open(RESULTS_OUTPUT_FILE, 'r') as f:
                 results = json.load(f)
             plot_all_results(results)
             print("Done!")
-        except FileNotFoundError:
-            print(f"Error: Results file '{RESULTS_OUTPUT_FILE}' not found.")
-            print("Please run the experiment first without --plot-only flag.")
         except Exception as e:
             print(f"Error while plotting: {e}")
             import traceback

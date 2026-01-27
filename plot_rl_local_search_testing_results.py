@@ -472,9 +472,9 @@ def plot_testing_comparison(testing_data_by_acceptance, output_dir):
                 ax.axvline(x=num_rl - 0.5, color='black', linestyle='--',
                           linewidth=1.5, alpha=0.5)
 
-            ax.set_xlabel('Method')
+            ax.set_xlabel('Reward Function/Baseline')
             ax.set_ylabel(ylabel)
-            ax.set_title(f'Reward Strategy: {metric_name.capitalize()} ({acceptance_strategy})',
+            ax.set_title(f'Combinations of Reward and Acceptance Strategies: {metric_name.capitalize()} ({acceptance_strategy})',
                         fontweight='bold')
             ax.set_xticks(x)
             ax.set_xticklabels(labels, rotation=45, ha='right')
@@ -618,7 +618,7 @@ def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, met
                       linewidth=1.5, alpha=0.5)
 
         # Styling
-        ax.set_xlabel('Method')
+        ax.set_xlabel('Reward Function/Baseline')
         ax.set_ylabel(ylabel)
         ax.set_title(f'{acceptance_strategy.replace("_", " ").title()}', fontweight='bold')
         ax.set_xticks(x)
@@ -635,7 +635,7 @@ def plot_testing_comparison_combined(testing_data_by_acceptance, output_dir, met
                ncol=2, bbox_to_anchor=(0.5, -0.02), framealpha=0.9, edgecolor='gray')
 
     # Overall title
-    fig.suptitle(f'Reward Strategy: {title_suffix} Overview',
+    fig.suptitle(f'Combinations of Reward and Acceptance Strategies: {title_suffix} Overview',
                 fontsize=28, y=0.995)
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.99])

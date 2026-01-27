@@ -260,6 +260,7 @@ def create_local_search_instances(operator_dict):
     local_searches.append(ls_06_rl_set1_one_shot)
     
     ls_07_rl_set1_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set1_final.pt")
+    ls_07_rl_set1_ranking.type = "Ranking"
     local_searches.append(ls_07_rl_set1_ranking)
     
     ls_08_rl_set2_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
@@ -272,25 +273,40 @@ def create_local_search_instances(operator_dict):
     local_searches.append(ls_10_rl_set2_shorter)
     
     ls_11_rl_set2_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
+    ls_11_rl_set2_ranking.type = "Ranking"
     local_searches.append(ls_11_rl_set2_ranking)
     
     ls_12_rl_set3_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt")
     local_searches.append(ls_12_rl_set3_one_shot)
     
     ls_13_rl_set3_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set3_final.pt")
+    ls_13_rl_set3_ranking.type = "Ranking"
     local_searches.append(ls_13_rl_set3_ranking)
     
     ls_14_rl_set4_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set4_final.pt")
     local_searches.append(ls_14_rl_set4_one_shot)
     
     ls_15_rl_set4_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set4_final.pt")
+    ls_15_rl_set4_ranking.type = "Ranking"
     local_searches.append(ls_15_rl_set4_ranking)
 
     ls_16_rl_set5_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set5_final.pt")
     local_searches.append(ls_16_rl_set5_one_shot)
     
     ls_17_rl_set5_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set5_final.pt")
+    ls_17_rl_set5_ranking.type = "Ranking"
     local_searches.append(ls_17_rl_set5_ranking)
+    
+    ls_18_rl_set2_50_50_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
+    ls_18_rl_set2_50_50_one_shot.max_iterations = 50
+    ls_18_rl_set2_50_50_one_shot.max_no_improvement = 50
+    local_searches.append(ls_18_rl_set2_50_50_one_shot)
+    
+    ls_19_rl_set2_50_50_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_100_greedy_binary_100_set2_final.pt")
+    ls_19_rl_set2_50_50_ranking.max_iterations = 50
+    ls_19_rl_set2_50_50_ranking.max_no_improvement = 50
+    ls_19_rl_set2_50_50_ranking.type = "Ranking"
+    local_searches.append(ls_19_rl_set2_50_50_ranking)
     
     return local_searches
 

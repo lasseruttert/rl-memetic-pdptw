@@ -478,7 +478,7 @@ def plot_algorithm_comparison_by_set(data_by_set, output_dir):
             metric_key='avg_fitness',
             std_key='std_fitness',
             ylabel='Fitness',
-            title=f'Algorithm Comparison: Fitness (Set {set_num})',
+            title=f'RL Algorithm Comparison: Fitness (Set {set_num})',
             filename=f'set{set_num}_algorithm_comparison_fitness.png',
             output_dir=output_dir,
             show_error_bars=True
@@ -490,7 +490,7 @@ def plot_algorithm_comparison_by_set(data_by_set, output_dir):
             metric_key='avg_time',
             std_key=None,
             ylabel='Time (s)',
-            title=f'Algorithm Comparison: Time (Set {set_num})',
+            title=f'RL Algorithm Comparison: Time (Set {set_num})',
             filename=f'set{set_num}_algorithm_comparison_time.png',
             output_dir=output_dir,
             show_error_bars=False,
@@ -604,7 +604,7 @@ def plot_algorithm_comparison_combined_by_metric(data_by_set, output_dir, metric
                ncol=3, bbox_to_anchor=(0.5, -0.02), framealpha=0.9, edgecolor='gray')
 
     # Overall title
-    fig.suptitle(f'Algorithm Comparison: {title_prefix} Overview',
+    fig.suptitle(f'RL Algorithm Comparison: {title_prefix} Overview',
                  fontsize=28, y=0.995)
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.99])

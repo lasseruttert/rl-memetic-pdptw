@@ -10,13 +10,20 @@ import os
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from matplotlib.patches import Patch
+
+def darken_color(color, factor=0.6):
+    """Make a color darker by the given factor (0=black, 1=original)."""
+    rgb = mcolors.to_rgb(color)
+    return tuple(c * factor for c in rgb)
+
 
 # =============================================================================
 # CONFIGURATION - Set log file paths here
 # =============================================================================
-LOG_PATH_200 = 'results/logs/rl_algorithm_logs/training_rl_local_search_dqn_200_greedy_normalized_improvement_seed42_set3_20250101120000.log'
-LOG_PATH_400 = 'results/logs/rl_algorithm_logs/training_rl_local_search_dqn_400_greedy_normalized_improvement_seed42_set3_20250101120000.log'
+LOG_PATH_200 = 'logs/training_rl_local_search_dqn_200_greedy_binary_seed100_set2_200_1768812256.log'
+LOG_PATH_400 = 'logs/training_rl_local_search_dqn_400_greedy_binary_seed100_set2_400_1768869261.log'
 OUTPUT_DIR = 'results/plots/size_comparison'
 # =============================================================================
 
@@ -49,18 +56,81 @@ DQN_COLORS = ['#1A5276', '#2E86AB', '#5DADE2']  # Dark blue, Steel blue, Light b
 BASELINE_COLORS = ['#5A5A5A', '#7A7A7A', '#9A9A9A', '#BABABA']
 
 
+def compute_axis_limits_with_outlier_truncation(values, std_values=None, start_at_zero=False, outlier_threshold=2.0):
+    """Compute y-axis limits, truncating outliers that are > threshold * next highest.
+
+    Args:
+        values: List of values to plot
+        std_values: List of std values for error bars (optional)
+        start_at_zero: Whether y-axis should start at 0
+        outlier_threshold: Truncate bars > this multiple of next highest value
+
+    Returns:
+        tuple: (y_min, y_max, truncated_indices) where truncated_indices are bars to clip
+    """
+    if std_values is None:
+        std_values = [0] * len(values)
+
+    # Calculate upper bounds (value + std) for proper axis scaling
+    upper_bounds = [v + s for v, s in zip(values, std_values)]
+    lower_bounds = [v - s for v, s in zip(values, std_values)]
+
+    valid_upper = [u for u in upper_bounds if u > 0]
+    if len(valid_upper) < 2:
+        y_min = 0 if start_at_zero else min(lower_bounds) * 0.9
+        y_max = max(upper_bounds) * 1.1
+        return y_min, y_max, []
+
+    sorted_upper = sorted(valid_upper, reverse=True)
+    max_upper = sorted_upper[0]
+    second_max_upper = sorted_upper[1]
+
+    truncated_indices = []
+
+    # Check if max is an outlier (more than threshold * second highest)
+    if max_upper > outlier_threshold * second_max_upper:
+        # Find all outlier values
+        truncation_limit = second_max_upper * 1.5  # Show up to 1.5x the second highest
+        for i, u in enumerate(upper_bounds):
+            if u > truncation_limit:
+                truncated_indices.append(i)
+
+        if start_at_zero:
+            y_min = 0
+            y_max = truncation_limit  # No padding - bars go right to the edge
+        else:
+            non_outlier_lower = [lower_bounds[i] for i, u in enumerate(upper_bounds) if u <= truncation_limit]
+            if non_outlier_lower:
+                y_min = min(non_outlier_lower) * 0.95
+                y_max = truncation_limit  # No padding - bars go right to the edge
+            else:
+                y_min = 0
+                y_max = truncation_limit  # No padding - bars go right to the edge
+    else:
+        # No outliers - normal scaling with error bars accounted for
+        if start_at_zero:
+            y_min = 0
+            y_max = max(upper_bounds) * 1.1
+        else:
+            y_min = min(lower_bounds) * 0.95
+            y_max = max(upper_bounds) * 1.1
+
+    return y_min, y_max, truncated_indices
+
+
 def parse_log_filename(filename):
     """Parse configuration from log filename.
 
-    Expected format: training_rl_local_search_{algo}_{size}_{acceptance}_{reward}_seed{seed}_set{set}_{timestamp}.log
+    Expected format: training_rl_local_search_{algo}_{size}_{acceptance}_{reward}_seed{seed}_set{set}_{size}_{timestamp}.log
 
     Returns:
         dict with keys: rl_algorithm, problem_size, acceptance_strategy, reward_strategy,
                        use_attention, seed, set_number, timestamp
         or None if parsing fails
     """
-    # Pattern to match filename with set number before timestamp
-    pattern = r'training_rl_local_search_(?P<algo>\w+)_(?P<size>\d+)_(?P<acceptance>[\w_]+)_(?P<reward>[\w_]+)(?P<attention>_attention)?_seed(?P<seed>\d+)_set(?P<set>\d+)_(?P<timestamp>\d+)\.log'
+    # Pattern to match filename with set number and optional size before timestamp
+    # The size may appear again after set number (e.g., _set2_200_timestamp)
+    pattern = r'training_rl_local_search_(?P<algo>\w+)_(?P<size>\d+)_(?P<acceptance>[\w_]+)_(?P<reward>[\w_]+)(?P<attention>_attention)?_seed(?P<seed>\d+)_set(?P<set>\d+)(?:_\d+)?_(?P<timestamp>\d+)\.log'
 
     match = re.match(pattern, filename)
     if not match:
@@ -191,7 +261,7 @@ def save_figure_multi_format(fig, filepath, formats=['png', 'pdf']):
 
 
 def plot_size_comparison(data_200, data_400, output_dir, metric_key, ylabel, title, filename,
-                         start_at_zero=False):
+                         start_at_zero=False, std_key=None, ylim_200=None, ylim_400=None):
     """Create side-by-side comparison plot for two problem sizes.
 
     Args:
@@ -203,6 +273,9 @@ def plot_size_comparison(data_200, data_400, output_dir, metric_key, ylabel, tit
         title: Plot title
         filename: Output filename (without extension)
         start_at_zero: Whether to start y-axis at 0
+        std_key: Key for std value (e.g., 'std_fitness') or None for no error bars
+        ylim_200: Tuple (ymin, ymax) for size 200 subplot, or None for auto
+        ylim_400: Tuple (ymin, ymax) for size 400 subplot, or None for auto
     """
     fig, axes = plt.subplots(1, 2, figsize=(20, 10))
 
@@ -220,6 +293,7 @@ def plot_size_comparison(data_200, data_400, output_dir, metric_key, ylabel, tit
     # Colors: 3 DQN (blue shades) + 4 baselines (gray shades)
     colors = DQN_COLORS + BASELINE_COLORS
 
+    ylims = [ylim_200, ylim_400]
     for ax_idx, (data, size_label) in enumerate([(data_200, 'Size 200'), (data_400, 'Size 400')]):
         ax = axes[ax_idx]
 
@@ -228,6 +302,7 @@ def plot_size_comparison(data_200, data_400, output_dir, metric_key, ylabel, tit
 
         method_names = []
         values = []
+        std_values = []
 
         for display_name, key, method_type in method_order:
             method_names.append(display_name)
@@ -238,14 +313,35 @@ def plot_size_comparison(data_200, data_400, output_dir, metric_key, ylabel, tit
 
             if results:
                 values.append(results[metric_key])
+                if std_key and std_key in results:
+                    std_values.append(results[std_key])
+                else:
+                    std_values.append(0)
             else:
                 values.append(0)
+                std_values.append(0)
 
         x = np.arange(len(method_names))
         width = 0.7
 
-        ax.bar(x, values, width, color=colors, alpha=0.85,
-               edgecolor='black', linewidth=1.0)
+        # Compute axis limits with outlier truncation
+        show_error = std_key is not None
+        y_min, y_max, truncated_indices = compute_axis_limits_with_outlier_truncation(
+            values, std_values=std_values if show_error else None, start_at_zero=start_at_zero
+        )
+
+        # Draw bars
+        bars = ax.bar(x, values, width, color=colors, alpha=0.85,
+                      edgecolor='black', linewidth=1.0)
+
+        # Draw error bars separately with matching darkened colors
+        if show_error:
+            for i, (val, std, color) in enumerate(zip(values, std_values, colors)):
+                if std > 0:
+                    dark_color = darken_color(color, factor=0.66)
+                    ax.errorbar(x[i], val, yerr=std, fmt='none',
+                               capsize=10, capthick=2.0, elinewidth=2.0,
+                               ecolor=dark_color)
 
         # Styling
         ax.set_xlabel('Method')
@@ -258,14 +354,11 @@ def plot_size_comparison(data_200, data_400, output_dir, metric_key, ylabel, tit
         # Add separator line between DQN methods and baselines (after 3 DQN methods)
         ax.axvline(x=2.5, color='black', linestyle='--', linewidth=1.5, alpha=0.5)
 
-        # Set y-axis limits
-        if start_at_zero:
-            ax.set_ylim(bottom=0, top=max(values) * 1.1)
+        # Set y-axis limits (use custom if provided, otherwise use computed limits)
+        if ylims[ax_idx] is not None:
+            ax.set_ylim(bottom=ylims[ax_idx][0], top=ylims[ax_idx][1])
         else:
-            y_range = max(values) - min(values)
-            if y_range > 0:
-                ax.set_ylim(bottom=min(values) - 0.1 * y_range,
-                           top=max(values) + 0.1 * y_range)
+            ax.set_ylim(bottom=y_min, top=y_max)
 
     # Add common legend below subplots
     legend_elements = [
@@ -329,7 +422,10 @@ def main():
         ylabel='Average Fitness (lower is better)',
         title='Size Comparison: Fitness',
         filename='size_comparison_fitness',
-        start_at_zero=False
+        start_at_zero=False,
+        std_key='std_fitness',
+        ylim_200=(0, 12500),
+        ylim_400=(0, 100000)
     )
 
     # Plot 2: Time Comparison
@@ -340,7 +436,8 @@ def main():
         ylabel='Average Time (seconds)',
         title='Size Comparison: Time',
         filename='size_comparison_time',
-        start_at_zero=True
+        start_at_zero=True,
+        std_key=None
     )
 
     print('\n' + '='*80)

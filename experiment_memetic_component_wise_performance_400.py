@@ -260,6 +260,7 @@ def create_local_search_instances(operator_dict):
     local_searches.append(ls_06_rl_set2_one_shot)
     
     ls_07_rl_set2_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_400_greedy_binary_100_set2_400_final.pt")
+    ls_07_rl_set2_ranking.type = "Ranking"
     local_searches.append(ls_07_rl_set2_ranking)
     
     return local_searches
