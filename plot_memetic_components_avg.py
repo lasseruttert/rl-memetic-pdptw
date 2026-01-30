@@ -1,16 +1,13 @@
 """
-Memetic Component Comparison Analysis Script
+Memetic Component Comparison Analysis Script (Averaged Version)
 
 Generates comprehensive comparison reports (tables + plots in PDF format) for all
 memetic algorithm combinations across different instance categories and overall performance.
 
-Input: results/memetic_component_wise/memetic_component_summary.csv
-Output: results/memetic_component_comparison/*.pdf
+This version works with averaged results (mean ± std) from multiple runs.
 
-Core metrics compared:
-- Average Best Fitness
-- Average Time to Best Solution
-- Average Gap to BKS (%)
+Input: results/memetic_component_summary_100_avg.csv
+Output: results/memetic_component_comparison_100_avg/*.pdf
 """
 
 import pandas as pd
@@ -24,8 +21,8 @@ import re
 # CONFIGURATION
 # ============================================================================
 
-CSV_FILE = "results/memetic_component_summary_100.csv"
-OUTPUT_DIR = "results/memetic_component_comparison_100"
+CSV_FILE = "results/memetic_component_summary_100_avg.csv"
+OUTPUT_DIR = "results/memetic_component_comparison_100_avg"
 
 # Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
@@ -273,14 +270,14 @@ def calculate_gap_to_bks(row):
     """Calculate percentage gap to best known solution.
 
     Args:
-        row: DataFrame row with Best_Fitness and BKS_Fitness columns
+        row: DataFrame row with Avg_Fitness and BKS_Fitness columns
 
     Returns:
         float: Gap percentage
     """
     if pd.isna(row['BKS_Fitness']) or row['BKS_Fitness'] == 0:
         return np.nan
-    return ((row['Best_Fitness'] - row['BKS_Fitness']) / row['BKS_Fitness']) * 100
+    return ((row['Avg_Fitness'] - row['BKS_Fitness']) / row['BKS_Fitness']) * 100
 
 def process_data(df):
     """Process raw data: add category and gap columns.
@@ -296,7 +293,7 @@ def process_data(df):
     # Add category column
     df['Category'] = df['Instance'].apply(parse_instance_category)
 
-    # Add gap to BKS column
+    # Add gap to BKS column (using Avg_Fitness instead of Best_Fitness)
     df['Gap_to_BKS'] = df.apply(calculate_gap_to_bks, axis=1)
 
     # Exclude No_LocalSearch combinations
@@ -324,14 +321,17 @@ def aggregate_by_category(df, category=None):
         df_filtered = df.copy()
 
     # Group by combination and calculate means
+    # Note: Using Avg_Fitness and Avg_Time_To_Best (already averaged per instance)
     agg_df = df_filtered.groupby('Combination_Name').agg({
-        'Best_Fitness': 'mean',
-        'Time_To_Best': 'mean',
+        'Avg_Fitness': 'mean',
+        'Std_Fitness': 'mean',  # Average of stds (for reference)
+        'Avg_Time_To_Best': 'mean',
+        'Std_Time_To_Best': 'mean',
         'Gap_to_BKS': 'mean'
     }).reset_index()
 
     # Rename columns for clarity
-    agg_df.columns = ['Combination', 'Avg_Fitness', 'Avg_Time', 'Avg_Gap']
+    agg_df.columns = ['Combination', 'Avg_Fitness', 'Avg_Std_Fitness', 'Avg_Time', 'Avg_Std_Time', 'Avg_Gap']
 
     # Sort by average fitness (best first)
     agg_df = agg_df.sort_values('Avg_Fitness')
@@ -384,11 +384,11 @@ def generate_latex_comparison_table(agg_df, category_name):
 
     # Build table
     if category_name == 'overall':
-        caption = 'Component Comparison: Overall'
-        label = 'tab:comparison_overall'
+        caption = 'Component Comparison: Overall (Averaged)'
+        label = 'tab:comparison_overall_avg'
     else:
-        caption = f'Component Comparison: {category_name.upper()}'
-        label = f'tab:comparison_{category_name}'
+        caption = f'Component Comparison: {category_name.upper()} (Averaged)'
+        label = f'tab:comparison_{category_name}_avg'
 
     lines = [
         r'\begin{table}[htbp]',
@@ -397,13 +397,13 @@ def generate_latex_comparison_table(agg_df, category_name):
         f'\\label{{{label}}}',
         r'\begin{tabular}{lrrr}',
         r'\toprule',
-        r'Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\',
+        r'Combination & Avg Fitness ($\pm$ Std) & Time to Best (s) & Avg Gap to BKS (\%) \\',
         r'\midrule',
     ]
 
     for idx, row in agg_df.iterrows():
         combo_escaped = escape_latex(row['Combination'])
-        fitness_val = f"{row['Avg_Fitness']:.1f}"
+        fitness_val = f"{row['Avg_Fitness']:.1f} ($\\pm${row['Avg_Std_Fitness']:.1f})"
         time_val = f"{row['Avg_Time']:.2f}"
         gap_val = f"{row['Avg_Gap']:.2f}"
 
@@ -440,8 +440,8 @@ def generate_latex_ranking_table(df):
     lines = [
         r'\begin{table}[htbp]',
         r'\centering',
-        r'\caption{Summary Rankings: Winners by Category}',
-        r'\label{tab:summary_rankings}',
+        r'\caption{Summary Rankings: Winners by Category (Averaged)}',
+        r'\label{tab:summary_rankings_avg}',
         r'\begin{tabular}{llll}',
         r'\toprule',
         r'Category & Best Fitness & Fastest & Best Gap to BKS \\',
@@ -531,8 +531,8 @@ def generate_latex_rank_summary_table(df):
     lines = [
         r'\begin{table}[htbp]',
         r'\centering',
-        r'\caption{Average Rank Summary (1 = Best)}',
-        r'\label{tab:avg_rank_summary}',
+        r'\caption{Average Rank Summary (1 = Best, Averaged)}',
+        r'\label{tab:avg_rank_summary_avg}',
         r'\begin{tabular}{lrrrr}',
         r'\toprule',
         r'Combination & Avg Rank (Fitness) & Avg Rank (Time) & Avg Rank (Gap) & Overall Avg Rank \\',
@@ -620,8 +620,8 @@ def generate_latex_win_count_table(df):
     lines = [
         r'\begin{table}[htbp]',
         r'\centering',
-        r'\caption{Win Count Summary (across all categories)}',
-        r'\label{tab:win_count_summary}',
+        r'\caption{Win Count Summary (across all categories, Averaged)}',
+        r'\label{tab:win_count_summary_avg}',
         r'\begin{tabular}{lrrrr}',
         r'\toprule',
         r'Combination & Fitness Wins & Time Wins & Gap Wins & Total Wins \\',
@@ -728,7 +728,7 @@ def add_bar_labels(ax, bars, values, y_min, y_max, truncated_indices, fmt='.1f',
 
 
 def create_comparison_plots(agg_df, category_name):
-    """Create comparison bar charts.
+    """Create comparison bar charts with error bars for standard deviation.
 
     Args:
         agg_df: Aggregated DataFrame
@@ -746,30 +746,32 @@ def create_comparison_plots(agg_df, category_name):
     # Assign colors based on category
     colors = assign_colors_to_combinations(combos)
 
-    # Plot 1: Average Fitness
+    # Plot 1: Average Fitness (with error bars)
     ax = axes[0]
     values = agg_df['Avg_Fitness'].tolist()
+    std_values = agg_df['Avg_Std_Fitness'].tolist()
     y_min, y_max, truncated = compute_axis_limits_with_outlier_truncation(values, start_at_zero=False)
     y_max = y_max + (y_max - y_min) * 0.15  # Extra top padding for labels
-    bars = ax.bar(x, values, color=colors, alpha=0.8, edgecolor='black')
+    bars = ax.bar(x, values, color=colors, alpha=0.8, edgecolor='black', yerr=std_values, capsize=3)
     ax.set_xlabel('Combination')
     ax.set_ylabel('Fitness')
-    ax.set_title('Fitness', fontweight='bold')
+    ax.set_title('Avg Fitness (±Std)', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(combos, rotation=45, ha='right')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
     ax.set_ylim(bottom=y_min, top=y_max)
     add_bar_labels(ax, bars, values, y_min, y_max, truncated, fmt='.1f')
 
-    # Plot 2: Average Time to Best
+    # Plot 2: Average Time to Best (with error bars)
     ax = axes[1]
     values = agg_df['Avg_Time'].tolist()
+    std_values = agg_df['Avg_Std_Time'].tolist()
     y_min, y_max, truncated = compute_axis_limits_with_outlier_truncation(values, start_at_zero=True)
     y_max = y_max * 1.15  # Extra top padding for labels
-    bars = ax.bar(x, values, color=colors, alpha=0.8, edgecolor='black')
+    bars = ax.bar(x, values, color=colors, alpha=0.8, edgecolor='black', yerr=std_values, capsize=3)
     ax.set_xlabel('Combination')
     ax.set_ylabel('Time (s)')
-    ax.set_title('Time to Best', fontweight='bold')
+    ax.set_title('Avg Time to Best (±Std)', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(combos, rotation=45, ha='right')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
@@ -784,7 +786,7 @@ def create_comparison_plots(agg_df, category_name):
     bars = ax.bar(x, values, color=colors, alpha=0.8, edgecolor='black')
     ax.set_xlabel('Combination')
     ax.set_ylabel('Gap to BKS (%)')
-    ax.set_title('Gap to BKS', fontweight='bold')
+    ax.set_title('Avg Gap to BKS', fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(combos, rotation=45, ha='right')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
@@ -793,9 +795,9 @@ def create_comparison_plots(agg_df, category_name):
 
     # Overall title
     if category_name == 'overall':
-        suptitle = 'Component Comparison: Overall'
+        suptitle = 'Component Comparison: Overall (Averaged)'
     else:
-        suptitle = f'Component Comparison: {category_name.upper()}'
+        suptitle = f'Component Comparison: {category_name.upper()} (Averaged)'
 
     fig.suptitle(suptitle, fontsize=28)
     plt.tight_layout(rect=[0, 0, 1, 0.94])
@@ -822,7 +824,7 @@ def save_pdf(fig, filepath):
 def create_comparison_report():
     """Main function to create all comparison reports."""
     print("=" * 80)
-    print("MEMETIC COMPONENT COMPARISON ANALYSIS")
+    print("MEMETIC COMPONENT COMPARISON ANALYSIS (AVERAGED)")
     print("=" * 80)
 
     # Load and process data

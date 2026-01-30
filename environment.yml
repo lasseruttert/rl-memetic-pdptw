@@ -1,0 +1,27 @@
+name: PDPTW
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python>=3.9
+
+  - numpy
+  - pandas
+
+  - gymnasium
+
+  - matplotlib
+  - seaborn
+
+  - pyyaml
+  - pyparsing
+
+  - pybind11
+  - setuptools
+  - tensorboard
+
+  - pip
+  - pip:
+    - ortools  # Google OR-Tools (better installed via pip)
