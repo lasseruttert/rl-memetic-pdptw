@@ -322,8 +322,6 @@ COMBINATIONS = [
     {'name': 'No_LocalSearch', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 0},
     {'name': 'LS_Set2_OneShot', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 8},
     {'name': 'LS_Set2_Ranking', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 11},
-    {'name': 'LS_Set4_OneShot', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 14},
-    {'name': 'LS_Set4_Ranking', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 15},
     {'name': 'LS_Set2_OneShot_50', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 18},
     {'name': 'LS_Set2_Ranking_50', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 19},
 
