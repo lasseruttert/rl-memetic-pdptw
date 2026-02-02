@@ -263,6 +263,17 @@ def create_local_search_instances(operator_dict):
     ls_07_rl_set2_ranking.type = "Ranking"
     local_searches.append(ls_07_rl_set2_ranking)
     
+    ls_06_rl_set2_50_50_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_200_greedy_binary_100_set2_200_final.pt")
+    ls_06_rl_set2_50_50_one_shot.max_iterations = 50
+    ls_06_rl_set2_50_50_one_shot.max_no_improvement = 50
+    local_searches.append(ls_06_rl_set2_50_50_one_shot)
+    
+    ls_07_rl_set2_50_50_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_200_greedy_binary_100_set2_200_final.pt")
+    ls_07_rl_set2_50_50_ranking.max_iterations = 50
+    ls_07_rl_set2_50_50_ranking.max_no_improvement = 50
+    ls_07_rl_set2_50_50_ranking.type = "Ranking"
+    local_searches.append(ls_07_rl_set2_50_50_ranking)
+    
     return local_searches
 
 # ============================================================================
@@ -272,12 +283,13 @@ def create_local_search_instances(operator_dict):
 # Each combination specifies indices into the component lists
 # Format: {'name': str, 'selection': idx, 'crossover': idx, 'mutation': idx, 'local_search': idx}
 COMBINATIONS = [
-    {'name': 'Baseline_Short', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 1},
-    {'name': 'Baseline_Long', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 2},
-    {'name': 'No_LocalSearch', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 0},
-    {'name': 'LS_Set2_OneShot', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 6},
-    {'name': 'LS_Set2_Ranking', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 7},
-    
+    # {'name': 'Baseline_Short', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 1},
+    # {'name': 'Baseline_Long', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 2},
+    # {'name': 'No_LocalSearch', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 0},
+    # {'name': 'LS_Set2_OneShot', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 6},
+    # {'name': 'LS_Set2_Ranking', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 7},
+    {'name': 'LS_Set2_50_50_OneShot', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 8},
+    {'name': 'LS_Set2_50_50_Ranking', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 9},
 ]
 
 # ============================================================================
