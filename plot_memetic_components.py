@@ -24,8 +24,8 @@ import re
 # CONFIGURATION
 # ============================================================================
 
-CSV_FILE = "results/memetic_component_summary_100.csv"
-OUTPUT_DIR = "results/memetic_component_comparison_100"
+CSV_FILE = "results/memetic_component_summary_400.csv"
+OUTPUT_DIR = "results/memetic_component_comparison_400"
 
 # Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {

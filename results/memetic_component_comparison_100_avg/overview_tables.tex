@@ -1,0 +1,84 @@
+\documentclass{article}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{longtable}
+
+\begin{document}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: Overall (Averaged)}
+\label{tab:comparison_overall_avg}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness ($\pm$ Std) & Time to Best (s) & Avg Gap to BKS (\%) \\
+\midrule
+Baseline\_Short & \cellcolor{green!20}1542.3 ($\pm$74.0) & 31.00 & \cellcolor{green!20}7.63 \\
+Baseline\_Long & 1543.5 ($\pm$75.9) & 45.84 & 7.66 \\
+LS\_Set2\_Ranking & 1584.2 ($\pm$77.4) & 82.06 & 8.70 \\
+LS\_Set2\_Ranking\_50 & 1590.0 ($\pm$76.8) & 31.13 & 8.94 \\
+LS\_Set2\_OneShot\_50 & 1618.1 ($\pm$21.5) & \cellcolor{green!20}23.54 & 9.15 \\
+LS\_Set2\_OneShot & 1674.8 ($\pm$86.5) & 24.92 & 11.27 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Summary Rankings: Winners by Category (Averaged)}
+\label{tab:summary_rankings_avg}
+\begin{tabular}{llll}
+\toprule
+Category & Best Fitness & Fastest & Best Gap to BKS \\
+\midrule
+OVERALL & Baseline\_Short & LS\_Set2\_OneShot\_50 & Baseline\_Short \\
+BAR & LS\_Set2\_Ranking\_50 & LS\_Set2\_OneShot\_50 & LS\_Set2\_Ranking\_50 \\
+BER & Baseline\_Short & LS\_Set2\_OneShot & Baseline\_Short \\
+LC1 & LS\_Set2\_Ranking & LS\_Set2\_OneShot\_50 & LS\_Set2\_Ranking \\
+LC2 & Baseline\_Long & LS\_Set2\_OneShot\_50 & Baseline\_Long \\
+LR1 & Baseline\_Short & LS\_Set2\_OneShot & Baseline\_Short \\
+LR2 & LS\_Set2\_OneShot & LS\_Set2\_OneShot & LS\_Set2\_OneShot \\
+LRC1 & Baseline\_Long & LS\_Set2\_OneShot & Baseline\_Long \\
+LRC2 & LS\_Set2\_OneShot\_50 & LS\_Set2\_OneShot & LS\_Set2\_OneShot\_50 \\
+NYC & LS\_Set2\_Ranking & LS\_Set2\_OneShot & LS\_Set2\_Ranking \\
+POA & Baseline\_Long & LS\_Set2\_OneShot\_50 & Baseline\_Short \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Average Rank Summary (1 = Best, Averaged)}
+\label{tab:avg_rank_summary_avg}
+\begin{tabular}{lrrrr}
+\toprule
+Combination & Avg Rank (Fitness) & Avg Rank (Time) & Avg Rank (Gap) & Overall Avg Rank \\
+\midrule
+LS\_Set2\_OneShot\_50 & 3.50 & \cellcolor{green!20}1.60 & 3.50 & \cellcolor{green!20}2.87 \\
+Baseline\_Short & \cellcolor{green!20}3.00 & 3.30 & \cellcolor{green!20}3.10 & 3.13 \\
+LS\_Set2\_OneShot & 4.20 & 1.90 & 4.20 & 3.43 \\
+Baseline\_Long & \cellcolor{green!20}3.00 & 4.90 & \cellcolor{green!20}3.10 & 3.67 \\
+LS\_Set2\_Ranking\_50 & 4.20 & 3.30 & 4.00 & 3.83 \\
+LS\_Set2\_Ranking & 3.10 & 6.00 & \cellcolor{green!20}3.10 & 4.07 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Win Count Summary (across all categories, Averaged)}
+\label{tab:win_count_summary_avg}
+\begin{tabular}{lrrrr}
+\toprule
+Combination & Fitness Wins & Time Wins & Gap Wins & Total Wins \\
+\midrule
+LS\_Set2\_OneShot & 1 & \cellcolor{green!20}6 & 1 & \cellcolor{green!20}8 \\
+LS\_Set2\_OneShot\_50 & 1 & 4 & 1 & 6 \\
+Baseline\_Short & 2 & 0 & \cellcolor{green!20}3 & 5 \\
+Baseline\_Long & \cellcolor{green!20}3 & 0 & 2 & 5 \\
+LS\_Set2\_Ranking & 2 & 0 & 2 & 4 \\
+LS\_Set2\_Ranking\_50 & 1 & 0 & 1 & 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{document}

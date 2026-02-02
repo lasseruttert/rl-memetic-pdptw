@@ -1,0 +1,167 @@
+\documentclass{article}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{longtable}
+
+\begin{document}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: BAR}
+\label{tab:comparison_bar}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
+\midrule
+LS\_Set2\_Ranking & \cellcolor{green!20}2288.9 & 110.23 & \cellcolor{green!20}12.34 \\
+Baseline\_Short & 2292.4 & 53.74 & 12.97 \\
+Baseline\_Long & 2308.9 & 93.77 & 13.58 \\
+LS\_Set2\_OneShot & 2332.2 & \cellcolor{green!20}36.66 & 13.90 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: BER}
+\label{tab:comparison_ber}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
+\midrule
+Baseline\_Short & \cellcolor{green!20}9166.0 & 52.92 & \cellcolor{green!20}85.04 \\
+Baseline\_Long & 9411.9 & 81.41 & 89.15 \\
+LS\_Set2\_Ranking & 9418.1 & 114.06 & 87.87 \\
+LS\_Set2\_OneShot & 12292.8 & \cellcolor{green!20}38.91 & 133.25 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: LC1}
+\label{tab:comparison_lc1}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
+\midrule
+LS\_Set2\_Ranking & \cellcolor{green!20}3920.5 & 49.93 & \cellcolor{green!20}0.86 \\
+LS\_Set2\_OneShot & 3993.1 & \cellcolor{green!20}26.79 & 2.75 \\
+Baseline\_Long & 4011.8 & 45.69 & 3.11 \\
+Baseline\_Short & 4047.6 & 37.00 & 4.05 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: LC2}
+\label{tab:comparison_lc2}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
+\midrule
+LS\_Set2\_Ranking & \cellcolor{green!20}2142.0 & 225.26 & \cellcolor{green!20}3.35 \\
+LS\_Set2\_OneShot & 2209.1 & \cellcolor{green!20}33.52 & 6.61 \\
+Baseline\_Long & 2230.6 & 134.35 & 7.70 \\
+Baseline\_Short & 2261.6 & 49.95 & 9.16 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: LR1}
+\label{tab:comparison_lr1}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
+\midrule
+LS\_Set2\_OneShot & \cellcolor{green!20}5196.3 & \cellcolor{green!20}36.76 & \cellcolor{green!20}-1.21 \\
+LS\_Set2\_Ranking & 5266.5 & 86.14 & 0.06 \\
+Baseline\_Short & 5346.3 & 37.52 & 2.00 \\
+Baseline\_Long & 5399.8 & 46.96 & 2.51 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: LR2}
+\label{tab:comparison_lr2}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
+\midrule
+LS\_Set2\_Ranking & \cellcolor{green!20}3461.4 & 864.07 & \cellcolor{green!20}-4.68 \\
+Baseline\_Long & 3540.9 & 528.12 & -2.58 \\
+LS\_Set2\_OneShot & 3591.3 & \cellcolor{green!20}21.39 & -1.59 \\
+Baseline\_Short & 3873.2 & 88.12 & 7.28 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: LRC1}
+\label{tab:comparison_lrc1}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
+\midrule
+LS\_Set2\_Ranking & \cellcolor{green!20}4602.1 & 77.54 & 8.15 \\
+Baseline\_Short & 4605.6 & 43.80 & \cellcolor{green!20}8.12 \\
+LS\_Set2\_OneShot & 4615.7 & \cellcolor{green!20}37.63 & 8.25 \\
+Baseline\_Long & 4659.6 & 50.92 & 9.23 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: LRC2}
+\label{tab:comparison_lrc2}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
+\midrule
+LS\_Set2\_Ranking & \cellcolor{green!20}2936.6 & 747.42 & \cellcolor{green!20}-2.94 \\
+LS\_Set2\_OneShot & 2959.1 & \cellcolor{green!20}38.49 & -1.98 \\
+Baseline\_Long & 3042.7 & 386.33 & 0.56 \\
+Baseline\_Short & 3207.0 & 65.73 & 6.25 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: NYC}
+\label{tab:comparison_nyc}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
+\midrule
+LS\_Set2\_Ranking & \cellcolor{green!20}1518.7 & 313.80 & \cellcolor{green!20}16.16 \\
+LS\_Set2\_OneShot & 1528.9 & \cellcolor{green!20}29.72 & 16.97 \\
+Baseline\_Long & 1545.4 & 234.26 & 18.03 \\
+Baseline\_Short & 1559.7 & 73.90 & 19.29 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Component Comparison: POA}
+\label{tab:comparison_poa}
+\begin{tabular}{lrrr}
+\toprule
+Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
+\midrule
+Baseline\_Short & \cellcolor{green!20}3918.5 & 45.94 & \cellcolor{green!20}14.22 \\
+LS\_Set2\_Ranking & 3942.7 & 82.72 & 14.69 \\
+Baseline\_Long & 3952.6 & 57.97 & 15.27 \\
+LS\_Set2\_OneShot & 4086.0 & \cellcolor{green!20}32.92 & 17.75 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{document}
