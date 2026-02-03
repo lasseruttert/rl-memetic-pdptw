@@ -98,6 +98,7 @@ def create_rl_local_search(size, operators):
         verbose=False
     )
     rl_local_search = RLLocalSearch.load_from_checkpoint(MODEL_PATHS[size])
+    rl_local_search.type = "Ranking"
     return rl_local_search
 
 
@@ -264,11 +265,6 @@ def run_experiment():
 
             # Store result
             size_results['instances'][instance_name] = instance_result
-
-            # Print comparison summary
-            print(f"    Summary: BKS={bks_fitness:.2f if bks_fitness else 'N/A'}, "
-                  f"Memetic={instance_result['memetic_fitness']:.2f}, "
-                  f"OR-Tools={instance_result['ortools_fitness']:.2f if instance_result['ortools_fitness'] else 'N/A'}")
 
         all_results[f"size_{size}"] = size_results
 

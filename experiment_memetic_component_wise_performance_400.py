@@ -49,7 +49,7 @@ from pathlib import Path
 # ============================================================================
 
 # Problem sizes to test
-PROBLEM_SIZES = [200]
+PROBLEM_SIZES = [400]
 
 # Memetic algorithm parameters
 POPULATION_SIZE = 10
