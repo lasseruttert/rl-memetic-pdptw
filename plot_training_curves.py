@@ -207,6 +207,70 @@ def plot_single(steps, values, color, xlabel, ylabel, title, filename, smoothing
     plt.close()
 
 
+def plot_combined_grid(dqn_length_steps, dqn_length_values,
+                       ppo_length_steps, ppo_length_values,
+                       dqn_reward_steps, dqn_reward_values,
+                       ppo_reward_steps, ppo_reward_values,
+                       dqn_loss_steps, dqn_loss_values,
+                       ppo_loss_steps, ppo_loss_values,
+                       filename, smoothing=0.8):
+    """Create a 2x2 grid with all training curves.
+
+    Args:
+        All data arrays for the 4 plots
+        filename: Output filename (without extension)
+        smoothing: EMA weight for smoothing
+    """
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+
+    # Plot 1: Episode Length (top-left)
+    ax = axes[0, 0]
+    ax.plot(dqn_length_steps, dqn_length_values, color=DQN_COLOR, alpha=0.2, linewidth=1.0)
+    ax.plot(ppo_length_steps, ppo_length_values, color=PPO_COLOR, alpha=0.2, linewidth=1.0)
+    ax.plot(dqn_length_steps, smooth(dqn_length_values, smoothing), color=DQN_COLOR, linewidth=2.5, label='DQN')
+    ax.plot(ppo_length_steps, smooth(ppo_length_values, smoothing), color=PPO_COLOR, linewidth=2.5, label='PPO')
+    ax.set_xlabel('Episode')
+    ax.set_ylabel('Episode Length (steps)')
+    ax.set_title('Episode Length')
+    ax.legend(loc='best', framealpha=0.9, edgecolor='gray')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+
+    # Plot 2: Episode Reward (top-right)
+    ax = axes[0, 1]
+    ax.plot(dqn_reward_steps, dqn_reward_values, color=DQN_COLOR, alpha=0.2, linewidth=1.0)
+    ax.plot(ppo_reward_steps, ppo_reward_values, color=PPO_COLOR, alpha=0.2, linewidth=1.0)
+    ax.plot(dqn_reward_steps, smooth(dqn_reward_values, smoothing), color=DQN_COLOR, linewidth=2.5, label='DQN')
+    ax.plot(ppo_reward_steps, smooth(ppo_reward_values, smoothing), color=PPO_COLOR, linewidth=2.5, label='PPO')
+    ax.set_xlabel('Episode')
+    ax.set_ylabel('Reward (10-episode moving avg.)')
+    ax.set_title('Episode Reward')
+    ax.legend(loc='best', framealpha=0.9, edgecolor='gray')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+
+    # Plot 3: DQN Training Loss (bottom-left)
+    ax = axes[1, 0]
+    ax.plot(dqn_loss_steps, dqn_loss_values, color=DQN_COLOR, linewidth=2.5)
+    ax.set_xlabel('Episode')
+    ax.set_ylabel('TD Loss')
+    ax.set_title('DQN Training Loss')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+
+    # Plot 4: PPO Value Loss (bottom-right)
+    ax = axes[1, 1]
+    ax.plot(ppo_loss_steps, ppo_loss_values, color=PPO_COLOR, linewidth=2.5)
+    ax.set_xlabel('Episode')
+    ax.set_ylabel('Value Loss')
+    ax.set_title('PPO Value Loss')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+
+    plt.tight_layout()
+
+    # Save
+    filepath = os.path.join(OUTPUT_DIR, filename)
+    save_figure_multi_format(fig, filepath)
+    plt.close()
+
+
 def main():
     """Main function to create training curves plots."""
     print('='*80)
@@ -292,6 +356,19 @@ def main():
         title='PPO Value Loss',
         filename='training_loss_ppo',
         smoothing=None
+    )
+
+    # Plot 5: Combined 2x2 grid
+    print('\n  Combined training curves plot:')
+    plot_combined_grid(
+        dqn_length_steps, dqn_length_values,
+        ppo_length_steps, ppo_length_values,
+        dqn_reward_steps, dqn_reward_values,
+        ppo_reward_steps, ppo_reward_values,
+        dqn_loss_steps, dqn_loss_values,
+        ppo_loss_steps, ppo_loss_values,
+        filename='training_curves_combined',
+        smoothing=0.8
     )
 
     print('\n' + '='*80)
