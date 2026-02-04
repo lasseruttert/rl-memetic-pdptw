@@ -13,10 +13,12 @@
 \toprule
 Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
 \midrule
-LS\_Set2\_Ranking & \cellcolor{green!20}3894.3 & 283.62 & \cellcolor{green!20}9.95 \\
-Baseline\_Long & 3963.3 & 172.30 & 12.14 \\
+Set2\_Ranking & 3894.3 & 283.62 & 9.95 \\
+Set2\_Ranking\_Short & 3908.1 & 51.27 & 10.84 \\
+Baseline & 3963.3 & 172.30 & 12.14 \\
 Baseline\_Short & 3996.3 & 54.19 & 13.71 \\
-LS\_Set2\_OneShot & 4140.9 & \cellcolor{green!20}33.12 & 14.52 \\
+Set2\_OneShot\_Short & 4045.5 & 34.61 & 12.39 \\
+Set2\_OneShot & 4140.9 & 33.12 & 14.52 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -29,17 +31,17 @@ LS\_Set2\_OneShot & 4140.9 & \cellcolor{green!20}33.12 & 14.52 \\
 \toprule
 Category & Best Fitness & Fastest & Best Gap to BKS \\
 \midrule
-OVERALL & LS\_Set2\_Ranking & LS\_Set2\_OneShot & LS\_Set2\_Ranking \\
-BAR & LS\_Set2\_Ranking & LS\_Set2\_OneShot & LS\_Set2\_Ranking \\
-BER & Baseline\_Short & LS\_Set2\_OneShot & Baseline\_Short \\
-LC1 & LS\_Set2\_Ranking & LS\_Set2\_OneShot & LS\_Set2\_Ranking \\
-LC2 & LS\_Set2\_Ranking & LS\_Set2\_OneShot & LS\_Set2\_Ranking \\
-LR1 & LS\_Set2\_OneShot & LS\_Set2\_OneShot & LS\_Set2\_OneShot \\
-LR2 & LS\_Set2\_Ranking & LS\_Set2\_OneShot & LS\_Set2\_Ranking \\
-LRC1 & LS\_Set2\_Ranking & LS\_Set2\_OneShot & Baseline\_Short \\
-LRC2 & LS\_Set2\_Ranking & LS\_Set2\_OneShot & LS\_Set2\_Ranking \\
-NYC & LS\_Set2\_Ranking & LS\_Set2\_OneShot & LS\_Set2\_Ranking \\
-POA & Baseline\_Short & LS\_Set2\_OneShot & Baseline\_Short \\
+OVERALL & Set2\_Ranking & Set2\_OneShot & Set2\_Ranking \\
+BAR & Set2\_Ranking & Set2\_OneShot\_Short & Set2\_Ranking \\
+BER & Set2\_Ranking\_Short & Set2\_OneShot\_Short & Set2\_Ranking\_Short \\
+LC1 & Set2\_Ranking & Set2\_OneShot\_Short & Set2\_Ranking \\
+LC2 & Set2\_Ranking & Set2\_OneShot\_Short & Set2\_Ranking \\
+LR1 & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_OneShot\_Short \\
+LR2 & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_OneShot\_Short \\
+LRC1 & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_OneShot\_Short \\
+LRC2 & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_Ranking \\
+NYC & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_OneShot\_Short \\
+POA & Baseline\_Short & Set2\_OneShot\_Short & Set2\_Ranking\_Short \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -52,10 +54,12 @@ POA & Baseline\_Short & LS\_Set2\_OneShot & Baseline\_Short \\
 \toprule
 Combination & Avg Rank (Fitness) & Avg Rank (Time) & Avg Rank (Gap) & Overall Avg Rank \\
 \midrule
-LS\_Set2\_OneShot & 2.70 & \cellcolor{green!20}1.00 & 2.70 & \cellcolor{green!20}2.13 \\
-LS\_Set2\_Ranking & \cellcolor{green!20}1.40 & 4.00 & \cellcolor{green!20}1.40 & 2.27 \\
-Baseline\_Short & 2.90 & 2.00 & 2.80 & 2.57 \\
-Baseline\_Long & 3.00 & 3.00 & 3.10 & 3.03 \\
+Set2\_OneShot\_Short & 2.70 & 1.60 & 2.70 & 2.33 \\
+Set2\_Ranking\_Short & 2.80 & 3.50 & 2.80 & 3.03 \\
+Set2\_OneShot & 4.30 & 1.50 & 4.20 & 3.33 \\
+Set2\_Ranking & 2.30 & 6.00 & 2.20 & 3.50 \\
+Baseline\_Short & 4.50 & 3.40 & 4.50 & 4.13 \\
+Baseline & 4.40 & 5.00 & 4.60 & 4.67 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -68,10 +72,12 @@ Baseline\_Long & 3.00 & 3.00 & 3.10 & 3.03 \\
 \toprule
 Combination & Fitness Wins & Time Wins & Gap Wins & Total Wins \\
 \midrule
-LS\_Set2\_Ranking & \cellcolor{green!20}7 & 0 & \cellcolor{green!20}6 & \cellcolor{green!20}13 \\
-LS\_Set2\_OneShot & 1 & \cellcolor{green!20}10 & 1 & 12 \\
-Baseline\_Short & 2 & 0 & 3 & 5 \\
-Baseline\_Long & 0 & 0 & 0 & 0 \\
+Set2\_OneShot\_Short & 5 & 5 & 4 & 14 \\
+Set2\_Ranking & 3 & 0 & 4 & 7 \\
+Set2\_OneShot & 0 & 5 & 0 & 5 \\
+Set2\_Ranking\_Short & 1 & 0 & 2 & 3 \\
+Baseline\_Short & 1 & 0 & 0 & 1 \\
+Baseline & 0 & 0 & 0 & 0 \\
 \bottomrule
 \end{tabular}
 \end{table}
