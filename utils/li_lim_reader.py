@@ -1,3 +1,4 @@
+from pathlib import Path
 from .pdptw_problem import PDPTWProblem, Node
 
 def li_lim_reader(file_path):
@@ -25,8 +26,8 @@ def li_lim_reader(file_path):
             delivery_index=parts[8]
         )
         nodes.append(node)
-        
-    problem_name = file_path.split('/')[-1].split('.')[0]
+
+    problem_name = Path(file_path).stem
 
     problem = PDPTWProblem(
         num_vehicles=num_vehicles,

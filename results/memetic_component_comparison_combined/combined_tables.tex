@@ -1,0 +1,67 @@
+\documentclass{article}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{longtable}
+
+\begin{document}
+
+\begin{table}[htbp]
+\centering
+\caption{Fitness Comparison Across Instance Sizes}
+\label{tab:combined_fitness}
+\begin{tabular}{lrrr}
+\toprule
+Combination & $n=100$ & $n=200$ & $n=400$ \\
+\midrule
+Baseline & \textbf{1479.1} & 3963.3 & 8413.4 \\
+Baseline\_Short & 1480.2 & 3996.3 & 9333.8 \\
+Set2\_OneShot & 1612.0 & 4140.9 & 8281.2 \\
+Set2\_OneShot\_Short & 1594.4 & 4045.5 & 8573.5 \\
+Set2\_Ranking & 1590.3 & \textbf{3894.3} & \textbf{8259.4} \\
+Set2\_Ranking\_Short & 1591.6 & 3908.1 & 8598.3 \\
+Set4\_OneShot & 1638.6 & -- & -- \\
+Set4\_Ranking & 1503.7 & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Time to Best (s) Comparison Across Instance Sizes}
+\label{tab:combined_time_to_best_s}
+\begin{tabular}{lrrr}
+\toprule
+Combination & $n=100$ & $n=200$ & $n=400$ \\
+\midrule
+Baseline & 45.0 & 172.3 & 421.0 \\
+Baseline\_Short & 33.0 & 54.2 & 69.1 \\
+Set2\_OneShot & \textbf{24.7} & \textbf{33.1} & \textbf{50.3} \\
+Set2\_OneShot\_Short & 29.5 & 34.6 & 57.0 \\
+Set2\_Ranking & 79.8 & 283.6 & 828.7 \\
+Set2\_Ranking\_Short & 29.1 & 51.3 & 85.8 \\
+Set4\_OneShot & 38.5 & -- & -- \\
+Set4\_Ranking & 119.3 & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Gap to BKS (\%) Comparison Across Instance Sizes}
+\label{tab:combined_gap_to_bks_pct}
+\begin{tabular}{lrrr}
+\toprule
+Combination & $n=100$ & $n=200$ & $n=400$ \\
+\midrule
+Baseline & \textbf{4.69} & 12.14 & 12.31 \\
+Baseline\_Short & 4.78 & 13.71 & 25.47 \\
+Set2\_OneShot & 8.66 & 14.52 & 10.54 \\
+Set2\_OneShot\_Short & 7.52 & 12.39 & 15.24 \\
+Set2\_Ranking & 7.24 & \textbf{9.95} & \textbf{10.31} \\
+Set2\_Ranking\_Short & 7.49 & 10.84 & 15.30 \\
+Set4\_OneShot & 10.81 & -- & -- \\
+Set4\_Ranking & 6.27 & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{document}

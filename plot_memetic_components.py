@@ -24,8 +24,8 @@ import re
 # CONFIGURATION
 # ============================================================================
 
-CSV_FILE = "results/memetic_component_summary_400.csv"
-OUTPUT_DIR = "results/memetic_component_comparison_400"
+SIZES = [100, 200, 400]
+COMBINED_OUTPUT_DIR = "results/memetic_component_comparison_combined"
 
 # Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
@@ -133,16 +133,11 @@ def darken_color(color, factor=0.3):
     rgb = mcolors.to_rgb(color)
     return tuple(c * (1 - factor) for c in rgb)
 
-# Base colors for each category
+# Base colors for each category (matching METHOD_COLORS from other plotting scripts)
 CATEGORY_BASE_COLORS = {
-    'Baseline': '#2E86AB',   # Steel Blue family
-    'LS_Set1': '#A23B72',    # Plum Purple family
-    'LS_Set2': '#1D7874',    # Teal family
-    'LS_Set3': '#E8A838',    # Muted Gold family
-    'LS_Set4': '#6B4C9A',    # Violet family
-    'LS_Set5': '#D64550',    # Soft Red family
-    'LS_Set6': '#44AF69',    # Sage Green family
-    'LS_Set7': '#8B5E3C',    # Brown family
+    'Baseline': '#2E86AB',   # Steel Blue
+    'Set2': '#A23B72',       # Plum Purple (pink-ish)
+    'Set4': '#E07020',       # Orange
     'No_Mutation': '#5A5A5A',    # Gray
 }
 
@@ -150,7 +145,7 @@ def get_combination_color(combo_name, combo_index_in_category=0):
     """Get color for a combination based on its category.
 
     Args:
-        combo_name: Name of the combination (e.g., 'Baseline_Full', 'LS_Set2_OneShot')
+        combo_name: Name of the combination (e.g., 'Baseline_Short', 'Set2_OneShot')
         combo_index_in_category: Index within the category for shade variation
 
     Returns:
@@ -161,11 +156,11 @@ def get_combination_color(combo_name, combo_index_in_category=0):
         base_color = CATEGORY_BASE_COLORS['Baseline']
     elif combo_name.startswith('No_Mutation'):
         base_color = CATEGORY_BASE_COLORS['No_Mutation']
-    elif combo_name.startswith('LS_Set'):
-        # Extract set number (e.g., 'LS_Set2_OneShot' -> 'LS_Set2')
+    elif combo_name.startswith('Set'):
+        # Extract set number (e.g., 'Set2_OneShot' -> 'Set2')
         parts = combo_name.split('_')
-        if len(parts) >= 2:
-            set_key = f"{parts[0]}_{parts[1]}"  # 'LS_Set2'
+        if len(parts) >= 1:
+            set_key = parts[0]  # 'Set2'
             base_color = CATEGORY_BASE_COLORS.get(set_key, METHOD_COLORS[0])
         else:
             base_color = METHOD_COLORS[0]
@@ -202,10 +197,11 @@ def assign_colors_to_combinations(combos):
             category = 'Baseline'
         elif combo.startswith('No_Mutation'):
             category = 'No_Mutation'
-        elif combo.startswith('LS_Set'):
+        elif combo.startswith('Set'):
+            # Extract set number (e.g., 'Set2_OneShot' -> 'Set2')
             parts = combo.split('_')
-            if len(parts) >= 2:
-                category = f"{parts[0]}_{parts[1]}"
+            if len(parts) >= 1:
+                category = parts[0]  # 'Set2'
             else:
                 category = 'Other'
         else:
@@ -377,11 +373,6 @@ def generate_latex_comparison_table(agg_df, category_name):
     Returns:
         str: LaTeX table code
     """
-    # Find best values for highlighting
-    best_fitness_idx = agg_df['Avg_Fitness'].idxmin()
-    best_time_idx = agg_df['Avg_Time'].idxmin()
-    best_gap_idx = agg_df['Avg_Gap'].idxmin()
-
     # Build table
     if category_name == 'overall':
         caption = 'Component Comparison: Overall'
@@ -406,14 +397,6 @@ def generate_latex_comparison_table(agg_df, category_name):
         fitness_val = f"{row['Avg_Fitness']:.1f}"
         time_val = f"{row['Avg_Time']:.2f}"
         gap_val = f"{row['Avg_Gap']:.2f}"
-
-        # Apply cell highlighting for best values
-        if idx == best_fitness_idx:
-            fitness_val = r'\cellcolor{green!20}' + fitness_val
-        if idx == best_time_idx:
-            time_val = r'\cellcolor{green!20}' + time_val
-        if idx == best_gap_idx:
-            gap_val = r'\cellcolor{green!20}' + gap_val
 
         lines.append(f'{combo_escaped} & {fitness_val} & {time_val} & {gap_val} \\\\')
 
@@ -522,12 +505,6 @@ def generate_latex_rank_summary_table(df):
     # Sort by overall average rank
     summary_data.sort(key=lambda x: x['Overall_Avg_Rank'])
 
-    # Find best (lowest) values for highlighting
-    best_fitness_rank = min(d['Avg_Rank_Fitness'] for d in summary_data)
-    best_time_rank = min(d['Avg_Rank_Time'] for d in summary_data)
-    best_gap_rank = min(d['Avg_Rank_Gap'] for d in summary_data)
-    best_overall_rank = min(d['Overall_Avg_Rank'] for d in summary_data)
-
     lines = [
         r'\begin{table}[htbp]',
         r'\centering',
@@ -545,16 +522,6 @@ def generate_latex_rank_summary_table(df):
         time_val = f"{row['Avg_Rank_Time']:.2f}"
         gap_val = f"{row['Avg_Rank_Gap']:.2f}"
         overall_val = f"{row['Overall_Avg_Rank']:.2f}"
-
-        # Highlight best values
-        if row['Avg_Rank_Fitness'] == best_fitness_rank:
-            fitness_val = r'\cellcolor{green!20}' + fitness_val
-        if row['Avg_Rank_Time'] == best_time_rank:
-            time_val = r'\cellcolor{green!20}' + time_val
-        if row['Avg_Rank_Gap'] == best_gap_rank:
-            gap_val = r'\cellcolor{green!20}' + gap_val
-        if row['Overall_Avg_Rank'] == best_overall_rank:
-            overall_val = r'\cellcolor{green!20}' + overall_val
 
         lines.append(f'{combo_escaped} & {fitness_val} & {time_val} & {gap_val} & {overall_val} \\\\')
 
@@ -611,12 +578,6 @@ def generate_latex_win_count_table(df):
     # Sort by total wins (descending)
     summary_data.sort(key=lambda x: x['Total_Wins'], reverse=True)
 
-    # Find best (highest) values for highlighting
-    max_fitness_wins = max(d['Fitness_Wins'] for d in summary_data)
-    max_time_wins = max(d['Time_Wins'] for d in summary_data)
-    max_gap_wins = max(d['Gap_Wins'] for d in summary_data)
-    max_total_wins = max(d['Total_Wins'] for d in summary_data)
-
     lines = [
         r'\begin{table}[htbp]',
         r'\centering',
@@ -635,16 +596,6 @@ def generate_latex_win_count_table(df):
         gap_val = str(row['Gap_Wins'])
         total_val = str(row['Total_Wins'])
 
-        # Highlight best values (only if > 0)
-        if row['Fitness_Wins'] == max_fitness_wins and max_fitness_wins > 0:
-            fitness_val = r'\cellcolor{green!20}' + fitness_val
-        if row['Time_Wins'] == max_time_wins and max_time_wins > 0:
-            time_val = r'\cellcolor{green!20}' + time_val
-        if row['Gap_Wins'] == max_gap_wins and max_gap_wins > 0:
-            gap_val = r'\cellcolor{green!20}' + gap_val
-        if row['Total_Wins'] == max_total_wins and max_total_wins > 0:
-            total_val = r'\cellcolor{green!20}' + total_val
-
         lines.append(f'{combo_escaped} & {fitness_val} & {time_val} & {gap_val} & {total_val} \\\\')
 
     lines.extend([
@@ -654,6 +605,119 @@ def generate_latex_win_count_table(df):
     ])
 
     return '\n'.join(lines)
+
+
+def generate_combined_metric_table(size_agg_data, metric, metric_label, fmt, sizes):
+    """Generate LaTeX table for one metric across all sizes.
+
+    Args:
+        size_agg_data: Dict {size: aggregated_df}
+        metric: Column name ('Avg_Fitness', 'Avg_Time', 'Avg_Gap')
+        metric_label: Display name for caption
+        fmt: Format string ('.1f', '.2f')
+        sizes: List of sizes [100, 200, 400]
+
+    Returns:
+        str: LaTeX table code
+    """
+    # Get all unique combinations across all sizes
+    all_combos = set()
+    for size, agg_df in size_agg_data.items():
+        all_combos.update(agg_df['Combination'].tolist())
+
+    # Sort combinations: Baselines first, then Set2, then Set4, then others
+    def combo_sort_key(combo):
+        if combo.startswith('Baseline'):
+            return (0, combo)
+        elif combo.startswith('Set2') or combo.startswith('LS_Set2'):
+            return (1, combo)
+        elif combo.startswith('Set4') or combo.startswith('LS_Set4'):
+            return (2, combo)
+        else:
+            return (3, combo)
+
+    sorted_combos = sorted(all_combos, key=combo_sort_key)
+
+    # Find best (minimum) value per size column for bolding
+    best_per_size = {}
+    for size in sizes:
+        if size in size_agg_data:
+            agg_df = size_agg_data[size]
+            best_per_size[size] = agg_df[metric].min()
+
+    # Build table
+    label_safe = metric_label.replace(' ', '_').replace('(', '').replace(')', '').replace('%', 'pct').replace('\\', '')
+    caption = f'{metric_label} Comparison Across Instance Sizes'
+    label = f'tab:combined_{label_safe.lower()}'
+
+    # Build column spec: l for combo name, r for each size
+    col_spec = 'l' + 'r' * len(sizes)
+    header_cols = ' & '.join([f'$n={s}$' for s in sizes])
+
+    lines = [
+        r'\begin{table}[htbp]',
+        r'\centering',
+        f'\\caption{{{caption}}}',
+        f'\\label{{{label}}}',
+        f'\\begin{{tabular}}{{{col_spec}}}',
+        r'\toprule',
+        f'Combination & {header_cols} \\\\',
+        r'\midrule',
+    ]
+
+    for combo in sorted_combos:
+        combo_escaped = escape_latex(combo)
+        row_values = []
+
+        for size in sizes:
+            if size in size_agg_data:
+                agg_df = size_agg_data[size]
+                row = agg_df[agg_df['Combination'] == combo]
+                if not row.empty:
+                    val = row[metric].iloc[0]
+                    val_str = f'{val:{fmt}}'
+                    # Bold if best in this column
+                    if val == best_per_size[size]:
+                        val_str = r'\textbf{' + val_str + '}'
+                    row_values.append(val_str)
+                else:
+                    row_values.append('--')
+            else:
+                row_values.append('--')
+
+        lines.append(f'{combo_escaped} & {" & ".join(row_values)} \\\\')
+
+    lines.extend([
+        r'\bottomrule',
+        r'\end{tabular}',
+        r'\end{table}',
+    ])
+
+    return '\n'.join(lines)
+
+
+def generate_combined_tables(size_agg_data, sizes):
+    """Generate all combined LaTeX tables for multi-size comparison.
+
+    Args:
+        size_agg_data: Dict {size: aggregated_df}
+        sizes: List of sizes [100, 200, 400]
+
+    Returns:
+        str: Combined LaTeX content for all tables
+    """
+    tables = []
+
+    metrics = [
+        ('Avg_Fitness', 'Fitness', '.1f'),
+        ('Avg_Time', 'Time to Best (s)', '.1f'),
+        ('Avg_Gap', 'Gap to BKS (\\%)', '.2f'),
+    ]
+
+    for metric, label, fmt in metrics:
+        tables.append(generate_combined_metric_table(size_agg_data, metric, label, fmt, sizes))
+
+    return '\n\n'.join(tables)
 
 
 def save_latex_file(content, filepath):
@@ -819,17 +883,25 @@ def save_pdf(fig, filepath):
     print(f"  Saved: {filepath}")
     plt.close(fig)
 
-def create_comparison_report():
-    """Main function to create all comparison reports."""
+def create_comparison_report_for_size(size):
+    """Create all comparison reports for a specific size.
+
+    Args:
+        size: Instance size (100, 200, or 400)
+
+    Returns:
+        pandas.DataFrame: Processed DataFrame for use in combined plotting
+    """
+    csv_file = f"results/memetic_component_comparison_{size}/memetic_component_summary_{size}.csv"
+    output_dir = Path(f"results/memetic_component_comparison_{size}")
+
     print("=" * 80)
-    print("MEMETIC COMPONENT COMPARISON ANALYSIS")
+    print(f"MEMETIC COMPONENT COMPARISON ANALYSIS - SIZE {size}")
     print("=" * 80)
 
     # Load and process data
-    df = load_csv_data(CSV_FILE)
+    df = load_csv_data(csv_file)
     df = process_data(df)
-
-    output_dir = Path(OUTPUT_DIR)
 
     # Collect LaTeX tables
     category_tables = []
@@ -901,12 +973,106 @@ def create_comparison_report():
 
     # Print summary
     print("\n" + "=" * 80)
-    print("COMPARISON COMPLETE")
+    print(f"COMPARISON COMPLETE FOR SIZE {size}")
     print("=" * 80)
     print(f"\nOutput directory: {output_dir}/")
     print(f"  - category_tables.tex: {len(categories)} category comparison tables")
     print(f"  - overview_tables.tex: 4 overview tables (overall comparison, rankings, avg rank, win count)")
     print(f"  - Plot PDFs: {1 + len(categories)} files (overall + per-category)")
+
+    return df
+
+
+def create_combined_overall_plots(all_data):
+    """Create combined 3x3 plot showing all sizes together.
+
+    Layout: 3 rows (sizes: 100, 200, 400) × 3 columns (metrics: Fitness, Time, Gap)
+
+    Args:
+        all_data: Dict mapping size -> processed DataFrame
+    """
+    print("\n" + "=" * 80)
+    print("GENERATING COMBINED OVERALL COMPARISON")
+    print("=" * 80)
+
+    # Create output directory
+    output_dir = Path(COMBINED_OUTPUT_DIR)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Get aggregated data for each size
+    size_agg_data = {}
+    for size, df in all_data.items():
+        size_agg_data[size] = aggregate_by_category(df, category=None)
+
+    # Get all unique combinations across all sizes
+    all_combos = set()
+    for size, agg_df in size_agg_data.items():
+        all_combos.update(agg_df['Combination'].tolist())
+    all_combos = sorted(all_combos)
+
+    # Assign colors to combinations
+    combo_colors = {combo: color for combo, color in zip(all_combos, assign_colors_to_combinations(all_combos))}
+
+    sizes = sorted(all_data.keys())
+    n_sizes = len(sizes)
+
+    # Create 3x3 figure: rows=sizes, columns=metrics
+    fig, axes = plt.subplots(n_sizes, 3, figsize=(22, 7 * n_sizes))
+
+    metrics = [
+        ('Avg_Fitness', 'Fitness', '.1f', '', False),
+        ('Avg_Time', 'Time to Best (s)', '.1f', '', True),
+        ('Avg_Gap', 'Gap to BKS (%)', '.2f', '%', False),
+    ]
+
+    for row_idx, size in enumerate(sizes):
+        agg_df = size_agg_data[size]
+        combos = agg_df['Combination'].tolist()
+        x = np.arange(len(combos))
+        colors = [combo_colors[c] for c in combos]
+
+        for col_idx, (metric, ylabel, fmt, suffix, start_at_zero) in enumerate(metrics):
+            ax = axes[row_idx, col_idx]
+
+            values = agg_df[metric].tolist()
+            y_min, y_max, truncated = compute_axis_limits_with_outlier_truncation(values, start_at_zero=start_at_zero)
+            y_max = y_max + (y_max - y_min) * 0.15  # Extra padding for labels
+
+            bars = ax.bar(x, values, color=colors, alpha=0.8, edgecolor='black')
+
+            ax.set_ylabel(ylabel)
+            ax.set_xticks(x)
+            ax.set_xticklabels(combos, rotation=45, ha='right')
+            ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
+            ax.set_ylim(bottom=y_min, top=y_max)
+
+            # Add value labels
+            add_bar_labels(ax, bars, values, y_min, y_max, truncated, fmt=fmt, suffix=suffix)
+
+            # Add title only on top row
+            if row_idx == 0:
+                ax.set_title(ylabel, fontweight='bold')
+
+            # Add size label on left column
+            if col_idx == 0:
+                ax.annotate(f'Size {size}', xy=(-0.25, 0.5), xycoords='axes fraction',
+                           fontsize=22, fontweight='bold', rotation=90,
+                           ha='center', va='center')
+
+    fig.suptitle('Component Comparison: All Sizes', fontsize=28, y=0.995)
+    plt.tight_layout(rect=[0.03, 0, 1, 0.98])
+
+    # Save the figure
+    save_pdf(fig, output_dir / 'combined_overall_plots.pdf')
+
+    print(f"\nCombined plot saved to: {output_dir / 'combined_overall_plots.pdf'}")
+
+    # Generate combined LaTeX tables
+    print("\nGenerating combined LaTeX tables...")
+    tables_content = generate_combined_tables(size_agg_data, sizes)
+    save_latex_file(tables_content, output_dir / 'combined_tables.tex')
+
+    print(f"Combined tables saved to: {output_dir / 'combined_tables.tex'}")
 
 # ============================================================================
 # ENTRY POINT
@@ -914,10 +1080,28 @@ def create_comparison_report():
 
 if __name__ == "__main__":
     try:
-        create_comparison_report()
-        print("\nAll comparison reports generated successfully!")
+        # Process each size individually
+        all_data = {}
+        for size in SIZES:
+            csv_file = f"results/memetic_component_comparison_{size}/memetic_component_summary_{size}.csv"
+            if not Path(csv_file).exists():
+                print(f"\nWarning: CSV file not found for size {size}: {csv_file}")
+                print("Skipping this size...")
+                continue
+            df = create_comparison_report_for_size(size)
+            all_data[size] = df
+
+        # Create combined comparison if we have data from multiple sizes
+        if len(all_data) > 1:
+            create_combined_overall_plots(all_data)
+        elif len(all_data) == 1:
+            print("\nOnly one size has data, skipping combined plot.")
+
+        print("\n" + "=" * 80)
+        print("ALL COMPARISON REPORTS GENERATED SUCCESSFULLY!")
+        print("=" * 80)
     except FileNotFoundError as e:
-        print(f"\nError: CSV file not found: {CSV_FILE}")
+        print(f"\nError: {e}")
         print("Please ensure the experiment has been run and the summary CSV exists.")
     except Exception as e:
         print(f"\nError during comparison: {e}")
