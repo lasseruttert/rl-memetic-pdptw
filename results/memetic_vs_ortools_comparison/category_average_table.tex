@@ -1,0 +1,67 @@
+\documentclass{article}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{longtable}
+\usepackage{geometry}
+\geometry{a4paper, margin=1cm, landscape}
+
+\begin{document}
+
+\begin{longtable}{l rr rrr rrr}
+  \caption{Category-average comparison of Memetic algorithm and OR-Tools against BKS.}
+  \label{tab:category_avg} \\
+  \toprule
+    Instance & \multicolumn{2}{c}{BKS} & \multicolumn{3}{c}{Memetic} & \multicolumn{3}{c}{OR-Tools} \\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-6} \cmidrule(lr){7-9}
+    & Veh & Dist & Veh & Dist & Gap\% & Veh & Dist & Gap\% \\
+  \midrule
+  \endfirsthead
+  \multicolumn{9}{c}{\textit{(continued)}} \\
+  \toprule
+    Instance & \multicolumn{2}{c}{BKS} & \multicolumn{3}{c}{Memetic} & \multicolumn{3}{c}{OR-Tools} \\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-6} \cmidrule(lr){7-9}
+    & Veh & Dist & Veh & Dist & Gap\% & Veh & Dist & Gap\% \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endlastfoot
+  \multicolumn{9}{l}{\textbf{Size 100}} \\
+  \midrule
+    lc1 & 9.7 & 874.1 & \textbf{10.0} & \textbf{827.3} & \textbf{3.70} & 10.0 & 836.0 & 3.70 \\
+    lc2 & 3.0 & 589.9 & \textbf{3.0} & \textbf{595.9} & \textbf{1.01} & 3.0 & 604.2 & 2.43 \\
+    lr1 & 11.9 & 1219.7 & \textbf{12.7} & \textbf{1244.5} & \textbf{7.63} & 13.8 & 1338.4 & 14.83 \\
+    lr2 & 2.7 & 970.9 & \textbf{3.2} & \textbf{1009.9} & \textbf{21.25} & 3.8 & 1070.6 & 48.82 \\
+    lrc1 & 11.5 & 1386.8 & \textbf{12.5} & \textbf{1423.5} & \textbf{8.60} & 13.6 & 1517.3 & 18.44 \\
+    lrc2 & 3.2 & 1133.1 & \textbf{3.8} & \textbf{1171.3} & \textbf{16.50} & 4.5 & 1294.8 & 39.69 \\
+    bar & 6.3 & 801.3 & \textbf{7.0} & \textbf{837.5} & \textbf{15.35} & 7.7 & 883.8 & 21.39 \\
+    ber & 7.3 & 1362.9 & \textbf{6.8} & \textbf{1277.8} & \textbf{13.78} & 7.3 & 1319.8 & 24.69 \\
+    nyc & 3.4 & 578.2 & \textbf{4.0} & \textbf{602.8} & \textbf{30.25} & 4.4 & 626.2 & 35.00 \\
+    poa & 8.3 & 1146.1 & 9.3 & 1167.1 & 13.42 & \textbf{8.8} & \textbf{1139.3} & \textbf{24.45} \\
+  \midrule
+  \multicolumn{9}{l}{\textbf{Size 200}} \\
+  \midrule
+    lc1 & 18.7 & 2841.5 & \textbf{19.6} & \textbf{2834.3} & \textbf{5.07} & 19.5 & 2869.8 & 4.54 \\
+    lc2 & 6.0 & 1851.7 & \textbf{6.5} & \textbf{1925.1} & \textbf{8.63} & 6.7 & 1986.2 & 12.27 \\
+    lr1 & 13.5 & 4144.7 & 16.7 & 3799.2 & 25.79 & \textbf{16.4} & \textbf{4005.3} & \textbf{20.98} \\
+    lr2 & 3.4 & 3407.3 & \textbf{4.4} & \textbf{3168.9} & \textbf{34.63} & 4.8 & 3525.0 & 45.69 \\
+    lrc1 & 14.1 & 3325.0 & \textbf{16.7} & \textbf{3394.3} & \textbf{20.50} & 16.9 & 3536.5 & 19.30 \\
+    lrc2 & 4.3 & 2801.2 & \textbf{5.2} & \textbf{2645.3} & \textbf{24.75} & 5.8 & 2891.7 & 37.17 \\
+    bar & 13.0 & 1405.3 & \textbf{14.7} & \textbf{1499.3} & \textbf{14.62} & 15.4 & 1540.7 & 20.56 \\
+    ber & 14.8 & 2560.8 & 13.8 & 2628.2 & 14.02 & \textbf{11.5} & \textbf{2261.2} & \textbf{32.22} \\
+    nyc & 6.2 & 1038.0 & \textbf{7.8} & \textbf{1133.0} & \textbf{25.41} & 8.2 & 1183.0 & 30.79 \\
+    poa & 17.1 & 2263.6 & \textbf{19.4} & \textbf{2449.1} & \textbf{13.76} & 20.6 & 2492.9 & 21.07 \\
+  \midrule
+  \multicolumn{9}{l}{\textbf{Size 400}} \\
+  \midrule
+    lc1 & 37.6 & 7655.2 & 40.5 & 8015.0 & 10.19 & \textbf{39.3} & \textbf{7606.0} & \textbf{6.67} \\
+    lc2 & 12.0 & 4046.2 & \textbf{13.4} & \textbf{4608.5} & \textbf{11.11} & 14.4 & 4791.8 & 20.37 \\
+    lr1 & 23.3 & 9350.3 & 30.9 & 9295.6 & 36.22 & \textbf{30.3} & \textbf{9253.4} & \textbf{34.15} \\
+    lr2 & 5.4 & 8312.8 & \textbf{8.5} & \textbf{7479.9} & \textbf{60.95} & 8.9 & 8596.9 & 69.21 \\
+    lrc1 & 27.4 & 7935.6 & 34.3 & 8672.2 & 25.79 & \textbf{32.8} & \textbf{8380.8} & \textbf{19.97} \\
+    lrc2 & 8.0 & 6594.0 & \textbf{11.2} & \textbf{6176.1} & \textbf{41.45} & 11.9 & 7102.7 & 50.21 \\
+    bar & 22.7 & 2781.9 & \textbf{26.6} & \textbf{3114.3} & \textbf{20.75} & 26.6 & 3115.6 & 20.16 \\
+    ber & 27.3 & 5038.3 & 32.9 & 5673.6 & 21.40 & \textbf{33.0} & \textbf{5528.9} & \textbf{22.43} \\
+    nyc & 9.6 & 1892.8 & \textbf{12.2} & \textbf{2131.6} & \textbf{24.84} & 12.4 & 2137.0 & 27.69 \\
+    poa & 29.2 & 3403.5 & 33.5 & 3769.8 & 17.01 & \textbf{33.5} & \textbf{3748.0} & \textbf{17.03} \\
+\end{longtable}
+\end{document}

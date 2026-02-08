@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.colors as mcolors
 from matplotlib.patches import Patch
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -16,6 +17,12 @@ import seaborn as sns
 from collections import defaultdict
 import argparse
 import yaml
+
+
+def darken_color(color, factor=0.6):
+    """Make a color darker by the given factor (0=black, 1=original)."""
+    rgb = mcolors.to_rgb(color)
+    return tuple(c * factor for c in rgb)
 
 # Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
@@ -110,13 +117,19 @@ def load_operator_names_from_config(config_path: str) -> Dict[int, str]:
             if 'params' in op_config and op_config['params']:
                 params = op_config['params']
 
-                # Special handling for ReinsertOperator
+                # Special handling for ReinsertOperator - only show non-default params
                 if op_type == 'ReinsertOperator':
                     param_parts = []
-                    if params.get('clustered'):
+                    if params.get('clustered', False):
                         param_parts.append('C')
-                    if 'max_attempts' in params:
+                    if params.get('max_attempts', 1) != 1:
                         param_parts.append(f"k{params['max_attempts']}")
+                    if not params.get('allow_new_vehicles', True):
+                        param_parts.append('NoNewV')
+                    if not params.get('allow_same_vehicle', True):
+                        param_parts.append('NoSameV')
+                    if params.get('force_same_vehicle', False):
+                        param_parts.append('F_SameV')
                     if param_parts:
                         name = f"{name}({','.join(param_parts)})"
                 # Existing handling for other operators
@@ -550,12 +563,12 @@ def plot_operator_usage_frequency(operator_stats: Dict, output_dir: str):
     y = np.arange(len(operators_sorted))
     height = 0.35
 
-    ax.barh(y + height/2, random_uses, height, label='Random', color=INIT_COLORS['random'], alpha=0.8)
-    ax.barh(y - height/2, greedy_uses, height, label='Greedy', color=INIT_COLORS['greedy'], alpha=0.8)
+    ax.barh(y + height/2, random_uses, height, label='Random', color=INIT_COLORS['random'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['random']), linewidth=1.5)
+    ax.barh(y - height/2, greedy_uses, height, label='Greedy', color=INIT_COLORS['greedy'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['greedy']), linewidth=1.5)
 
     ax.set_ylabel('Operator')
-    ax.set_xlabel('Usage Frequency')
-    ax.set_title('Operator Usage: Frequency', fontweight='bold')
+    ax.set_xlabel('Usage Amount')
+    ax.set_title('Operator Usage: Amount', fontweight='bold')
     ax.set_yticks(y)
     ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
     ax.legend(framealpha=0.9, edgecolor='gray')
@@ -593,8 +606,8 @@ def plot_operator_success_rates(operator_stats: Dict, output_dir: str):
     y = np.arange(len(operators_sorted))
     height = 0.35
 
-    ax.barh(y + height/2, random_rates, height, label='Random', color=INIT_COLORS['random'], alpha=0.8)
-    ax.barh(y - height/2, greedy_rates, height, label='Greedy', color=INIT_COLORS['greedy'], alpha=0.8)
+    ax.barh(y + height/2, random_rates, height, label='Random', color=INIT_COLORS['random'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['random']), linewidth=1.5)
+    ax.barh(y - height/2, greedy_rates, height, label='Greedy', color=INIT_COLORS['greedy'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['greedy']), linewidth=1.5)
 
     ax.set_ylabel('Operator')
     ax.set_xlabel('Success Rate')
@@ -749,7 +762,7 @@ def plot_operator_temporal_usage(all_histories: Dict, init_type: str, output_dir
             op_name = abbreviate_operator_name(op_name)
 
         ax.bar(x, values, width, label=op_name,
-               bottom=bottom, color=color, alpha=0.8)
+               bottom=bottom, color=color, alpha=0.85, edgecolor=darken_color(color), linewidth=1.0)
         bottom += values
 
     ax.set_xlabel('Iteration Range')
@@ -789,7 +802,7 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     # Random - Initial Fitness
     ax = axes[0, 0]
     data = df[df['Initialization'] == 'random']['Mean_Initial_Fitness']
-    ax.hist(data, bins=20, color=INIT_COLORS['random'], alpha=0.7, edgecolor='black')
+    ax.hist(data, bins=20, color=INIT_COLORS['random'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['random']))
     ax.set_xlabel('Initial Fitness')
     ax.set_ylabel('Frequency')
     ax.set_title('Random: Initial', fontweight='bold')
@@ -798,7 +811,7 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     # Random - Final Fitness
     ax = axes[0, 1]
     data = df[df['Initialization'] == 'random']['Mean_Final_Fitness']
-    ax.hist(data, bins=20, color=INIT_COLORS['random'], alpha=0.7, edgecolor='black')
+    ax.hist(data, bins=20, color=INIT_COLORS['random'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['random']))
     ax.set_xlabel('Final Fitness')
     ax.set_ylabel('Frequency')
     ax.set_title('Random: Final', fontweight='bold')
@@ -807,7 +820,7 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     # Greedy - Initial Fitness
     ax = axes[1, 0]
     data = df[df['Initialization'] == 'greedy']['Mean_Initial_Fitness']
-    ax.hist(data, bins=20, color=INIT_COLORS['greedy'], alpha=0.7, edgecolor='black')
+    ax.hist(data, bins=20, color=INIT_COLORS['greedy'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['greedy']))
     ax.set_xlabel('Initial Fitness')
     ax.set_ylabel('Frequency')
     ax.set_title('Greedy: Initial', fontweight='bold')
@@ -816,7 +829,7 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     # Greedy - Final Fitness
     ax = axes[1, 1]
     data = df[df['Initialization'] == 'greedy']['Mean_Final_Fitness']
-    ax.hist(data, bins=20, color=INIT_COLORS['greedy'], alpha=0.7, edgecolor='black')
+    ax.hist(data, bins=20, color=INIT_COLORS['greedy'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['greedy']))
     ax.set_xlabel('Final Fitness')
     ax.set_ylabel('Frequency')
     ax.set_title('Greedy: Final', fontweight='bold')
@@ -851,7 +864,9 @@ def plot_time_distributions(df: pd.DataFrame, output_dir: str):
 
     for patch, color in zip(bp['boxes'], [INIT_COLORS['random'], INIT_COLORS['greedy']]):
         patch.set_facecolor(color)
-        patch.set_alpha(0.7)
+        patch.set_edgecolor(darken_color(color))
+        patch.set_alpha(0.85)
+        patch.set_linewidth(1.5)
 
     ax.set_ylabel('Time (s)')
     ax.set_title('Distribution: Execution Time',
@@ -900,8 +915,12 @@ def plot_operator_average_improvement(all_histories: Dict, init_type: str, outpu
     y = np.arange(len(operators_sorted))
     colors = [OPERATOR_COLORS.get(op, plt.cm.tab10(i % 10)) for i, op in enumerate(operators_sorted)]
 
-    ax.barh(y, avg_improvements, color=colors, alpha=0.8, xerr=std_improvements,
-           capsize=5, error_kw={'linewidth': 1.5}, edgecolor='black')
+    edge_colors = [darken_color(c) for c in colors]
+    bars = ax.barh(y, avg_improvements, color=colors, alpha=0.85, linewidth=1.5)
+    for bar, edge_color in zip(bars, edge_colors):
+        bar.set_edgecolor(edge_color)
+    ax.errorbar(y, avg_improvements, xerr=std_improvements, fmt='none',
+               capsize=5, elinewidth=1.5, capthick=1.5, ecolor='gray')
 
     ax.set_ylabel('Operator')
     ax.set_xlabel('Average Fitness Improvement')
@@ -1212,11 +1231,12 @@ def plot_operator_quartile_distribution(all_histories: Dict, init_type: str, out
     for q in range(n_quartiles):
         offset = (q - 1.5) * width
         bars = ax.bar(x + offset, usage_normalized[:, q], width,
-                     label=quartile_labels[q], color=quartile_colors[q], alpha=0.8)
+                     label=quartile_labels[q], color=quartile_colors[q], alpha=0.85,
+                     edgecolor=darken_color(quartile_colors[q], factor=0.4), linewidth=1.0)
 
     ax.set_xlabel('Operator')
     ax.set_ylabel('Usage Proportion')
-    ax.set_title(f'Operator Quartile Distribution: {init_type.capitalize()}',
+    ax.set_title(f'Operator Usage by Iteration Quartile: {init_type.capitalize()}',
                  fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted],
@@ -1271,8 +1291,12 @@ def plot_random_vs_greedy_comparison(df: pd.DataFrame, output_dir: str):
         stds = [r_std, g_std]
         colors = [INIT_COLORS['random'], INIT_COLORS['greedy']]
 
-        ax.bar(x, means, width=0.6, color=colors, alpha=0.8, yerr=stds,
-               capsize=5, error_kw={'linewidth': 2})
+        edge_colors = [darken_color(c) for c in colors]
+        bars = ax.bar(x, means, width=0.6, color=colors, alpha=0.85, linewidth=1.5)
+        for bar, edge_color in zip(bars, edge_colors):
+            bar.set_edgecolor(edge_color)
+        ax.errorbar(x, means, yerr=stds, fmt='none',
+                   capsize=5, elinewidth=2, capthick=2, ecolor='gray')
         ax.set_xticks(x)
         ax.set_xticklabels(['Random', 'Greedy'])
         ax.set_ylabel(metric_label)

@@ -1,0 +1,21 @@
+\documentclass{article}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+\usepackage{longtable}
+\usepackage{geometry}
+\geometry{a4paper, margin=1cm, landscape}
+
+\begin{document}
+
+\begin{tabular}{l rr rrr rrr}
+  \toprule
+    Instance & \multicolumn{2}{c}{BKS} & \multicolumn{3}{c}{Memetic} & \multicolumn{3}{c}{OR-Tools} \\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-6} \cmidrule(lr){7-9}
+    & Veh & Dist & Veh & Dist & Gap\% & Veh & Dist & Gap\% \\
+  \midrule
+    Size 100 & 7.0 & 1028.7 & \textbf{7.5} & \textbf{1036.1} & \textbf{12.34} & 8.0 & 1084.0 & 22.95 \\
+    Size 200 & 11.0 & 2705.3 & \textbf{12.4} & \textbf{2668.0} & \textbf{18.92} & 12.4 & 2762.9 & 23.87 \\
+    Size 400 & 20.0 & 6167.1 & \textbf{24.3} & \textbf{6320.8} & \textbf{28.40} & 24.4 & 6457.2 & 29.86 \\
+  \bottomrule
+\end{tabular}
+\end{document}
