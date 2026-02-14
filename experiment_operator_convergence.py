@@ -31,6 +31,9 @@ import os
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from matplotlib.patches import Patch
+from collections import OrderedDict
 from pathlib import Path
 
 # ============================================================================
@@ -103,6 +106,243 @@ EXTENDED_COLORS = METHOD_COLORS + [
 
 # Line styles for multi-operator plots
 LINE_STYLES = ['-', '--', '-.', ':']  # solid, dashed, dash-dot, dotted
+
+# ============================================================================
+# OPERATOR FAMILY GROUPINGS & DISPLAY NAMES
+# ============================================================================
+
+def darken_color(color, factor=0.6):
+    """Make a color darker by the given factor (0=black, 1=original)."""
+    rgb = mcolors.to_rgb(color)
+    return tuple(c * factor for c in rgb)
+
+
+def compute_axis_limits_with_outlier_truncation(values, std_values=None, start_at_zero=False, outlier_threshold=2.0):
+    """Compute y-axis limits, truncating outliers that are > threshold * next highest.
+
+    Args:
+        values: List of values to plot
+        std_values: List of std values for error bars (optional)
+        start_at_zero: Whether y-axis should start at 0
+        outlier_threshold: Truncate bars > this multiple of next highest value
+
+    Returns:
+        tuple: (y_min, y_max, truncated_indices) where truncated_indices are bars to clip
+    """
+    if std_values is None:
+        std_values = [0] * len(values)
+
+    upper_bounds = [v + s for v, s in zip(values, std_values)]
+    lower_bounds = [v - s for v, s in zip(values, std_values)]
+
+    valid_upper = [u for u in upper_bounds if u > 0]
+    if len(valid_upper) < 2:
+        y_min = 0 if start_at_zero else min(lower_bounds) * 0.9
+        y_max = max(upper_bounds) * 1.1
+        return y_min, y_max, []
+
+    sorted_upper = sorted(valid_upper, reverse=True)
+    max_upper = sorted_upper[0]
+    second_max_upper = sorted_upper[1]
+
+    truncated_indices = []
+
+    if max_upper > outlier_threshold * second_max_upper:
+        truncation_limit = second_max_upper * 1.5
+        for i, u in enumerate(upper_bounds):
+            if u > truncation_limit:
+                truncated_indices.append(i)
+
+        if start_at_zero:
+            y_min = 0
+            y_max = truncation_limit
+        else:
+            non_outlier_lower = [lower_bounds[i] for i, u in enumerate(upper_bounds) if u <= truncation_limit]
+            if non_outlier_lower:
+                y_min = min(non_outlier_lower) * 0.95
+                y_max = truncation_limit
+            else:
+                y_min = 0
+                y_max = truncation_limit
+    else:
+        if start_at_zero:
+            y_min = 0
+            y_max = max(upper_bounds) * 1.1
+        else:
+            y_min = min(lower_bounds) * 0.95
+            y_max = max(upper_bounds) * 1.1
+
+    return y_min, y_max, truncated_indices
+
+
+# Operator families: determines x-axis ordering in bar charts
+OPERATOR_FAMILIES = OrderedDict([
+    ('Reinsert', [
+        'Reinsert-nC-Max1-NewV-SameV-nF_SameV',
+        'Reinsert-C-Max5-NewV-SameV-nF_SameV',
+        'Reinsert-nC-Max1-NewV-SameV-F_SameV',
+        'Reinsert-nC-Max1-NewV-NoSameV-nF_SameV',
+        'Reinsert-nC-Max1-NoNewV-NoSameV-nF_SameV',
+    ]),
+    ('RouteElim', [
+        'RouteElimination',
+    ]),
+    ('Flip', [
+        'Flip-All-Unlimited',
+        'Flip-All-Max5',
+        'Flip-Single-Unlimited',
+    ]),
+    ('Merge', [
+        'Merge-random-N2-F-R',
+        'Merge-random-N2-F-nR',
+        'Merge-min-N2-F-R',
+        'Merge-min-N2-F-nR',
+    ]),
+    ('SwapWithin', [
+        'SwapWithin-random-A-MaxNone',
+        'SwapWithin-random-A-Max5',
+        'SwapWithin-random-S-MaxNone',
+        'SwapWithin-best-S-MaxNone',
+        'SwapWithin-best-A-MaxNone',
+    ]),
+    ('SwapBetween', [
+        'SwapBetween-random',
+        'SwapBetween-best',
+    ]),
+    ('Transfer', [
+        'Transfer-A-Max1',
+        'Transfer-S-Max1',
+        'Transfer-S-Max5',
+    ]),
+    ('Shift', [
+        'Shift-random-A-Max5-Seg3-Dist3',
+        'Shift-random-A-Max5-Seg2-Dist4',
+        'Shift-random-A-Max3-Seg4-Dist2',
+        'Shift-random-A-Max3-Seg3-Dist5',
+        'Shift-best-A-Max5-Seg2-Dist3',
+        'Shift-best-A-Max5-Seg3-Dist2',
+        'Shift-random-S-Max5-Seg3-Dist3',
+    ]),
+    ('TwoOpt', [
+        'TwoOpt',
+    ]),
+    ('CLS', [
+        'CLS-M1',
+        'CLS-M2',
+        'CLS-M3',
+        'CLS-M4',
+    ]),
+    ('ReqShift', [
+        'RequestShiftWithin',
+    ]),
+    ('NodeSwap', [
+        'NodeSwapWithin-WithPrecedence',
+        'NodeSwapWithin',
+    ]),
+])
+
+# One distinct base color per family
+FAMILY_BASE_COLORS = {
+    'Reinsert':    '#2E86AB',  # Steel Blue
+    'RouteElim':   '#A23B72',  # Plum Purple
+    'Flip':        '#1D7874',  # Teal
+    'Merge':       '#E8A838',  # Muted Gold
+    'SwapWithin':  '#6B4C9A',  # Violet
+    'SwapBetween': '#D64550',  # Soft Red
+    'Transfer':    '#44AF69',  # Sage Green
+    'Shift':       '#8B5E3C',  # Brown
+    'TwoOpt':      '#C44536',  # Rust
+    'CLS':         '#3A7D44',  # Forest Green
+    'ReqShift':    '#7B68EE',  # Medium Slate Blue
+    'NodeSwap':    '#CD853F',  # Peru
+}
+
+# Short display names — follows Name(params) convention from plot_rl_local_search_performance.py
+DISPLAY_NAMES = {
+    'Reinsert-nC-Max1-NewV-SameV-nF_SameV':       'Reinsert',
+    'Reinsert-C-Max5-NewV-SameV-nF_SameV':         'Reinsert(C,k5)',
+    'Reinsert-nC-Max1-NewV-SameV-F_SameV':         'Reinsert(F_SameV)',
+    'Reinsert-nC-Max1-NewV-NoSameV-nF_SameV':      'Reinsert(NoSameV)',
+    'Reinsert-nC-Max1-NoNewV-NoSameV-nF_SameV':    'Reinsert(NoNewV,NoSameV)',
+    'RouteElimination':                             'RouteElim',
+    'Flip-All-Unlimited':                           'Flip',
+    'Flip-All-Max5':                                'Flip(k5)',
+    'Flip-Single-Unlimited':                        'Flip(SR)',
+    'Merge-random-N2-F-R':                          'Merge(random)',
+    'Merge-random-N2-F-nR':                         'Merge(random,noR)',
+    'Merge-min-N2-F-R':                             'Merge(min)',
+    'Merge-min-N2-F-nR':                            'Merge(min,noR)',
+    'SwapWithin-random-A-MaxNone':                  'SwapW',
+    'SwapWithin-random-A-Max5':                     'SwapW(k5)',
+    'SwapWithin-random-S-MaxNone':                  'SwapW(SR)',
+    'SwapWithin-best-S-MaxNone':                    'SwapW(best,SR)',
+    'SwapWithin-best-A-MaxNone':                    'SwapW(best)',
+    'SwapBetween-random':                           'SwapB',
+    'SwapBetween-best':                             'SwapB(best)',
+    'Transfer-A-Max1':                              'Transfer',
+    'Transfer-S-Max1':                              'Transfer(SR)',
+    'Transfer-S-Max5':                              'Transfer(SR,k5)',
+    'Shift-random-A-Max5-Seg3-Dist3':               'Shift(rnd,s3,d3,k5)',
+    'Shift-random-A-Max5-Seg2-Dist4':               'Shift(rnd,s2,d4,k5)',
+    'Shift-random-A-Max3-Seg4-Dist2':               'Shift(rnd,s4,d2,k3)',
+    'Shift-random-A-Max3-Seg3-Dist5':               'Shift(rnd,s3,d5,k3)',
+    'Shift-best-A-Max5-Seg2-Dist3':                 'Shift(best,s2,d3)',
+    'Shift-best-A-Max5-Seg3-Dist2':                 'Shift(best,s3,d2)',
+    'Shift-random-S-Max5-Seg3-Dist3':               'Shift(rnd,SR,s3,d3)',
+    'TwoOpt':                                       'TwoOpt',
+    'CLS-M1':                                       'CLS-M1',
+    'CLS-M2':                                       'CLS-M2',
+    'CLS-M3':                                       'CLS-M3',
+    'CLS-M4':                                       'CLS-M4',
+    'RequestShiftWithin':                           'ReqShift',
+    'NodeSwapWithin-WithPrecedence':                'NodeSwap(prec)',
+    'NodeSwapWithin':                               'NodeSwap',
+}
+
+
+def _display_name(operator_name):
+    """Return the short display name for an operator, falling back to original."""
+    return DISPLAY_NAMES.get(operator_name, operator_name)
+
+
+def _generate_family_shades(base_color, n):
+    """Create n shades from light to full saturation for variants within a family."""
+    if n == 1:
+        return [base_color]
+    rgb = mcolors.to_rgb(base_color)
+    shades = []
+    for i in range(n):
+        # Blend from white (light) toward base color
+        t = 0.35 + 0.65 * (i / (n - 1))  # range [0.35, 1.0]
+        shaded = tuple(1.0 - t * (1.0 - c) for c in rgb)
+        shades.append(shaded)
+    return shades
+
+
+def _get_operator_colors(results):
+    """Return (ordered_names, colors) grouped by family.
+
+    Only includes operators that are present in the results dict.
+    """
+    ordered_names = []
+    colors = []
+    for family, members in OPERATOR_FAMILIES.items():
+        present = [m for m in members if m in results]
+        if not present:
+            continue
+        base = FAMILY_BASE_COLORS[family]
+        shades = _generate_family_shades(base, len(present))
+        ordered_names.extend(present)
+        colors.extend(shades)
+
+    # Append any operators not listed in families (safety net)
+    for op in results:
+        if op not in ordered_names:
+            ordered_names.append(op)
+            colors.append('#888888')
+
+    return ordered_names, colors
+
 
 # ============================================================================
 # EXPERIMENT FUNCTIONS
@@ -343,6 +583,220 @@ def save_figure_multi_format(fig, filepath, formats=['png', 'pdf']):
         print(f'    Saved: {output_path}')
 
 
+def _extract_operator_metrics(results):
+    """Compute per-operator aggregate metrics across all instances and runs.
+
+    Args:
+        results: Dictionary containing all experiment results
+
+    Returns:
+        dict: {operator_name: {metric_name: value, ...}}
+    """
+    metrics = {}
+    for operator_name, operator_results in results.items():
+        improvements_list = []
+        improvement_rate_list = []
+        improvement_mag_list = []
+        final_fitness_list = []
+        time_list = []
+
+        for instance_name, instance_data in operator_results.items():
+            for run in instance_data['runs']:
+                n_imp = run['num_improvements']
+                t = run['total_time']
+                init_f = run['initial_fitness']
+                final_f = run['final_fitness']
+
+                improvements_list.append(n_imp)
+                improvement_rate_list.append(n_imp / t if t > 0 else 0.0)
+                improvement_mag_list.append(
+                    (init_f - final_f) / max(1, n_imp)
+                )
+                final_fitness_list.append(final_f)
+                time_list.append(t)
+
+        metrics[operator_name] = {
+            'avg_improvements': np.mean(improvements_list),
+            'std_improvements': np.std(improvements_list),
+            'avg_improvement_rate': np.mean(improvement_rate_list),
+            'std_improvement_rate': np.std(improvement_rate_list),
+            'avg_improvement_magnitude': np.mean(improvement_mag_list),
+            'std_improvement_magnitude': np.std(improvement_mag_list),
+            'avg_final_fitness': np.mean(final_fitness_list),
+            'std_final_fitness': np.std(final_fitness_list),
+            'avg_time': np.mean(time_list),
+            'std_time': np.std(time_list),
+        }
+
+    return metrics
+
+
+def _plot_operator_bar_chart(results, metrics, metric_key, std_key, ylabel,
+                             title, filename, start_at_zero=True, ax=None):
+    """Reusable bar chart for operator metrics, family-grouped with separators.
+
+    Args:
+        results: Full results dict (used for ordering)
+        metrics: Dict from _extract_operator_metrics
+        metric_key: Key in metrics for bar heights
+        std_key: Key in metrics for error bar values
+        ylabel: Y-axis label
+        title: Plot title
+        filename: Output filename (without extension), or None if using ax
+        start_at_zero: Whether y-axis starts at 0
+        ax: Optional axes to draw on (for grid plots). If None, creates new figure.
+
+    Returns:
+        fig if ax is None, else None
+    """
+    ordered_names, colors = _get_operator_colors(results)
+
+    values = [metrics[n][metric_key] for n in ordered_names]
+    std_values = [metrics[n][std_key] for n in ordered_names]
+    display_labels = [_display_name(n) for n in ordered_names]
+
+    standalone = ax is None
+    if standalone:
+        fig, ax = plt.subplots(figsize=(22, 10))
+
+    x = np.arange(len(ordered_names))
+    width = 0.72
+
+    # Draw bars
+    bars = ax.bar(x, values, width, color=colors, alpha=0.85,
+                  edgecolor='black', linewidth=1.0)
+
+    # Error bars with darkened matching colors
+    for i, (val, std, col) in enumerate(zip(values, std_values, colors)):
+        if std > 0:
+            dark = darken_color(col, factor=0.66)
+            ax.errorbar(x[i], val, yerr=std, fmt='none',
+                        capsize=8, capthick=2.0, elinewidth=2.0,
+                        ecolor=dark)
+
+    # Separator lines between families
+    pos = 0
+    for family, members in OPERATOR_FAMILIES.items():
+        present = [m for m in members if m in results]
+        if not present:
+            continue
+        pos += len(present)
+        if pos < len(ordered_names):
+            ax.axvline(x=pos - 0.5, color='black', linestyle='--',
+                       linewidth=1.2, alpha=0.4)
+
+    # Axis limits
+    y_min, y_max, _ = compute_axis_limits_with_outlier_truncation(
+        values, std_values=std_values, start_at_zero=start_at_zero
+    )
+    ax.set_ylim(bottom=y_min, top=y_max)
+
+    # Labels
+    ax.set_xlabel('Operator')
+    ax.set_ylabel(ylabel)
+    ax.set_title(title, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(display_labels, rotation=60, ha='right')
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5, axis='y')
+
+    if standalone:
+        plt.tight_layout()
+        filepath = Path(PLOTS_OUTPUT_DIR) / filename
+        save_figure_multi_format(fig, str(filepath))
+        plt.close()
+        return fig
+    return None
+
+
+# ---- Thin wrapper plot functions ----
+
+def plot_avg_improvements(results, metrics):
+    """Bar chart: average number of improvements per operator."""
+    _plot_operator_bar_chart(
+        results, metrics,
+        metric_key='avg_improvements', std_key='std_improvements',
+        ylabel='Avg. Number of Improvements',
+        title='Average Number of Improvements by Operator',
+        filename='operator_avg_improvements',
+        start_at_zero=True,
+    )
+
+def plot_improvement_rate(results, metrics):
+    """Bar chart: improvements per second per operator."""
+    _plot_operator_bar_chart(
+        results, metrics,
+        metric_key='avg_improvement_rate', std_key='std_improvement_rate',
+        ylabel='Improvements per Second',
+        title='Improvement Rate by Operator',
+        filename='operator_improvement_rate',
+        start_at_zero=True,
+    )
+
+def plot_avg_improvement_magnitude(results, metrics):
+    """Bar chart: average fitness gain per improvement per operator."""
+    _plot_operator_bar_chart(
+        results, metrics,
+        metric_key='avg_improvement_magnitude', std_key='std_improvement_magnitude',
+        ylabel='Avg. Fitness Gain per Improvement',
+        title='Average Improvement Magnitude by Operator',
+        filename='operator_improvement_magnitude',
+        start_at_zero=True,
+    )
+
+def plot_avg_final_fitness(results, metrics):
+    """Bar chart: average final fitness per operator."""
+    _plot_operator_bar_chart(
+        results, metrics,
+        metric_key='avg_final_fitness', std_key='std_final_fitness',
+        ylabel='Final Fitness',
+        title='Average Final Fitness by Operator',
+        filename='operator_avg_final_fitness',
+        start_at_zero=True,
+    )
+
+def plot_avg_computation_time(results, metrics):
+    """Bar chart: average computation time per operator."""
+    _plot_operator_bar_chart(
+        results, metrics,
+        metric_key='avg_time', std_key='std_time',
+        ylabel='Time (s)',
+        title='Average Computation Time by Operator',
+        filename='operator_avg_time',
+        start_at_zero=True,
+    )
+
+
+def plot_operator_overview_grid(results, metrics):
+    """2x2 grid of key operator metrics."""
+    fig, axes = plt.subplots(2, 2, figsize=(28, 20))
+
+    panels = [
+        (axes[0, 0], 'avg_improvements', 'std_improvements',
+         'Avg. Number of Improvements', 'Average Improvements', True),
+        (axes[0, 1], 'avg_improvement_rate', 'std_improvement_rate',
+         'Improvements per Second', 'Improvement Rate', True),
+        (axes[1, 0], 'avg_final_fitness', 'std_final_fitness',
+         'Final Fitness', 'Final Fitness', True),
+        (axes[1, 1], 'avg_time', 'std_time',
+         'Time (s)', 'Computation Time', True),
+    ]
+
+    for ax, mk, sk, yl, ttl, saz in panels:
+        _plot_operator_bar_chart(
+            results, metrics,
+            metric_key=mk, std_key=sk,
+            ylabel=yl, title=ttl, filename=None,
+            start_at_zero=saz, ax=ax,
+        )
+
+    fig.suptitle('Operator Performance Overview', fontsize=28, fontweight='bold', y=0.995)
+    plt.tight_layout(rect=[0, 0, 1, 0.99])
+
+    filepath = Path(PLOTS_OUTPUT_DIR) / 'operator_overview_grid'
+    save_figure_multi_format(fig, str(filepath))
+    plt.close()
+
+
 def plot_all_results(results):
     """Generate all plots from experiment results.
 
@@ -356,6 +810,10 @@ def plot_all_results(results):
     print("GENERATING PLOTS")
     print("=" * 80)
 
+    # Extract operator metrics for bar charts
+    print("Extracting operator metrics...")
+    metrics = _extract_operator_metrics(results)
+
     # 1. Plot aggregated convergence curves (all operators on one plot)
     print("Plotting aggregated convergence curves...")
     plot_aggregated_convergence(results)
@@ -363,6 +821,26 @@ def plot_all_results(results):
     # 2. Plot per-operator average across all instances
     print("Plotting per-operator averages across all instances...")
     plot_per_operator_average_all_instances(results)
+
+    # 3. Bar charts for operator metrics
+    print("Plotting average improvements bar chart...")
+    plot_avg_improvements(results, metrics)
+
+    print("Plotting improvement rate bar chart...")
+    plot_improvement_rate(results, metrics)
+
+    print("Plotting improvement magnitude bar chart...")
+    plot_avg_improvement_magnitude(results, metrics)
+
+    print("Plotting average final fitness bar chart...")
+    plot_avg_final_fitness(results, metrics)
+
+    print("Plotting average computation time bar chart...")
+    plot_avg_computation_time(results, metrics)
+
+    # 4. Overview grid
+    print("Plotting operator overview grid...")
+    plot_operator_overview_grid(results, metrics)
 
     print(f"\nAll plots saved to: {PLOTS_OUTPUT_DIR}/")
     print("=" * 80)
@@ -391,11 +869,11 @@ def plot_aggregated_convergence(results):
                     if run_data['convergence_times']:
                         max_time = max(max_time, run_data['convergence_times'][-1])
 
-    # Use extended colors for many operators
-    num_operators = len(results)
-    colors = EXTENDED_COLORS * ((num_operators // len(EXTENDED_COLORS)) + 1)
+    # Use family-grouped colors
+    ordered_names, colors = _get_operator_colors(results)
 
-    for idx, (operator_name, operator_results) in enumerate(results.items()):
+    for idx, operator_name in enumerate(ordered_names):
+        operator_results = results[operator_name]
         all_fitness_curves = []
 
         # Collect all convergence curves and extend them to max_time
@@ -437,8 +915,8 @@ def plot_aggregated_convergence(results):
         # Get line style (cycle through available styles)
         line_style = LINE_STYLES[idx % len(LINE_STYLES)]
 
-        # Plot median curve
-        ax.plot(time_bins, aggregated_fitness, label=operator_name,
+        # Plot median curve with display name
+        ax.plot(time_bins, aggregated_fitness, label=_display_name(operator_name),
                color=colors[idx], linestyle=line_style, linewidth=2.5, alpha=0.85)
 
     ax.set_xlabel('Time (seconds)')
@@ -472,6 +950,12 @@ def plot_per_operator_average_all_instances(results):
     per_operator_avg_dir = Path(PLOTS_OUTPUT_DIR) / 'per_operator_averages'
     per_operator_avg_dir.mkdir(parents=True, exist_ok=True)
 
+    # Build operator -> family lookup
+    op_to_family = {}
+    for family, members in OPERATOR_FAMILIES.items():
+        for m in members:
+            op_to_family[m] = family
+
     for operator_name, operator_results in results.items():
         # Collect all runs from all instances for this operator
         all_runs = []
@@ -480,6 +964,11 @@ def plot_per_operator_average_all_instances(results):
 
         if not all_runs:
             continue
+
+        # Get family base color for this operator
+        family = op_to_family.get(operator_name)
+        color_fitness = FAMILY_BASE_COLORS.get(family, METHOD_COLORS[0]) if family else METHOD_COLORS[0]
+        color_vehicles = darken_color(color_fitness, factor=0.7)
 
         # Create figure with two subplots
         fig, axes = plt.subplots(1, 2, figsize=(16, 7))
@@ -493,7 +982,7 @@ def plot_per_operator_average_all_instances(results):
         ax1 = axes[0]
         if len(time_bins_fitness) > 0:
             # Plot mean line
-            ax1.plot(time_bins_fitness, mean_fitness, color=METHOD_COLORS[0],
+            ax1.plot(time_bins_fitness, mean_fitness, color=color_fitness,
                     linewidth=3, label='Mean', alpha=0.9)
             # Plot shaded std deviation
             mean_fitness_array = np.array(mean_fitness)
@@ -501,7 +990,7 @@ def plot_per_operator_average_all_instances(results):
             ax1.fill_between(time_bins_fitness,
                             mean_fitness_array - std_fitness_array,
                             mean_fitness_array + std_fitness_array,
-                            color=METHOD_COLORS[0], alpha=0.25, label='±1 Std Dev')
+                            color=color_fitness, alpha=0.25, label='±1 Std Dev')
 
         ax1.set_xlabel('Time (seconds)')
         ax1.set_ylabel('Fitness')
@@ -519,7 +1008,7 @@ def plot_per_operator_average_all_instances(results):
         ax2 = axes[1]
         if len(time_bins_vehicles) > 0:
             # Plot mean line
-            ax2.plot(time_bins_vehicles, mean_vehicles, color=METHOD_COLORS[2],
+            ax2.plot(time_bins_vehicles, mean_vehicles, color=color_vehicles,
                     linewidth=3, label='Mean', alpha=0.9)
             # Plot shaded std deviation
             mean_vehicles_array = np.array(mean_vehicles)
@@ -527,7 +1016,7 @@ def plot_per_operator_average_all_instances(results):
             ax2.fill_between(time_bins_vehicles,
                             mean_vehicles_array - std_vehicles_array,
                             mean_vehicles_array + std_vehicles_array,
-                            color=METHOD_COLORS[2], alpha=0.25, label='±1 Std Dev')
+                            color=color_vehicles, alpha=0.25, label='±1 Std Dev')
 
         ax2.set_xlabel('Time (seconds)')
         ax2.set_ylabel('Number of Vehicles')
@@ -536,10 +1025,11 @@ def plot_per_operator_average_all_instances(results):
         ax2.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
         ax2.legend(framealpha=0.9, edgecolor='gray')
 
-        # Add suptitle with operator name and number of instances/runs
+        # Add suptitle with display name and number of instances/runs
+        disp = _display_name(operator_name)
         num_instances = len(operator_results)
         num_runs = len(all_runs)
-        plt.suptitle(f'Operator: {operator_name}\n({num_instances} instances, {num_runs} runs)',
+        plt.suptitle(f'Operator: {disp}\n({num_instances} instances, {num_runs} runs)',
                     fontsize=28, fontweight='bold')
         plt.tight_layout()
 
