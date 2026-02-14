@@ -523,9 +523,6 @@ def plot_convergence_top_bottom_instances(histories: Dict, top_instances: List[s
             if idx == 0:
                 ax.set_ylabel('Fitness')
 
-    # Overall title
-    fig.suptitle(f'Convergence: Top vs Bottom ({init_type.capitalize()})',
-                 fontsize=24)
     plt.tight_layout(pad=1.5)
 
     filepath = os.path.join(output_dir, f'convergence_top5_bottom5_{init_type}')
@@ -568,7 +565,6 @@ def plot_operator_usage_frequency(operator_stats: Dict, output_dir: str):
 
     ax.set_ylabel('Operator')
     ax.set_xlabel('Usage Amount')
-    ax.set_title('Operator Usage: Amount', fontweight='bold')
     ax.set_yticks(y)
     ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
     ax.legend(framealpha=0.9, edgecolor='gray')
@@ -611,7 +607,6 @@ def plot_operator_success_rates(operator_stats: Dict, output_dir: str):
 
     ax.set_ylabel('Operator')
     ax.set_xlabel('Success Rate')
-    ax.set_title('Operator Analysis: Success Rates', fontweight='bold')
     ax.set_yticks(y)
     ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
     ax.set_xlim([0, 1])
@@ -681,8 +676,6 @@ def plot_operator_heatmap(all_histories: Dict, init_type: str, output_dir: str):
 
     ax.set_xlabel('Operator')
     ax.set_ylabel('Instance')
-    ax.set_title(f'Operator Heatmap: {init_type.capitalize()}',
-                 fontweight='bold')
 
     plt.tight_layout(pad=2.0)
     filepath = os.path.join(output_dir, f'operator_heatmap_{init_type}')
@@ -767,8 +760,6 @@ def plot_operator_temporal_usage(all_histories: Dict, init_type: str, output_dir
 
     ax.set_xlabel('Iteration Range')
     ax.set_ylabel('Operator Usage Proportion')
-    ax.set_title(f'Operator Temporal: {init_type.capitalize()}',
-                 fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(bin_labels)
 
@@ -805,7 +796,6 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     ax.hist(data, bins=20, color=INIT_COLORS['random'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['random']))
     ax.set_xlabel('Initial Fitness')
     ax.set_ylabel('Frequency')
-    ax.set_title('Random: Initial', fontweight='bold')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     # Random - Final Fitness
@@ -814,7 +804,6 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     ax.hist(data, bins=20, color=INIT_COLORS['random'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['random']))
     ax.set_xlabel('Final Fitness')
     ax.set_ylabel('Frequency')
-    ax.set_title('Random: Final', fontweight='bold')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     # Greedy - Initial Fitness
@@ -823,7 +812,6 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     ax.hist(data, bins=20, color=INIT_COLORS['greedy'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['greedy']))
     ax.set_xlabel('Initial Fitness')
     ax.set_ylabel('Frequency')
-    ax.set_title('Greedy: Initial', fontweight='bold')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     # Greedy - Final Fitness
@@ -832,7 +820,6 @@ def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     ax.hist(data, bins=20, color=INIT_COLORS['greedy'], alpha=0.85, edgecolor=darken_color(INIT_COLORS['greedy']))
     ax.set_xlabel('Final Fitness')
     ax.set_ylabel('Frequency')
-    ax.set_title('Greedy: Final', fontweight='bold')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     plt.suptitle('Distribution: Fitness', fontsize=24)
@@ -869,8 +856,6 @@ def plot_time_distributions(df: pd.DataFrame, output_dir: str):
         patch.set_linewidth(1.5)
 
     ax.set_ylabel('Time (s)')
-    ax.set_title('Distribution: Execution Time',
-                 fontweight='bold')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     plt.tight_layout(pad=1.5)
@@ -924,8 +909,6 @@ def plot_operator_average_improvement(all_histories: Dict, init_type: str, outpu
 
     ax.set_ylabel('Operator')
     ax.set_xlabel('Average Fitness Improvement')
-    ax.set_title(f'Operator Improvement: {init_type.capitalize()}',
-                 fontweight='bold')
     ax.set_yticks(y)
     ax.set_yticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted], fontsize=18)
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
@@ -1001,8 +984,6 @@ def plot_operator_transition_matrix(all_histories: Dict, init_type: str, output_
 
     ax.set_xlabel('Next Operator')
     ax.set_ylabel('Current Operator')
-    ax.set_title(f'Transition Matrix: {init_type.capitalize()}',
-                 fontweight='bold')
 
     plt.tight_layout(pad=2.0)
     filepath = os.path.join(output_dir, f'operator_transition_matrix_directed_{init_type}')
@@ -1076,8 +1057,6 @@ def plot_operator_cooccurrence_matrix(all_histories: Dict, init_type: str, outpu
 
     ax.set_xlabel('Operator')
     ax.set_ylabel('Operator')
-    ax.set_title(f'Co-occurrence Matrix: {init_type.capitalize()}',
-                 fontweight='bold')
 
     plt.tight_layout(pad=2.0)
     filepath = os.path.join(output_dir, f'operator_cooccurrence_matrix_{init_type}')
@@ -1147,8 +1126,6 @@ def plot_operator_usage_heatmap_aggregate(all_histories: Dict, init_type: str, o
 
     ax.set_xlabel('Iteration Range')
     ax.set_ylabel('Operator')
-    ax.set_title(f'Usage Heatmap: {init_type.capitalize()}',
-                 fontweight='bold')
 
     plt.tight_layout(pad=2.0)
     filepath = os.path.join(output_dir, f'operator_usage_aggregate_heatmap_{init_type}')
@@ -1236,8 +1213,6 @@ def plot_operator_quartile_distribution(all_histories: Dict, init_type: str, out
 
     ax.set_xlabel('Operator')
     ax.set_ylabel('Usage Proportion')
-    ax.set_title(f'Operator Usage by Iteration Quartile: {init_type.capitalize()}',
-                 fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels([OPERATOR_NAMES.get(op, f'Op{op}') for op in operators_sorted],
                        rotation=45, ha='right', fontsize=18)

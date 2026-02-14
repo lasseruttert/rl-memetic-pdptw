@@ -153,7 +153,6 @@ def plot_comparison(dqn_steps, dqn_values, ppo_steps, ppo_values,
     # Styling
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    ax.set_title(title)
     ax.legend(loc='best', framealpha=0.9, edgecolor='gray')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
@@ -196,7 +195,6 @@ def plot_single(steps, values, color, xlabel, ylabel, title, filename, smoothing
     # Styling
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    ax.set_title(title)
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
 
     plt.tight_layout()

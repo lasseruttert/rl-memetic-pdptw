@@ -32,8 +32,7 @@ class SwapWithinOperator(BaseOperator):
                     # Skip if fewer than 2 unique requests
                     if len(requests) < 2:
                         continue
-
-                    request1, request2 = random.sample(requests, 2)
+                    request1, request2 = random.sample(sorted(requests), 2)
                     pickup1, delivery1 = request1
                     pickup2, delivery2 = request2
                     idx1_pickup = route.index(pickup1)

@@ -412,7 +412,6 @@ def plot_metric(methods, colors, metric_key, std_key, ylabel, title, filename,
     # Styling
     ax.set_xlabel('Method')
     ax.set_ylabel(ylabel)
-    ax.set_title(title)
     ax.set_xticks(x)
     ax.set_xticklabels(method_names, rotation=45, ha='right')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
@@ -602,10 +601,6 @@ def plot_algorithm_comparison_combined_by_metric(data_by_set, output_dir, metric
     ]
     fig.legend(handles=legend_elements, loc='lower center',
                ncol=3, bbox_to_anchor=(0.5, -0.02), framealpha=0.9, edgecolor='gray')
-
-    # Overall title
-    fig.suptitle(f'RL Algorithm Comparison: {title_prefix} Overview',
-                 fontsize=28, y=0.995)
 
     plt.tight_layout(rect=[0, 0.02, 1, 0.99])
 

@@ -368,9 +368,6 @@ def plot_size_comparison(data_200, data_400, output_dir, metric_key, ylabel, tit
     fig.legend(handles=legend_elements, loc='lower center',
                ncol=2, bbox_to_anchor=(0.5, -0.02), framealpha=0.9, edgecolor='gray')
 
-    # Overall title
-    fig.suptitle(title, fontsize=28, y=0.995)
-
     plt.tight_layout(rect=[0, 0.02, 1, 0.99])
 
     # Save

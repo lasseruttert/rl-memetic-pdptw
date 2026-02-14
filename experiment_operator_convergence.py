@@ -694,7 +694,6 @@ def _plot_operator_bar_chart(results, metrics, metric_key, std_key, ylabel,
     # Labels
     ax.set_xlabel('Operator')
     ax.set_ylabel(ylabel)
-    ax.set_title(title, fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(display_labels, rotation=60, ha='right')
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5, axis='y')
