@@ -1,0 +1,535 @@
+Logging to: logs/seed_stability_rl_seed_stability_dqn_100_greedy_binary_base100_n30_set2_1771252245.log
+================================================================================
+SEED STABILITY TESTING
+================================================================================
+Testing 30 different training seeds: 100 to 129
+Algorithm: DQN
+Problem Size: 100
+Categories: ['lc1', 'lc2', 'lr1', 'lr2']
+Operator Attention: DISABLED
+================================================================================
+
+Train/Test Split (ratio=0.8):
+  lc1:
+    Train (7): ['lc101', 'lc102', 'lc103', 'lc104', 'lc105', 'lc106', 'lc107']
+    Test  (2): ['lc108', 'lc109']
+  lc2:
+    Train (6): ['lc201', 'lc202', 'lc203', 'lc204', 'lc205', 'lc206']
+    Test  (2): ['lc207', 'lc208']
+  lr1:
+    Train (9): ['lr101', 'lr102', 'lr103', 'lr104', 'lr105', 'lr106', 'lr107', 'lr108', 'lr109']
+    Test  (3): ['lr110', 'lr111', 'lr112']
+  lr2:
+    Train (8): ['lr201', 'lr202', 'lr203', 'lr204', 'lr205', 'lr206', 'lr207', 'lr208']
+    Test  (3): ['lr209', 'lr210', 'lr211']
+
+{'lc1': ['lc101', 'lc102', 'lc103', 'lc104', 'lc105', 'lc106', 'lc107'], 'lc2': ['lc201', 'lc202', 'lc203', 'lc204', 'lc205', 'lc206'], 'lr1': ['lr101', 'lr102', 'lr103', 'lr104', 'lr105', 'lr106', 'lr107', 'lr108', 'lr109'], 'lr2': ['lr201', 'lr202', 'lr203', 'lr204', 'lr205', 'lr206', 'lr207', 'lr208']}
+{'lc1': ['lc108', 'lc109'], 'lc2': ['lc207', 'lc208'], 'lr1': ['lr110', 'lr111', 'lr112'], 'lr2': ['lr209', 'lr210', 'lr211']}
+Testing Configuration:
+  Test seeds per training run: [42, 422, 100, 200, 300]
+  Test problems per seed: 50
+  Runs per problem: 3
+  Deterministic RNG: False
+
+
+================================================================================
+SEED RUN 1/30: Training Seed = 100
+================================================================================
+
+Training RL model with seed 100...
+
+Training completed for seed 100!
+Final average reward: -50.90
+Final average fitness: 1454.95
+
+Testing trained model (seed 100)...
+  Completed 750 test evaluations in 399.72s
+
+Seed 100 - Fitness: 1324.91 ± 468.21, Avg Time: 0.532s
+
+
+================================================================================
+SEED RUN 2/30: Training Seed = 101
+================================================================================
+
+Training RL model with seed 101...
+
+Training completed for seed 101!
+Final average reward: -52.28
+Final average fitness: 1354.81
+
+Testing trained model (seed 101)...
+  Completed 750 test evaluations in 449.77s
+
+Seed 101 - Fitness: 1327.28 ± 475.76, Avg Time: 0.599s
+
+
+================================================================================
+SEED RUN 3/30: Training Seed = 102
+================================================================================
+
+Training RL model with seed 102...
+
+Training completed for seed 102!
+Final average reward: -48.41
+Final average fitness: 1199.81
+
+Testing trained model (seed 102)...
+  Completed 750 test evaluations in 380.09s
+
+Seed 102 - Fitness: 1341.15 ± 473.19, Avg Time: 0.506s
+
+
+================================================================================
+SEED RUN 4/30: Training Seed = 103
+================================================================================
+
+Training RL model with seed 103...
+
+Training completed for seed 103!
+Final average reward: -51.36
+Final average fitness: 1396.03
+
+Testing trained model (seed 103)...
+  Completed 750 test evaluations in 393.57s
+
+Seed 103 - Fitness: 1331.87 ± 471.88, Avg Time: 0.524s
+
+
+================================================================================
+SEED RUN 5/30: Training Seed = 104
+================================================================================
+
+Training RL model with seed 104...
+
+Training completed for seed 104!
+Final average reward: -55.41
+Final average fitness: 1348.59
+
+Testing trained model (seed 104)...
+  Completed 750 test evaluations in 463.70s
+
+Seed 104 - Fitness: 1317.45 ± 464.37, Avg Time: 0.618s
+
+
+================================================================================
+SEED RUN 6/30: Training Seed = 105
+================================================================================
+
+Training RL model with seed 105...
+
+Training completed for seed 105!
+Final average reward: -57.36
+Final average fitness: 1702.40
+
+Testing trained model (seed 105)...
+  Completed 750 test evaluations in 451.84s
+
+Seed 105 - Fitness: 1367.13 ± 495.39, Avg Time: 0.602s
+
+
+================================================================================
+SEED RUN 7/30: Training Seed = 106
+================================================================================
+
+Training RL model with seed 106...
+
+Training completed for seed 106!
+Final average reward: -52.83
+Final average fitness: 1316.75
+
+Testing trained model (seed 106)...
+  Completed 750 test evaluations in 431.69s
+
+Seed 106 - Fitness: 1325.37 ± 468.10, Avg Time: 0.575s
+
+
+================================================================================
+SEED RUN 8/30: Training Seed = 107
+================================================================================
+
+Training RL model with seed 107...
+
+Training completed for seed 107!
+Final average reward: -51.29
+Final average fitness: 1359.55
+
+Testing trained model (seed 107)...
+  Completed 750 test evaluations in 476.90s
+
+Seed 107 - Fitness: 1320.32 ± 465.98, Avg Time: 0.635s
+
+
+================================================================================
+SEED RUN 9/30: Training Seed = 108
+================================================================================
+
+Training RL model with seed 108...
+
+Training completed for seed 108!
+Final average reward: -54.61
+Final average fitness: 1435.62
+
+Testing trained model (seed 108)...
+  Completed 750 test evaluations in 437.48s
+
+Seed 108 - Fitness: 1333.62 ± 478.03, Avg Time: 0.583s
+
+
+================================================================================
+SEED RUN 10/30: Training Seed = 109
+================================================================================
+
+Training RL model with seed 109...
+
+Training completed for seed 109!
+Final average reward: -53.99
+Final average fitness: 1383.70
+
+Testing trained model (seed 109)...
+  Completed 750 test evaluations in 523.34s
+
+Seed 109 - Fitness: 1328.24 ± 467.78, Avg Time: 0.697s
+
+
+================================================================================
+SEED RUN 11/30: Training Seed = 110
+================================================================================
+
+Training RL model with seed 110...
+
+Training completed for seed 110!
+Final average reward: -48.86
+Final average fitness: 1227.07
+
+Testing trained model (seed 110)...
+  Completed 750 test evaluations in 343.28s
+
+Seed 110 - Fitness: 1322.35 ± 468.63, Avg Time: 0.457s
+
+
+================================================================================
+SEED RUN 12/30: Training Seed = 111
+================================================================================
+
+Training RL model with seed 111...
+
+Training completed for seed 111!
+Final average reward: -54.27
+Final average fitness: 1410.53
+
+Testing trained model (seed 111)...
+  Completed 750 test evaluations in 453.33s
+
+Seed 111 - Fitness: 1310.46 ± 467.75, Avg Time: 0.604s
+
+
+================================================================================
+SEED RUN 13/30: Training Seed = 112
+================================================================================
+
+Training RL model with seed 112...
+
+Training completed for seed 112!
+Final average reward: -54.99
+Final average fitness: 1435.72
+
+Testing trained model (seed 112)...
+  Completed 750 test evaluations in 424.17s
+
+Seed 112 - Fitness: 1333.30 ± 478.62, Avg Time: 0.565s
+
+
+================================================================================
+SEED RUN 14/30: Training Seed = 113
+================================================================================
+
+Training RL model with seed 113...
+
+Training completed for seed 113!
+Final average reward: -50.99
+Final average fitness: 1152.57
+
+Testing trained model (seed 113)...
+  Completed 750 test evaluations in 353.74s
+
+Seed 113 - Fitness: 1358.25 ± 490.88, Avg Time: 0.471s
+
+
+================================================================================
+SEED RUN 15/30: Training Seed = 114
+================================================================================
+
+Training RL model with seed 114...
+
+Training completed for seed 114!
+Final average reward: -55.82
+Final average fitness: 1338.09
+
+Testing trained model (seed 114)...
+  Completed 750 test evaluations in 428.83s
+
+Seed 114 - Fitness: 1328.06 ± 484.09, Avg Time: 0.571s
+
+
+================================================================================
+SEED RUN 16/30: Training Seed = 115
+================================================================================
+
+Training RL model with seed 115...
+
+Training completed for seed 115!
+Final average reward: -53.55
+Final average fitness: 1451.50
+
+Testing trained model (seed 115)...
+  Completed 750 test evaluations in 462.71s
+
+Seed 115 - Fitness: 1336.91 ± 475.78, Avg Time: 0.616s
+
+
+================================================================================
+SEED RUN 17/30: Training Seed = 116
+================================================================================
+
+Training RL model with seed 116...
+
+Training completed for seed 116!
+Final average reward: -54.26
+Final average fitness: 1649.17
+
+Testing trained model (seed 116)...
+  Completed 750 test evaluations in 390.25s
+
+Seed 116 - Fitness: 1330.91 ± 479.57, Avg Time: 0.520s
+
+
+================================================================================
+SEED RUN 18/30: Training Seed = 117
+================================================================================
+
+Training RL model with seed 117...
+
+Training completed for seed 117!
+Final average reward: -48.89
+Final average fitness: 1310.05
+
+Testing trained model (seed 117)...
+  Completed 750 test evaluations in 489.44s
+
+Seed 117 - Fitness: 1325.62 ± 477.24, Avg Time: 0.652s
+
+
+================================================================================
+SEED RUN 19/30: Training Seed = 118
+================================================================================
+
+Training RL model with seed 118...
+
+Training completed for seed 118!
+Final average reward: -57.89
+Final average fitness: 1501.70
+
+Testing trained model (seed 118)...
+  Completed 750 test evaluations in 439.67s
+
+Seed 118 - Fitness: 1321.13 ± 464.15, Avg Time: 0.586s
+
+
+================================================================================
+SEED RUN 20/30: Training Seed = 119
+================================================================================
+
+Training RL model with seed 119...
+
+Training completed for seed 119!
+Final average reward: -50.04
+Final average fitness: 1195.26
+
+Testing trained model (seed 119)...
+  Completed 750 test evaluations in 520.77s
+
+Seed 119 - Fitness: 1329.76 ± 479.07, Avg Time: 0.694s
+
+
+================================================================================
+SEED RUN 21/30: Training Seed = 120
+================================================================================
+
+Training RL model with seed 120...
+
+Training completed for seed 120!
+Final average reward: -49.54
+Final average fitness: 1274.34
+
+Testing trained model (seed 120)...
+  Completed 750 test evaluations in 370.44s
+
+Seed 120 - Fitness: 1326.54 ± 471.80, Avg Time: 0.493s
+
+
+================================================================================
+SEED RUN 22/30: Training Seed = 121
+================================================================================
+
+Training RL model with seed 121...
+
+Training completed for seed 121!
+Final average reward: -54.29
+Final average fitness: 1664.92
+
+Testing trained model (seed 121)...
+  Completed 750 test evaluations in 358.96s
+
+Seed 121 - Fitness: 1321.81 ± 471.45, Avg Time: 0.478s
+
+
+================================================================================
+SEED RUN 23/30: Training Seed = 122
+================================================================================
+
+Training RL model with seed 122...
+
+Training completed for seed 122!
+Final average reward: -52.92
+Final average fitness: 1366.09
+
+Testing trained model (seed 122)...
+  Completed 750 test evaluations in 418.31s
+
+Seed 122 - Fitness: 1331.91 ± 475.16, Avg Time: 0.557s
+
+
+================================================================================
+SEED RUN 24/30: Training Seed = 123
+================================================================================
+
+Training RL model with seed 123...
+
+Training completed for seed 123!
+Final average reward: -53.93
+Final average fitness: 1344.03
+
+Testing trained model (seed 123)...
+  Completed 750 test evaluations in 355.54s
+
+Seed 123 - Fitness: 1350.11 ± 487.30, Avg Time: 0.473s
+
+
+================================================================================
+SEED RUN 25/30: Training Seed = 124
+================================================================================
+
+Training RL model with seed 124...
+
+Training completed for seed 124!
+Final average reward: -55.79
+Final average fitness: 1974.98
+
+Testing trained model (seed 124)...
+  Completed 750 test evaluations in 360.57s
+
+Seed 124 - Fitness: 1343.66 ± 481.01, Avg Time: 0.480s
+
+
+================================================================================
+SEED RUN 26/30: Training Seed = 125
+================================================================================
+
+Training RL model with seed 125...
+
+Training completed for seed 125!
+Final average reward: -51.79
+Final average fitness: 1351.48
+
+Testing trained model (seed 125)...
+  Completed 750 test evaluations in 345.94s
+
+Seed 125 - Fitness: 1336.88 ± 472.63, Avg Time: 0.461s
+
+
+================================================================================
+SEED RUN 27/30: Training Seed = 126
+================================================================================
+
+Training RL model with seed 126...
+
+Training completed for seed 126!
+Final average reward: -54.02
+Final average fitness: 1353.50
+
+Testing trained model (seed 126)...
+  Completed 750 test evaluations in 467.41s
+
+Seed 126 - Fitness: 1346.37 ± 483.45, Avg Time: 0.623s
+
+
+================================================================================
+SEED RUN 28/30: Training Seed = 127
+================================================================================
+
+Training RL model with seed 127...
+
+Training completed for seed 127!
+Final average reward: -48.52
+Final average fitness: 1279.72
+
+Testing trained model (seed 127)...
+  Completed 750 test evaluations in 475.60s
+
+Seed 127 - Fitness: 1493.93 ± 2758.97, Avg Time: 0.634s
+
+
+================================================================================
+SEED RUN 29/30: Training Seed = 128
+================================================================================
+
+Training RL model with seed 128...
+
+Training completed for seed 128!
+Final average reward: -59.47
+Final average fitness: 1563.07
+
+Testing trained model (seed 128)...
+  Completed 750 test evaluations in 400.46s
+
+Seed 128 - Fitness: 1342.98 ± 478.86, Avg Time: 0.533s
+
+
+================================================================================
+SEED RUN 30/30: Training Seed = 129
+================================================================================
+
+Training RL model with seed 129...
+
+Training completed for seed 129!
+Final average reward: -51.47
+Final average fitness: 1279.66
+
+Testing trained model (seed 129)...
+  Completed 750 test evaluations in 413.75s
+
+Seed 129 - Fitness: 1332.43 ± 476.86, Avg Time: 0.551s
+
+
+================================================================================
+FINAL SEED STABILITY ANALYSIS - RL ONESHOT
+================================================================================
+
+Analyzed 30 training seeds: 100 to 129
+Total test evaluations per seed: 750
+
+Overall Statistics:
+  Mean Fitness:      1338.02
+  Std Across Seeds:  31.27
+  CV:                2.34%
+  Min (best seed):   1310.46 (seed 111)
+  Max (worst seed):  1493.93 (seed 127)
+  Range:             183.47
+  Avg Time per Test: 0.563s
+
+Results saved to: logs/seed_stability_rl_seed_stability_dqn_100_greedy_binary_base100_n30_set2_1771252245.csv
+
+================================================================================
+SEED STABILITY ANALYSIS COMPLETE
+================================================================================
