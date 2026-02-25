@@ -1,14 +1,3 @@
-"""Script to create DQN hyperparameter tuning comparison plots from training logs.
-
-This script parses training logs from hyperparameter tuning experiments and creates
-multi-panel comparison plots showing performance across different hyperparameter settings.
-
-Input: Log files from logs/hyperparameter_tuning/
-Output:
-  - Multi-panel plots (PDF + PNG) in results/plots/hyperparameter_tuning/
-  - LaTeX table summarizing all results
-"""
-
 import os
 import re
 import numpy as np
@@ -16,11 +5,7 @@ import matplotlib.pyplot as plt
 from collections import defaultdict
 from pathlib import Path
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
-
-# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
     'figure.dpi': 300,
     'savefig.dpi': 300,
@@ -59,9 +44,7 @@ METHOD_COLORS = [
 BASELINE_COLOR = '#2E86AB'  # Steel Blue for baseline
 NON_BASELINE_COLOR = '#A23B72'  # Plum Purple for non-baseline
 
-# ============================================================================
 # HYPERPARAMETER GROUPS CONFIGURATION
-# ============================================================================
 
 HYPERPARAMETER_GROUPS = {
     'learning_rate': {
@@ -115,9 +98,7 @@ for group_name, group_info in HYPERPARAMETER_GROUPS.items():
         CONFIG_TO_GROUP[config] = group_name
 
 
-# ============================================================================
 # PARSING FUNCTIONS
-# ============================================================================
 
 def parse_hp_tuning_log_filename(filename):
     """Parse configuration from hyperparameter tuning log filename.
@@ -185,7 +166,6 @@ def parse_testing_overall_summary(log_path):
     rl_models_text = match.group(4)
 
     # Parse method results
-    # Format: "  {name}: {avg} ± {std} (Δ={improvement}, time: {time}s)"
     method_pattern = r'^\s*(.+?):\s+([\d.]+)\s+±\s+([\d.]+)\s+\(Δ=([+-][\d.]+),\s+time:\s+([\d.]+)s\)'
 
     rl_models = {}
@@ -210,7 +190,6 @@ def parse_testing_overall_summary(log_path):
             break
 
     if oneshot_results is None and rl_models:
-        # Fallback to first model if OneShot not found
         oneshot_results = list(rl_models.values())[0]
 
     return {
@@ -278,9 +257,7 @@ def organize_by_hyperparameter(log_dir):
     return dict(data_by_hp)
 
 
-# ============================================================================
 # PLOTTING FUNCTIONS
-# ============================================================================
 
 def save_figure_multi_format(fig, filepath, formats=['png', 'pdf']):
     """Save figure in multiple formats for thesis use.
@@ -323,7 +300,6 @@ def plot_single_hyperparameter(ax, hp_group, data_by_config, metric='avg_fitness
         if config in data_by_config and data_by_config[config][metric] is not None:
             values.append(data_by_config[config][metric])
             valid_labels.append(labels[i])
-            # Highlight baseline with different color
             if i == baseline_idx:
                 colors.append(BASELINE_COLOR)
             else:
@@ -488,9 +464,7 @@ def plot_summary_comparison(ax, data_by_hp, metric='avg_fitness'):
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.5, axis='y')
 
 
-# ============================================================================
 # LATEX TABLE GENERATION
-# ============================================================================
 
 def generate_latex_table(data_by_hp, output_path):
     """Generate comprehensive LaTeX table of hyperparameter tuning results.
@@ -667,9 +641,7 @@ def generate_summary_table(data_by_hp, output_path):
     print(f'  Saved summary table: {output_path}')
 
 
-# ============================================================================
 # MAIN FUNCTION
-# ============================================================================
 
 def main():
     """Main function to create hyperparameter tuning plots and tables."""

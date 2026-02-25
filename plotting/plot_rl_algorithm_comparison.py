@@ -1,12 +1,3 @@
-"""Script to create RL algorithm comparison plots from training logs.
-
-This script parses training logs from RL local search experiments and creates
-comparison plots showing performance across different operator sets, algorithms
-(DQN vs PPO), and selection strategies (OneShot, Roulette, Ranking).
-
-Output: 2 plots per operator set (fitness and time comparison)
-"""
-
 import os
 import re
 import numpy as np
@@ -20,7 +11,6 @@ def darken_color(color, factor=0.6):
     rgb = mcolors.to_rgb(color)
     return tuple(c * factor for c in rgb)
 
-# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
     'font.size': 18,
     'axes.labelsize': 22,

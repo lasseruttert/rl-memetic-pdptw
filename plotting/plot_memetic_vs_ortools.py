@@ -1,24 +1,9 @@
-"""
-Memetic vs OR-Tools Comparison - LaTeX Table Generator
-
-Generates LaTeX tables comparing Memetic algorithm, OR-Tools solver, and BKS
-across 251 PDPTW instances (sizes 100, 200, 400).
-
-Input: results/memetic_vs_ortools_summary.csv
-Output: results/memetic_vs_ortools_comparison/
-  - per_instance_table.tex
-  - category_average_table.tex
-  - overall_average_table.tex
-"""
-
 import pandas as pd
 import numpy as np
 from pathlib import Path
 import re
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
 
 CSV_PATH = "results/memetic_vs_ortools_summary.csv"
 OUTPUT_DIR = "results/memetic_vs_ortools_comparison"
@@ -27,9 +12,7 @@ SIZES = [100, 200, 400]
 
 CATEGORY_ORDER = ['lc1', 'lc2', 'lr1', 'lr2', 'lrc1', 'lrc2', 'bar', 'ber', 'nyc', 'poa']
 
-# ============================================================================
 # UTILITY FUNCTIONS (adapted from plot_memetic_components.py)
-# ============================================================================
 
 def parse_instance_category(instance_name):
     """Parse instance name to extract category."""
@@ -95,9 +78,7 @@ def save_latex_file(content, filepath):
     print(f"  Saved: {filepath}")
 
 
-# ============================================================================
 # DATA LOADING
-# ============================================================================
 
 def _compute_gap(solver_veh, solver_dist, bks_veh, bks_dist):
     """Compute gap% to BKS.
@@ -135,9 +116,6 @@ def load_data(csv_path):
     ortools_infeasible = df['ORTools_IsFeasible'] == False
     df.loc[ortools_infeasible, ['ORTools_Distance', 'ORTools_Vehicles', 'ORTools_Fitness']] = np.nan
 
-    # Compute gaps:
-    #   - If solver uses different #vehicles than BKS: gap on vehicles
-    #   - If solver uses same #vehicles as BKS: gap on distance
     df['Memetic_Gap'] = df.apply(
         lambda r: _compute_gap(r['Memetic_Vehicles'], r['Memetic_Distance'],
                                r['BKS_Vehicles'], r['BKS_Distance']),
@@ -156,9 +134,7 @@ def load_data(csv_path):
     return df
 
 
-# ============================================================================
 # FORMATTING HELPERS
-# ============================================================================
 
 def format_value(val, fmt='.1f', bold=False):
     """Format a numeric value for LaTeX. NaN -> '--'."""
@@ -193,9 +169,7 @@ def determine_best(val_a, val_b):
     return False, True
 
 
-# ============================================================================
 # TABLE GENERATION
-# ============================================================================
 
 def _table_header_row():
     """Return the column header lines used across tables."""
@@ -426,9 +400,7 @@ def generate_overall_average_table(df):
     return '\n'.join(lines)
 
 
-# ============================================================================
 # MAIN
-# ============================================================================
 
 def main():
     print("=" * 60)

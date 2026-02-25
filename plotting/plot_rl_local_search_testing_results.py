@@ -1,5 +1,3 @@
-"""Script to parse training logs and create comparison plots by reward and acceptance strategies."""
-
 import os
 import re
 import numpy as np
@@ -14,7 +12,6 @@ def darken_color(color, factor=0.6):
     rgb = mcolors.to_rgb(color)
     return tuple(c * factor for c in rgb)
 
-# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
     'font.size': 18,
     'axes.labelsize': 22,
@@ -128,9 +125,6 @@ def parse_log_filename(filename):
                        use_attention, seed, timestamp
         or None if parsing fails
     """
-    # Pattern: Match known acceptance strategies, then capture reward (may have underscores),
-    # then optional _attention flag, then _seed
-    # Use negative lookahead to prevent reward from capturing _attention
     pattern = r'training_rl_local_search_(?P<algo>\w+)_(?P<size>\d+)_(?P<acceptance>rising_epsilon_greedy|epsilon_greedy|always|greedy)_(?P<reward>[^_]+(?:_(?!attention)[^_]+)*)(?P<attention>_attention)?_seed(?P<seed>\d+)_(?P<timestamp>\d+)\.log'
 
     match = re.match(pattern, filename)
@@ -249,8 +243,6 @@ def parse_testing_overall_summary(log_path):
     with open(log_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    # Find the overall summary section - looking for the exact format from train_rl_local_search.py
-    # The section starts with "OVERALL SUMMARY..." after a line of 80 '=' characters
     overall_pattern = r'={80}\nOVERALL SUMMARY ACROSS ALL INSTANCES\n={80}\nTotal evaluations: (\d+)\nUnique instances tested: (\d+)\n\nAverage initial fitness: ([\d.]+)\n\nRL Models:\n(.*?)\n\nBaseline Methods:\n(.*?)\n\n={80}'
 
     match = re.search(overall_pattern, content, re.DOTALL)
@@ -264,8 +256,6 @@ def parse_testing_overall_summary(log_path):
     baselines_text = match.group(5)
 
     # Parse RL model results
-    # Format: "  {name}: {avg} ± {std} (Δ={improvement}, time: {time}s)"
-    # Note: 2 spaces at start, method name can contain spaces/special chars, delta has explicit +/- sign
     method_pattern = r'^\s*(.+?):\s+([\d.]+)\s+±\s+([\d.]+)\s+\(Δ=([+-][\d.]+),\s+time:\s+([\d.]+)s\)'
 
     rl_models = {}

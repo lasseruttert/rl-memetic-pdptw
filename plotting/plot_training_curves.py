@@ -1,18 +1,9 @@
-"""Script to plot training curves from TensorBoard event files.
-
-Compares DQN vs PPO training dynamics using thesis-ready visualization style
-matching plot_rl_algorithm_comparison.py.
-
-Output: PDF and PNG plots for episode length, episode reward, and training loss.
-"""
-
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from tensorboard.backend.event_processing import event_accumulator
 
 
-# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
     'font.size': 18,
     'axes.labelsize': 22,

@@ -1,11 +1,3 @@
-"""Script to create size comparison plots for DQN RL methods.
-
-This script compares DQN RL methods (OneShot, Roulette, Ranking) against baselines
-for two different problem sizes (200 and 400).
-
-Output: 2 plots (fitness and time comparison) with side-by-side size comparison
-"""
-
 import os
 import re
 import numpy as np
@@ -19,13 +11,10 @@ def darken_color(color, factor=0.6):
     return tuple(c * factor for c in rgb)
 
 
-# =============================================================================
 # CONFIGURATION - Set log file paths here
-# =============================================================================
 LOG_PATH_200 = 'logs/training_rl_local_search_dqn_200_greedy_binary_seed100_set2_200_1768812256.log'
 LOG_PATH_400 = 'logs/training_rl_local_search_dqn_400_greedy_binary_seed100_set2_400_1768869261.log'
 OUTPUT_DIR = 'results/plots/size_comparison'
-# =============================================================================
 
 # Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
@@ -129,7 +118,6 @@ def parse_log_filename(filename):
         or None if parsing fails
     """
     # Pattern to match filename with set number and optional size before timestamp
-    # The size may appear again after set number (e.g., _set2_200_timestamp)
     pattern = r'training_rl_local_search_(?P<algo>\w+)_(?P<size>\d+)_(?P<acceptance>[\w_]+)_(?P<reward>[\w_]+)(?P<attention>_attention)?_seed(?P<seed>\d+)_set(?P<set>\d+)(?:_\d+)?_(?P<timestamp>\d+)\.log'
 
     match = re.match(pattern, filename)

@@ -13,12 +13,12 @@
 \toprule
 Combination & Avg Fitness & Time to Best Solution (s) & Avg Gap to BKS (\%) \\
 \midrule
-Set2\_Ranking & 3894.3 & 283.62 & 9.95 \\
-Set2\_Ranking\_Short & 3908.1 & 51.27 & 10.84 \\
-Baseline & 3963.3 & 172.30 & 12.14 \\
-Baseline\_Short & 3996.3 & 54.19 & 13.71 \\
-Set2\_OneShot\_Short & 4045.5 & 34.61 & 12.39 \\
-Set2\_OneShot & 4140.9 & 33.12 & 14.52 \\
+Set2\_Ranking & 3894.3 & 283.62 & 18.83 \\
+Set2\_Ranking\_Short & 3908.1 & 51.27 & 20.33 \\
+Baseline & 3963.3 & 172.30 & 20.90 \\
+Baseline\_Short & 3996.3 & 54.19 & 21.74 \\
+Set2\_OneShot\_Short & 4045.5 & 34.61 & 19.55 \\
+Set2\_OneShot & 4140.9 & 33.12 & 23.67 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -32,15 +32,15 @@ Set2\_OneShot & 4140.9 & 33.12 & 14.52 \\
 Category & Best Fitness & Fastest & Best Gap to BKS \\
 \midrule
 OVERALL & Set2\_Ranking & Set2\_OneShot & Set2\_Ranking \\
-BAR & Set2\_Ranking & Set2\_OneShot\_Short & Set2\_Ranking \\
+BAR & Set2\_Ranking & Set2\_OneShot\_Short & Baseline \\
 BER & Set2\_Ranking\_Short & Set2\_OneShot\_Short & Set2\_Ranking\_Short \\
 LC1 & Set2\_Ranking & Set2\_OneShot\_Short & Set2\_Ranking \\
 LC2 & Set2\_Ranking & Set2\_OneShot\_Short & Set2\_Ranking \\
-LR1 & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_OneShot\_Short \\
+LR1 & Set2\_OneShot\_Short & Set2\_OneShot & Baseline \\
 LR2 & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_OneShot\_Short \\
-LRC1 & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_OneShot\_Short \\
+LRC1 & Set2\_OneShot\_Short & Set2\_OneShot & Baseline \\
 LRC2 & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_Ranking \\
-NYC & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_OneShot\_Short \\
+NYC & Set2\_OneShot\_Short & Set2\_OneShot & Set2\_Ranking\_Short \\
 POA & Baseline\_Short & Set2\_OneShot\_Short & Set2\_Ranking\_Short \\
 \bottomrule
 \end{tabular}
@@ -54,12 +54,12 @@ POA & Baseline\_Short & Set2\_OneShot\_Short & Set2\_Ranking\_Short \\
 \toprule
 Combination & Avg Rank (Fitness) & Avg Rank (Time) & Avg Rank (Gap) & Overall Avg Rank \\
 \midrule
-Set2\_OneShot\_Short & 2.70 & 1.60 & 2.70 & 2.33 \\
-Set2\_Ranking\_Short & 2.80 & 3.50 & 2.80 & 3.03 \\
-Set2\_OneShot & 4.30 & 1.50 & 4.20 & 3.33 \\
-Set2\_Ranking & 2.30 & 6.00 & 2.20 & 3.50 \\
-Baseline\_Short & 4.50 & 3.40 & 4.50 & 4.13 \\
-Baseline & 4.40 & 5.00 & 4.60 & 4.67 \\
+Set2\_OneShot\_Short & 2.70 & 1.60 & 2.90 & 2.40 \\
+Set2\_Ranking\_Short & 2.80 & 3.50 & 3.10 & 3.13 \\
+Set2\_OneShot & 4.30 & 1.50 & 4.90 & 3.57 \\
+Set2\_Ranking & 2.30 & 6.00 & 2.50 & 3.60 \\
+Baseline\_Short & 4.50 & 3.40 & 3.90 & 3.93 \\
+Baseline & 4.40 & 5.00 & 3.40 & 4.27 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -72,12 +72,12 @@ Baseline & 4.40 & 5.00 & 4.60 & 4.67 \\
 \toprule
 Combination & Fitness Wins & Time Wins & Gap Wins & Total Wins \\
 \midrule
-Set2\_OneShot\_Short & 5 & 5 & 4 & 14 \\
-Set2\_Ranking & 3 & 0 & 4 & 7 \\
+Set2\_OneShot\_Short & 5 & 5 & 1 & 11 \\
+Set2\_Ranking & 3 & 0 & 3 & 6 \\
 Set2\_OneShot & 0 & 5 & 0 & 5 \\
-Set2\_Ranking\_Short & 1 & 0 & 2 & 3 \\
+Set2\_Ranking\_Short & 1 & 0 & 3 & 4 \\
+Baseline & 0 & 0 & 3 & 3 \\
 Baseline\_Short & 1 & 0 & 0 & 1 \\
-Baseline & 0 & 0 & 0 & 0 \\
 \bottomrule
 \end{tabular}
 \end{table}

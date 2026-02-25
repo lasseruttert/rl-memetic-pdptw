@@ -1,8 +1,3 @@
-"""
-Comprehensive visualization script for RL Local Search Performance Experiment results.
-Creates thesis-quality plots for convergence, operator analysis, distributions, and correlations.
-"""
-
 import os
 import json
 import numpy as np
@@ -24,7 +19,6 @@ def darken_color(color, factor=0.6):
     rgb = mcolors.to_rgb(color)
     return tuple(c * factor for c in rgb)
 
-# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
     'font.size': 18,
     'axes.labelsize': 22,
@@ -173,9 +167,7 @@ def abbreviate_operator_name(name: str, max_length: int = 25) -> str:
     return name[:max_length-3] + '...'
 
 
-# ============================================================================
 # UTILITY FUNCTIONS
-# ============================================================================
 
 def save_figure_multi_format(fig, filepath: str, formats: List[str] = ['png', 'pdf']):
     """Save figure in multiple formats for thesis use.
@@ -230,9 +222,7 @@ def get_instance_family(instance_name: str) -> str:
         return 'other'
 
 
-# ============================================================================
 # DATA LOADING FUNCTIONS
-# ============================================================================
 
 def load_master_summary(results_dir: str) -> Dict:
     """Load master summary JSON file.
@@ -298,9 +288,7 @@ def load_all_best_run_histories(results_dir: str) -> Dict:
     return histories
 
 
-# ============================================================================
 # DATA PROCESSING FUNCTIONS
-# ============================================================================
 
 def extract_convergence_data(history: Dict) -> Tuple[np.ndarray, np.ndarray]:
     """Extract iterations and fitness trajectory from iteration history.
@@ -432,9 +420,7 @@ def identify_top_bottom_instances(df: pd.DataFrame, init_type: str, n: int = 5) 
     return top_instances, bottom_instances
 
 
-# ============================================================================
 # CONVERGENCE PLOTTING FUNCTIONS
-# ============================================================================
 
 def plot_convergence_trajectories_averaged(all_histories: Dict, output_dir: str):
     """Create averaged convergence trajectories for random vs greedy.
@@ -530,9 +516,7 @@ def plot_convergence_top_bottom_instances(histories: Dict, top_instances: List[s
     plt.close()
 
 
-# ============================================================================
 # OPERATOR SELECTION PLOTTING FUNCTIONS
-# ============================================================================
 
 def plot_operator_usage_frequency(operator_stats: Dict, output_dir: str):
     """Create grouped horizontal bar chart of operator usage frequency.
@@ -775,9 +759,7 @@ def plot_operator_temporal_usage(all_histories: Dict, init_type: str, output_dir
     plt.close()
 
 
-# ============================================================================
 # DISTRIBUTION PLOTTING FUNCTIONS
-# ============================================================================
 
 def plot_fitness_distributions(df: pd.DataFrame, output_dir: str):
     """Create 2x2 subplot grid showing initial and final fitness distributions.
@@ -1225,15 +1207,7 @@ def plot_operator_quartile_distribution(all_histories: Dict, init_type: str, out
     plt.close()
 
 
-# ============================================================================
-# REMOVED: CORRELATION PLOTTING FUNCTIONS
-# ============================================================================
-# Correlation plots have been removed as requested
-
-
-# ============================================================================
 # SUMMARY COMPARISON PLOTTING FUNCTIONS
-# ============================================================================
 
 def plot_random_vs_greedy_comparison(df: pd.DataFrame, output_dir: str):
     """Create bar chart comparing key metrics between random and greedy.
@@ -1287,9 +1261,7 @@ def plot_random_vs_greedy_comparison(df: pd.DataFrame, output_dir: str):
     plt.close()
 
 
-# ============================================================================
 # MAIN EXECUTION
-# ============================================================================
 
 def main():
     """Main execution function."""

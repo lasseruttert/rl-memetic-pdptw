@@ -1,17 +1,3 @@
-"""
-Visualization for State Archetype Action Distribution Experiment.
-
-Reads the CSV and JSON outputs from experiment_state_archetype_action_distributions.py
-and creates thesis-quality plots showing how the RL agent adapts its operator
-selection based on solution state archetypes.
-
-Plots:
-  1. Grouped bar chart: mean softmax probabilities per archetype
-  2. Grouped bar chart: empirical action fractions per archetype
-  3. Radar/spider chart: probability profiles per archetype
-  4. Heatmap: operators x archetypes (mean probability)
-"""
-
 import os
 import json
 import numpy as np
@@ -21,9 +7,7 @@ import matplotlib.colors as mcolors
 from pathlib import Path
 from typing import Dict, List
 
-# ============================================================================
 # PLOT STYLE (matching existing thesis plots)
-# ============================================================================
 
 PLOT_STYLE = {
     'font.size': 18,
@@ -47,9 +31,7 @@ PLOT_STYLE = {
 }
 plt.rcParams.update(PLOT_STYLE)
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
 
 RESULTS_DIR = "results/state_archetype_distributions"
 OUTPUT_DIR = "results/plots/state_archetype_distributions"
@@ -127,9 +109,7 @@ def abbreviate_operator_name(name, max_length=20):
     return name[:max_length - 3] + '...'
 
 
-# ============================================================================
 # DATA LOADING
-# ============================================================================
 
 def load_csv(results_dir, grouping_name=""):
     """Load the probability table CSV for a given grouping."""
@@ -177,9 +157,7 @@ def get_archetypes_from_csv(df):
     return archetypes
 
 
-# ============================================================================
 # PLOT 1: GROUPED BAR — MEAN SOFTMAX PROBABILITIES
-# ============================================================================
 
 def plot_mean_probabilities(df, archetypes, output_dir, grouping_name=""):
     """Grouped bar chart of mean softmax action probabilities per archetype."""
@@ -225,9 +203,7 @@ def plot_mean_probabilities(df, archetypes, output_dir, grouping_name=""):
     plt.close()
 
 
-# ============================================================================
 # PLOT 2: GROUPED BAR — EMPIRICAL ACTION FRACTIONS
-# ============================================================================
 
 def plot_empirical_fractions(df, archetypes, output_dir, grouping_name=""):
     """Grouped bar chart of empirical action fractions per archetype."""
@@ -271,9 +247,7 @@ def plot_empirical_fractions(df, archetypes, output_dir, grouping_name=""):
     plt.close()
 
 
-# ============================================================================
 # PLOT 3: RADAR / SPIDER CHART
-# ============================================================================
 
 def plot_radar_chart(df, archetypes, output_dir, grouping_name=""):
     """Radar chart showing probability profile per archetype."""
@@ -311,9 +285,7 @@ def plot_radar_chart(df, archetypes, output_dir, grouping_name=""):
     plt.close()
 
 
-# ============================================================================
 # PLOT 4: HEATMAP — OPERATORS x ARCHETYPES
-# ============================================================================
 
 def plot_probability_heatmap(df, archetypes, output_dir, grouping_name=""):
     """Heatmap of mean probabilities: operators (rows) x archetypes (columns)."""
@@ -364,9 +336,7 @@ def plot_probability_heatmap(df, archetypes, output_dir, grouping_name=""):
     plt.close()
 
 
-# ============================================================================
 # PLOT 5: PROBABILITY DIFFERENCE — DEVIATION FROM UNIFORM/OVERALL MEAN
-# ============================================================================
 
 def plot_probability_difference(df, archetypes, output_dir, grouping_name=""):
     """Horizontal bar chart showing per-operator probability difference from overall mean."""
@@ -415,9 +385,7 @@ def plot_probability_difference(df, archetypes, output_dir, grouping_name=""):
     plt.close()
 
 
-# ============================================================================
 # MAIN
-# ============================================================================
 
 def main():
     print("=" * 80)

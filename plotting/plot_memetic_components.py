@@ -1,18 +1,3 @@
-"""
-Memetic Component Comparison Analysis Script
-
-Generates comprehensive comparison reports (tables + plots in PDF format) for all
-memetic algorithm combinations across different instance categories and overall performance.
-
-Input: results/memetic_component_wise/memetic_component_summary.csv
-Output: results/memetic_component_comparison/*.pdf
-
-Core metrics compared:
-- Average Best Fitness
-- Average Time to Best Solution
-- Average Gap to BKS (%)
-"""
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,14 +5,11 @@ import matplotlib.colors as mcolors
 from pathlib import Path
 import re
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
 
 SIZES = [100, 200, 400]
 COMBINED_OUTPUT_DIR = "results/memetic_component_comparison_combined"
 
-# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
 PLOT_STYLE = {
     'figure.dpi': 300,
     'savefig.dpi': 300,
@@ -120,8 +102,6 @@ def compute_axis_limits_with_outlier_truncation(values, start_at_zero=False, out
     return y_min, y_max, truncated_indices
 
 
-# Color families for combination categories
-# Each category gets a base color, with variations for different methods within
 
 def lighten_color(color, factor=0.3):
     """Make a color lighter by mixing with white."""
@@ -133,7 +113,6 @@ def darken_color(color, factor=0.3):
     rgb = mcolors.to_rgb(color)
     return tuple(c * (1 - factor) for c in rgb)
 
-# Base colors for each category (matching METHOD_COLORS from other plotting scripts)
 CATEGORY_BASE_COLORS = {
     'Baseline': '#2E86AB',   # Steel Blue
     'Set2': '#A23B72',       # Plum Purple (pink-ish)
@@ -157,7 +136,6 @@ def get_combination_color(combo_name, combo_index_in_category=0):
     elif combo_name.startswith('No_Mutation'):
         base_color = CATEGORY_BASE_COLORS['No_Mutation']
     elif combo_name.startswith('Set'):
-        # Extract set number (e.g., 'Set2_OneShot' -> 'Set2')
         parts = combo_name.split('_')
         if len(parts) >= 1:
             set_key = parts[0]  # 'Set2'
@@ -198,7 +176,6 @@ def assign_colors_to_combinations(combos):
         elif combo.startswith('No_Mutation'):
             category = 'No_Mutation'
         elif combo.startswith('Set'):
-            # Extract set number (e.g., 'Set2_OneShot' -> 'Set2')
             parts = combo.split('_')
             if len(parts) >= 1:
                 category = parts[0]  # 'Set2'
@@ -215,9 +192,7 @@ def assign_colors_to_combinations(combos):
 
     return colors
 
-# ============================================================================
 # DATA LOADING AND PROCESSING
-# ============================================================================
 
 def load_csv_data(csv_file):
     """Load results from CSV file.
@@ -265,18 +240,51 @@ def parse_instance_category(instance_name):
 
     return 'unknown'
 
+def _compute_gap(solver_veh, solver_dist, bks_veh, bks_dist):
+    """Compute gap% to BKS.
+
+    If solver uses a different number of vehicles than BKS, gap is vehicle-based.
+    Only when vehicles match is the gap distance-based.
+    """
+    if pd.isna(solver_veh) or pd.isna(bks_veh):
+        return np.nan
+    solver_veh = int(round(solver_veh))
+    bks_veh = int(round(bks_veh))
+    if solver_veh != bks_veh:
+        if bks_veh == 0:
+            return np.nan
+        return (solver_veh - bks_veh) / bks_veh * 100
+    # Same vehicles -> distance-based gap
+    if pd.isna(solver_dist) or pd.isna(bks_dist) or bks_dist == 0:
+        return np.nan
+    return (solver_dist - bks_dist) / bks_dist * 100
+
+
 def calculate_gap_to_bks(row):
     """Calculate percentage gap to best known solution.
 
+    Uses vehicle-based gap if vehicle counts differ, distance-based gap if they match.
+    Falls back to fitness-based gap if vehicle/distance columns are not available.
+
     Args:
-        row: DataFrame row with Best_Fitness and BKS_Fitness columns
+        row: DataFrame row with solver and BKS columns
 
     Returns:
         float: Gap percentage
     """
-    if pd.isna(row['BKS_Fitness']) or row['BKS_Fitness'] == 0:
-        return np.nan
-    return ((row['Best_Fitness'] - row['BKS_Fitness']) / row['BKS_Fitness']) * 100
+    # Check if we have separate vehicle and distance columns
+    has_veh_dist = ('Best_Vehicles' in row.index and 'Best_Distance' in row.index and
+                    'BKS_Vehicles' in row.index and 'BKS_Distance' in row.index)
+
+    if has_veh_dist:
+        # Use the proper vehicle/distance-based gap calculation
+        return _compute_gap(row['Best_Vehicles'], row['Best_Distance'],
+                           row['BKS_Vehicles'], row['BKS_Distance'])
+    else:
+        # Fallback to fitness-based calculation
+        if pd.isna(row['BKS_Fitness']) or row['BKS_Fitness'] == 0:
+            return np.nan
+        return ((row['Best_Fitness'] - row['BKS_Fitness']) / row['BKS_Fitness']) * 100
 
 def process_data(df):
     """Process raw data: add category and gap columns.
@@ -294,6 +302,9 @@ def process_data(df):
 
     # Add gap to BKS column
     df['Gap_to_BKS'] = df.apply(calculate_gap_to_bks, axis=1)
+
+    # Round down gaps below 0.1% to 0
+    df['Gap_to_BKS'] = df['Gap_to_BKS'].where(df['Gap_to_BKS'].abs() >= 0.1, other=0.0).where(df['Gap_to_BKS'].notna())
 
     # Exclude No_LocalSearch combinations
     df = df[~df['Combination_Name'].str.startswith('No_LocalSearch')]
@@ -334,9 +345,7 @@ def aggregate_by_category(df, category=None):
 
     return agg_df
 
-# ============================================================================
 # LATEX TABLE GENERATION
-# ============================================================================
 
 def escape_latex(text):
     """Escape special LaTeX characters in text.
@@ -746,9 +755,7 @@ def save_latex_file(content, filepath):
         f.write(postamble)
     print(f"  Saved: {filepath}")
 
-# ============================================================================
 # PLOT GENERATION
-# ============================================================================
 
 def add_bar_labels(ax, bars, values, y_min, y_max, truncated_indices, fmt='.1f', suffix=''):
     """Add value labels to bars, handling truncation and positioning.
@@ -864,9 +871,7 @@ def create_comparison_plots(agg_df, category_name):
     return fig
 
 
-# ============================================================================
 # MAIN ORCHESTRATION
-# ============================================================================
 
 def save_pdf(fig, filepath):
     """Save figure as PDF.
@@ -1071,9 +1076,7 @@ def create_combined_overall_plots(all_data):
 
     print(f"Combined tables saved to: {output_dir / 'combined_tables.tex'}")
 
-# ============================================================================
 # ENTRY POINT
-# ============================================================================
 
 if __name__ == "__main__":
     try:
