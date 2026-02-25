@@ -44,12 +44,10 @@ import numpy as np
 import copy
 from pathlib import Path
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
 
 # Problem sizes to test
-PROBLEM_SIZES = [200]
+PROBLEM_SIZES = [400]
 
 # Memetic algorithm parameters
 POPULATION_SIZE = 10
@@ -61,12 +59,10 @@ NUM_RUNS = 3
 
 # Output files
 RESULTS_BASE_DIR = "results"
-RESULTS_OUTPUT_FILE = "results/memetic_component_results_200.json"
-SUMMARY_CSV_FILE = "results/memetic_component_summary_200.csv"
+RESULTS_OUTPUT_FILE = "results/memetic_component_results_400.json"
+SUMMARY_CSV_FILE = "results/memetic_component_summary_400.csv"
 
-# ============================================================================
 # COMPONENT CREATION FUNCTIONS
-# ============================================================================
 def create_operators():
     operator_dict = {}
     
@@ -256,32 +252,28 @@ def create_local_search_instances(operator_dict):
     ls_05_random_10_30 = RandomLocalSearch(operators=operator_dict["set2"], max_no_improvement=10, max_iterations=30)
     local_searches.append(ls_05_random_10_30)
     
-    ls_06_rl_set2_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_200_greedy_binary_100_set2_200_final.pt")
+    ls_06_rl_set2_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_400_greedy_binary_100_set2_400_final.pt")
     local_searches.append(ls_06_rl_set2_one_shot)
     
-    ls_07_rl_set2_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_200_greedy_binary_100_set2_200_final.pt")
+    ls_07_rl_set2_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_400_greedy_binary_100_set2_400_final.pt")
     ls_07_rl_set2_ranking.type = "Ranking"
     local_searches.append(ls_07_rl_set2_ranking)
     
-    ls_08_rl_set2_50_50_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_200_greedy_binary_100_set2_200_final.pt")
-    ls_08_rl_set2_50_50_one_shot.max_iterations = 50
-    ls_08_rl_set2_50_50_one_shot.max_no_improvement = 50
-    local_searches.append(ls_08_rl_set2_50_50_one_shot)
+    ls_06_rl_set2_50_50_one_shot = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_200_greedy_binary_100_set2_200_final.pt")
+    ls_06_rl_set2_50_50_one_shot.max_iterations = 50
+    ls_06_rl_set2_50_50_one_shot.max_no_improvement = 50
+    local_searches.append(ls_06_rl_set2_50_50_one_shot)
     
-    ls_09_rl_set2_50_50_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_200_greedy_binary_100_set2_200_final.pt")
-    ls_09_rl_set2_50_50_ranking.max_iterations = 50
-    ls_09_rl_set2_50_50_ranking.max_no_improvement = 50
-    ls_09_rl_set2_50_50_ranking.type = "Ranking"
-    local_searches.append(ls_09_rl_set2_50_50_ranking)
+    ls_07_rl_set2_50_50_ranking = RLLocalSearch.load_from_checkpoint("models/rl_local_search_dqn_200_greedy_binary_100_set2_200_final.pt")
+    ls_07_rl_set2_50_50_ranking.max_iterations = 50
+    ls_07_rl_set2_50_50_ranking.max_no_improvement = 50
+    ls_07_rl_set2_50_50_ranking.type = "Ranking"
+    local_searches.append(ls_07_rl_set2_50_50_ranking)
     
     return local_searches
 
-# ============================================================================
 # COMBINATIONS TO TEST
-# ============================================================================
 
-# Each combination specifies indices into the component lists
-# Format: {'name': str, 'selection': idx, 'crossover': idx, 'mutation': idx, 'local_search': idx}
 COMBINATIONS = [
     # {'name': 'Baseline_Short', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 1},
     # {'name': 'Baseline_Long', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 2},
@@ -292,9 +284,7 @@ COMBINATIONS = [
     {'name': 'LS_Set2_50_50_Ranking', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 9},
 ]
 
-# ============================================================================
 # EXPERIMENT FUNCTIONS
-# ============================================================================
 
 def run_experiment():
     """Run memetic component-wise performance experiment.
@@ -379,7 +369,6 @@ def run_experiment():
             np.random.seed(seed)
 
             # Get best known solution
-            # Note: instance.name may contain full path, extract just the filename
             clean_instance_name = Path(instance_name).stem if ('/' in instance_name or '\\' in instance_name) else instance_name
 
             # Temporarily update instance name for BKS lookup
@@ -387,20 +376,15 @@ def run_experiment():
             instance.name = clean_instance_name
 
             try:
-                # Note: get_bks_as_tuple returns (num_vehicles, total_distance)
                 bks_num_vehicles, bks_total_distance = best_known_solutions.get_bks_as_tuple(instance)
 
-                # Calculate BKS fitness using the same formula as solver
-                # Assuming BKS solutions are feasible (penalty = 0)
                 bks_fitness = bks_total_distance * (1 + bks_num_vehicles / instance.num_vehicles)
             except Exception as e:
                 print(f"    Warning: Could not retrieve BKS for {clean_instance_name}: {e}")
-                print(instance.name)
                 bks_fitness = None
                 bks_num_vehicles = None
                 bks_total_distance = None
             finally:
-                # Restore original name
                 instance.name = original_name
 
             best_results = None
@@ -516,9 +500,7 @@ def save_summary_csv(results):
             writer.writeheader()
             writer.writerows(csv_rows)
 
-# ============================================================================
 # MAIN
-# ============================================================================
 
 if __name__ == "__main__":
     try:

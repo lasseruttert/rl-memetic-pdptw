@@ -29,9 +29,7 @@ import numpy as np
 import copy
 from pathlib import Path
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
 
 PROBLEM_SIZES = [100, 200, 400]
 MEMETIC_MAX_TIME_SECONDS = 180
@@ -51,9 +49,7 @@ RESULTS_BASE_DIR = "results"
 RESULTS_OUTPUT_FILE = "results/memetic_vs_ortools_results.json"
 SUMMARY_CSV_FILE = "results/memetic_vs_ortools_summary.csv"
 
-# ============================================================================
 # COMPONENT CREATION FUNCTIONS
-# ============================================================================
 
 def create_operators_set2():
     """Create set2 operator list."""
@@ -123,9 +119,7 @@ def calculate_fitness(problem, solution):
     return fitness(problem, solution)
 
 
-# ============================================================================
 # EXPERIMENT FUNCTIONS
-# ============================================================================
 
 def run_experiment():
     """Run memetic vs OR-Tools comparison experiment."""
@@ -144,7 +138,6 @@ def run_experiment():
     mendeley_manager = MendeleyInstanceManager()
     best_known_solutions = BestKnownSolutions()
 
-    # Create operators (shared across sizes)
     operators = create_operators_set2()
 
     # Store all results
@@ -324,9 +317,7 @@ def save_summary_csv(results):
         print(f"Summary CSV saved to {SUMMARY_CSV_FILE}")
 
 
-# ============================================================================
 # MAIN
-# ============================================================================
 
 if __name__ == "__main__":
     try:

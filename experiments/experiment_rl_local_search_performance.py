@@ -23,9 +23,7 @@ import copy
 from pathlib import Path
 from typing import Dict, List
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
 
 # Problem sizes to test
 PROBLEM_SIZES = [100]
@@ -42,9 +40,7 @@ RESULTS_DIR = "results/rl_local_search_performance_set1"
 # Random seed for reproducibility
 SEED = 42
 
-# ============================================================================
 # EXPERIMENT FUNCTIONS
-# ============================================================================
 
 def compute_averaged_metrics(run_results: List[Dict]) -> Dict:
     """Compute averaged metrics across multiple runs.
@@ -385,9 +381,7 @@ def create_csv_summary(all_results: Dict):
             writer.writerows(csv_rows)
         print(f"Saved CSV summary to: {csv_filename.name}")
 
-# ============================================================================
 # MAIN
-# ============================================================================
 
 if __name__ == "__main__":
     try:

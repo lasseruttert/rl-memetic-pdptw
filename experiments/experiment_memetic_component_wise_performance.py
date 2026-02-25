@@ -44,9 +44,7 @@ import numpy as np
 import copy
 from pathlib import Path
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
 
 # Problem sizes to test
 PROBLEM_SIZES = [100]
@@ -64,9 +62,7 @@ RESULTS_BASE_DIR = "results"
 RESULTS_OUTPUT_FILE = "results/memetic_component_results_100.json"
 SUMMARY_CSV_FILE = "results/memetic_component_summary_100.csv"
 
-# ============================================================================
 # COMPONENT CREATION FUNCTIONS
-# ============================================================================
 def create_operators():
     operator_dict = {}
     
@@ -310,12 +306,8 @@ def create_local_search_instances(operator_dict):
     
     return local_searches
 
-# ============================================================================
 # COMBINATIONS TO TEST
-# ============================================================================
 
-# Each combination specifies indices into the component lists
-# Format: {'name': str, 'selection': idx, 'crossover': idx, 'mutation': idx, 'local_search': idx}
 COMBINATIONS = [
     {'name': 'Baseline_Short', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 1},
     {'name': 'Baseline_Long', 'selection': 1, 'crossover': 1, 'mutation': 0, 'local_search': 2},
@@ -330,9 +322,7 @@ COMBINATIONS = [
     
 ]
 
-# ============================================================================
 # EXPERIMENT FUNCTIONS
-# ============================================================================
 
 def run_experiment():
     """Run memetic component-wise performance experiment.
@@ -416,8 +406,6 @@ def run_experiment():
             random.seed(seed)
             np.random.seed(seed)
 
-            # Get best known solution
-            # Note: instance.name may contain full path, extract just the filename
             clean_instance_name = Path(instance_name).stem if ('/' in instance_name or '\\' in instance_name) else instance_name
 
             # Temporarily update instance name for BKS lookup
@@ -425,11 +413,8 @@ def run_experiment():
             instance.name = clean_instance_name
 
             try:
-                # Note: get_bks_as_tuple returns (num_vehicles, total_distance)
                 bks_num_vehicles, bks_total_distance = best_known_solutions.get_bks_as_tuple(instance)
 
-                # Calculate BKS fitness using the same formula as solver
-                # Assuming BKS solutions are feasible (penalty = 0)
                 bks_fitness = bks_total_distance * (1 + bks_num_vehicles / instance.num_vehicles)
             except Exception as e:
                 print(f"    Warning: Could not retrieve BKS for {clean_instance_name}: {e}")
@@ -553,9 +538,7 @@ def save_summary_csv(results):
             writer.writeheader()
             writer.writerows(csv_rows)
 
-# ============================================================================
 # MAIN
-# ============================================================================
 
 if __name__ == "__main__":
     try:

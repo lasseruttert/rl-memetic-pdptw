@@ -1,22 +1,3 @@
-"""
-State Archetype Action Distribution Experiment
-
-Shows that the trained RL local search agent adapts its action probabilities
-based on the solution state, rather than using a fixed operator preference.
-
-Defines 3 state archetypes based on solution features:
-  1. Infeasible — feature[6] == 0
-  2. Feasible, High Distance — feature[6] == 1 AND feature[5] > median
-  3. Feasible, Compact — feature[6] == 1 AND feature[5] <= median
-
-Collects real states from running the model on benchmark instances, computes
-softmax action probability distributions from Q-values, and compares them
-across archetypes with statistical tests.
-
-Complements experiment_feature_ablation.py (which shows *which* features matter)
-by showing *how* the agent uses them to make different decisions.
-"""
-
 from utils.li_lim_instance_manager import LiLimInstanceManager
 from utils.mendeley_instance_manager import MendeleyInstanceManager
 
@@ -58,9 +39,7 @@ SOLUTION_FEATURE_NAMES = [
     "std_route_distance_norm",  # 13
 ]
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
 
 PROBLEM_SIZES = [100]
 NUM_RUNS = 3
@@ -72,9 +51,7 @@ SEED = 42
 # Softmax temperature for converting Q-values to probabilities
 SOFTMAX_TEMPERATURE = 1.0
 
-# ============================================================================
 # DATA COLLECTION
-# ============================================================================
 
 def collect_state_data(
     rl_local_search: RLLocalSearch,
@@ -133,9 +110,7 @@ def collect_state_data(
     return records
 
 
-# ============================================================================
 # Q-VALUE / SOFTMAX COMPUTATION
-# ============================================================================
 
 def compute_q_values_for_records(
     agent,
@@ -164,9 +139,7 @@ def compute_q_values_for_records(
         record['action_probs'] = probs.tolist()
 
 
-# ============================================================================
 # ARCHETYPE CLASSIFICATION
-# ============================================================================
 
 def classify_archetypes(records: List[Dict]) -> Dict[str, Dict[str, List[Dict]]]:
     """Classify records into multiple archetype groupings.
@@ -289,9 +262,7 @@ def classify_archetypes(records: List[Dict]) -> Dict[str, Dict[str, List[Dict]]]
     return all_groupings
 
 
-# ============================================================================
 # DISTRIBUTION ANALYSIS
-# ============================================================================
 
 def compute_archetype_distributions(
     archetypes: Dict[str, List[Dict]],
@@ -350,9 +321,7 @@ def compute_archetype_distributions(
     return results
 
 
-# ============================================================================
 # STATISTICAL TESTS
-# ============================================================================
 
 def compute_statistical_tests(
     archetypes: Dict[str, List[Dict]],
@@ -460,9 +429,7 @@ def compute_statistical_tests(
     return comparisons
 
 
-# ============================================================================
 # OUTPUT
-# ============================================================================
 
 def print_summary_table(
     distributions: Dict[str, Dict],

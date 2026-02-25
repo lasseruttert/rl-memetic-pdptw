@@ -1,12 +1,3 @@
-"""
-RL Local Search Feature Ablation Experiment
-
-Loads a trained RL local search model and systematically mutes each state feature
-(sets to zero), then runs on all benchmark instances to measure the impact on
-performance. Compares average, min, and max fitness across all features to
-identify which state features the model relies on most.
-"""
-
 from utils.li_lim_instance_manager import LiLimInstanceManager
 from utils.mendeley_instance_manager import MendeleyInstanceManager
 
@@ -24,9 +15,7 @@ import copy
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
 
 # Problem sizes to test
 PROBLEM_SIZES = [100]
@@ -46,9 +35,7 @@ RESULTS_DIR = "results/feature_ablation"
 # Random seed for reproducibility
 SEED = 42
 
-# ============================================================================
 # FEATURE DEFINITIONS
-# ============================================================================
 
 # Solution feature names (indices 0-13 in the state vector)
 SOLUTION_FEATURE_NAMES = [
@@ -87,9 +74,7 @@ FEATURE_GROUPS = {
 }
 
 
-# ============================================================================
 # FEATURE MUTING
-# ============================================================================
 
 def build_feature_name_map(num_operators: int, operator_names: List[str]) -> Dict[str, List[int]]:
     """Build a mapping from human-readable feature names to state vector indices.
@@ -151,9 +136,7 @@ def create_muted_get_state(original_get_state, mute_indices: List[int]):
     return muted_get_state
 
 
-# ============================================================================
 # EXPERIMENT FUNCTIONS
-# ============================================================================
 
 def run_single_instance(
     rl_local_search: RLLocalSearch,
@@ -369,7 +352,6 @@ def run_experiment():
     print(f"  Baseline max fitness: {baseline_results['max_fitness']:.2f}")
     print(f"  Time: {baseline_time:.1f}s")
 
-    # ---- Run ablation for each feature / group ----
     ablation_results = {}
 
     for feat_idx, (feat_name, mute_indices) in enumerate(feature_map.items()):
@@ -535,10 +517,7 @@ def print_summary_table(baseline: Dict, ablations: Dict):
     print("Negative degradation = performance got BETTER when feature was muted (feature may be harmful)")
 
 
-# ============================================================================
 # MAIN
-# ============================================================================
-
 if __name__ == "__main__":
     try:
         baseline, ablations = run_experiment()

@@ -36,11 +36,8 @@ from matplotlib.patches import Patch
 from collections import OrderedDict
 from pathlib import Path
 
-# ============================================================================
 # CONFIGURATION
-# ============================================================================
 
-# Problem sizes to test (None = default size from manager, or specific sizes like [100, 200, 400])
 PROBLEM_SIZES = [100]
 
 # Number of runs per instance
@@ -58,7 +55,7 @@ RESULTS_OUTPUT_FILE = "results/operator_convergence_results.json"
 # Plotting configuration
 PLOTS_OUTPUT_DIR = "results/operator_convergence_plots"
 
-# Unified plot style (LaTeX-ready, thesis-optimized for maximum readability)
+# Unified plot style
 PLOT_STYLE = {
     'font.size': 18,
     'axes.labelsize': 22,
@@ -80,36 +77,32 @@ PLOT_STYLE = {
 }
 plt.rcParams.update(PLOT_STYLE)
 
-# Unified color palette
 METHOD_COLORS = [
-    '#2E86AB',  # Steel Blue
-    '#A23B72',  # Plum Purple
-    '#1D7874',  # Teal
-    '#E8A838',  # Muted Gold
-    '#6B4C9A',  # Violet
-    '#D64550',  # Soft Red
-    '#44AF69',  # Sage Green
-    '#8B5E3C',  # Brown
+    '#2E86AB',  
+    '#A23B72',  
+    '#1D7874',  
+    '#E8A838',  
+    '#6B4C9A',  
+    '#D64550',  
+    '#44AF69',  
+    '#8B5E3C',  
 ]
 
-# Extended colors for many operators (cycle through with different line styles)
 EXTENDED_COLORS = METHOD_COLORS + [
-    '#C44536',  # Rust
-    '#3A7D44',  # Forest Green
-    '#7B68EE',  # Medium Slate Blue
-    '#CD853F',  # Peru
-    '#4682B4',  # Steel Blue 2
-    '#9370DB',  # Medium Purple
-    '#20B2AA',  # Light Sea Green
-    '#DAA520',  # Goldenrod
+    '#C44536',  
+    '#3A7D44',  
+    '#7B68EE',  
+    '#CD853F',  
+    '#4682B4',  
+    '#9370DB',  
+    '#20B2AA',  
+    '#DAA520',  
 ]
 
 # Line styles for multi-operator plots
-LINE_STYLES = ['-', '--', '-.', ':']  # solid, dashed, dash-dot, dotted
+LINE_STYLES = ['-', '--', '-.', ':']  
 
-# ============================================================================
 # OPERATOR FAMILY GROUPINGS & DISPLAY NAMES
-# ============================================================================
 
 def darken_color(color, factor=0.6):
     """Make a color darker by the given factor (0=black, 1=original)."""
@@ -243,21 +236,20 @@ OPERATOR_FAMILIES = OrderedDict([
 
 # One distinct base color per family
 FAMILY_BASE_COLORS = {
-    'Reinsert':    '#2E86AB',  # Steel Blue
-    'RouteElim':   '#A23B72',  # Plum Purple
-    'Flip':        '#1D7874',  # Teal
-    'Merge':       '#E8A838',  # Muted Gold
-    'SwapWithin':  '#6B4C9A',  # Violet
-    'SwapBetween': '#D64550',  # Soft Red
-    'Transfer':    '#44AF69',  # Sage Green
-    'Shift':       '#8B5E3C',  # Brown
-    'TwoOpt':      '#C44536',  # Rust
-    'CLS':         '#3A7D44',  # Forest Green
-    'ReqShift':    '#7B68EE',  # Medium Slate Blue
-    'NodeSwap':    '#CD853F',  # Peru
+    'Reinsert':    '#2E86AB',  
+    'RouteElim':   '#A23B72',  
+    'Flip':        '#1D7874',  
+    'Merge':       '#E8A838',  
+    'SwapWithin':  '#6B4C9A',  
+    'SwapBetween': '#D64550',  
+    'Transfer':    '#44AF69',  
+    'Shift':       '#8B5E3C',  
+    'TwoOpt':      '#C44536',  
+    'CLS':         '#3A7D44',  
+    'ReqShift':    '#7B68EE',  
+    'NodeSwap':    '#CD853F',  
 }
 
-# Short display names — follows Name(params) convention from plot_rl_local_search_performance.py
 DISPLAY_NAMES = {
     'Reinsert-nC-Max1-NewV-SameV-nF_SameV':       'Reinsert',
     'Reinsert-C-Max5-NewV-SameV-nF_SameV':         'Reinsert(C,k5)',
@@ -312,7 +304,6 @@ def _generate_family_shades(base_color, n):
     rgb = mcolors.to_rgb(base_color)
     shades = []
     for i in range(n):
-        # Blend from white (light) toward base color
         t = 0.35 + 0.65 * (i / (n - 1))  # range [0.35, 1.0]
         shaded = tuple(1.0 - t * (1.0 - c) for c in rgb)
         shades.append(shaded)
@@ -344,9 +335,7 @@ def _get_operator_colors(results):
     return ordered_names, colors
 
 
-# ============================================================================
 # EXPERIMENT FUNCTIONS
-# ============================================================================
 
 def run_experiment():
     """Run convergence experiment for all operators across all instances.
@@ -418,9 +407,7 @@ def _save_results(results):
     with open(RESULTS_OUTPUT_FILE, 'w') as f:
         json.dump(results, f, indent=2)
 
-# ============================================================================
 # PLOTTING FUNCTIONS
-# ============================================================================
 
 def _extend_convergence_data(times, values, max_time):
     """Extend convergence data to max_time with flat line if needed.
@@ -489,7 +476,6 @@ def _compute_optimal_x_cutoff(results):
     max_time = max(operator_max_times)
 
     # Check if there's a significant outlier:
-    # If max is more than 2x the median, we likely have outliers
     if max_time > 2 * median_time:
         # Use 90th percentile as cutoff
         return percentile_90, True
@@ -707,7 +693,6 @@ def _plot_operator_bar_chart(results, metrics, metric_key, std_key, ylabel,
     return None
 
 
-# ---- Thin wrapper plot functions ----
 
 def plot_avg_improvements(results, metrics):
     """Bar chart: average number of improvements per operator."""
@@ -1182,9 +1167,7 @@ def _run_operator_experiment(operator, li_lim_manager, mendeley_manager, best_kn
 
     return results
 
-# ============================================================================
 # MAIN
-# ============================================================================
 
 if __name__ == "__main__":
     import sys
